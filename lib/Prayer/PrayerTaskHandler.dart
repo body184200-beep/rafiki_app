@@ -115,7 +115,7 @@ class PrayerTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp) {
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) {
     timer?.cancel();
     player.stop();
     player.dispose();

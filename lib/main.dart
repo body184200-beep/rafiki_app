@@ -41,13 +41,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Image.asset(
-          'assets/rafiki.jpeg',
-          fit: BoxFit.cover,
+      backgroundColor: const Color(0xFF05211B), // Rich dark emerald green to blend with the splash screen
+      body: SafeArea(
+        child: Center(
+          child: Image.asset(
+            'assets/rafiki.png',
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
