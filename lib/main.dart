@@ -42,12 +42,10 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF05211B), // Rich dark emerald green to blend with the splash screen
-      body: SafeArea(
-        child: Center(
-          child: Image.asset(
-            'assets/rafiki.png',
-            fit: BoxFit.contain,
-          ),
+      body: SizedBox.expand(
+        child: Image.asset(
+          'assets/rafiki.png',
+          fit: BoxFit.cover,
         ),
       ),
     );
