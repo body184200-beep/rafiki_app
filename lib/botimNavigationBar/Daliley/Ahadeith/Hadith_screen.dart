@@ -403,12 +403,12 @@ class _HadithCard extends StatelessWidget {
           color: _kCard,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isFav ? _kGold.withOpacity(0.35) : Colors.transparent,
+            color: isFav ? _kGold.withValues(alpha: 0.35) : Colors.transparent,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -421,7 +421,7 @@ class _HadithCard extends StatelessWidget {
             Container(
               width: 52,
               decoration: BoxDecoration(
-                color: _kTeal.withOpacity(0.2),
+                color: _kTeal.withValues(alpha: 0.2),
                 borderRadius: const BorderRadius.only(
                   topLeft:    Radius.circular(18),
                   bottomLeft: Radius.circular(18),
@@ -570,7 +570,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         height: 90,
         decoration: BoxDecoration(
-          color: _kCard.withOpacity(_anim.value + 0.3),
+          color: _kCard.withValues(alpha: _anim.value + 0.3),
           borderRadius: BorderRadius.circular(18),
         ),
       ),
@@ -711,12 +711,12 @@ class _DetailPage extends StatelessWidget {
           color: _kCard,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isFav ? _kGold.withOpacity(0.4) : const Color(0xFF1E2D45),
+            color: isFav ? _kGold.withValues(alpha: 0.4) : const Color(0xFF1E2D45),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20, offset: const Offset(0, 6),
             ),
           ],

@@ -289,9 +289,9 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       body: Stack(children: [
         // Ambient blobs
         Positioned(top: -100, left: -80,
-            child: _GlowBlob(color: _C.jade.withOpacity(0.07), size: 380)),
+            child: _GlowBlob(color: _C.jade.withValues(alpha: 0.07), size: 380)),
         Positioned(bottom: 0, right: -100,
-            child: _GlowBlob(color: _C.gold.withOpacity(0.06), size: 320)),
+            child: _GlowBlob(color: _C.gold.withValues(alpha: 0.06), size: 320)),
 
         SafeArea(
           child: FadeTransition(
@@ -378,8 +378,8 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: _C.gold.withOpacity(0.07),
-        border: Border.all(color: _C.gold.withOpacity(0.15)),
+        color: _C.gold.withValues(alpha: 0.07),
+        border: Border.all(color: _C.gold.withValues(alpha: 0.15)),
       ),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         _StatItem(label: "إجمالي الحسنات", value: total.toString(), color: _C.goldLight),
@@ -419,8 +419,8 @@ class _HasanateyScreenState extends State<HasanateyScreen>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: _C.jade.withOpacity(0.12),
-              border: Border.all(color: _C.jade.withOpacity(0.25)),
+              color: _C.jade.withValues(alpha: 0.12),
+              border: Border.all(color: _C.jade.withValues(alpha: 0.25)),
             ),
             child: const Row(children: [
               Text("تغيير", style: TextStyle(color: _C.jadeLight, fontSize: 13,
@@ -490,7 +490,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
                 boxShadow: [
                   BoxShadow(
                     color: (_hasTarget && _progressPct >= 1.0 ? _C.gold : _C.jade)
-                        .withOpacity(0.30),
+                        .withValues(alpha: 0.30),
                     blurRadius: 50,
                     spreadRadius: 4,
                   ),
@@ -521,7 +521,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
                   "اضغط للذكر",
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.50),
+                    color: Colors.white.withValues(alpha: 0.50),
                     letterSpacing: 1.6,
                   ),
                 ),
@@ -530,7 +530,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
                   "اضغط مطولاً للتراجع",
                   style: TextStyle(
                     fontSize: 9,
-                    color: Colors.white.withOpacity(0.30),
+                    color: Colors.white.withValues(alpha: 0.30),
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -571,7 +571,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
           builder: (_, val, __) => LinearProgressIndicator(
             value: val,
             minHeight: 5,
-            backgroundColor: _C.textHint.withOpacity(0.25),
+            backgroundColor: _C.textHint.withValues(alpha: 0.25),
             valueColor: AlwaysStoppedAnimation(
                 done ? _C.gold : _C.jade),
           ),
@@ -650,7 +650,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
                     margin: const EdgeInsets.only(right: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _C.gold.withOpacity(0.15),
+                      color: _C.gold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text("✓", style: TextStyle(color: _C.goldLight, fontSize: 11)),
@@ -668,7 +668,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
                 child: LinearProgressIndicator(
                   value: pct.clamp(0.0, 1.0),
                   minHeight: 4,
-                  backgroundColor: Colors.white.withOpacity(0.06),
+                  backgroundColor: Colors.white.withValues(alpha: 0.06),
                   valueColor: AlwaysStoppedAnimation(done ? _C.gold : _C.jade),
                 ),
               ),
@@ -720,7 +720,7 @@ class _DhikrPickerSheetState extends State<_DhikrPickerSheet> {
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -761,7 +761,7 @@ class _DhikrPickerSheetState extends State<_DhikrPickerSheet> {
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  color: _C.red.withOpacity(0.2),
+                  color: _C.red.withValues(alpha: 0.2),
                   child: const Icon(Icons.delete_outline_rounded, color: _C.red),
                 ),
                 onDismissed: (_) => widget.onDelete(idx),
@@ -773,8 +773,8 @@ class _DhikrPickerSheetState extends State<_DhikrPickerSheet> {
                     width: 34, height: 34,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _C.jade.withOpacity(0.15),
-                      border: Border.all(color: _C.jade.withOpacity(0.4)),
+                      color: _C.jade.withValues(alpha: 0.15),
+                      border: Border.all(color: _C.jade.withValues(alpha: 0.4)),
                     ),
                     child: const Icon(Icons.check_rounded, color: _C.jade, size: 18),
                   )
@@ -782,7 +782,7 @@ class _DhikrPickerSheetState extends State<_DhikrPickerSheet> {
                     width: 34, height: 34,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.04),
+                      color: Colors.white.withValues(alpha: 0.04),
                     ),
                   ),
                   title: Text(e.text,
@@ -884,7 +884,7 @@ class _TargetEditorSheetState extends State<_TargetEditorSheet> {
       decoration: BoxDecoration(
         color: _C.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
@@ -918,9 +918,9 @@ class _TargetEditorSheetState extends State<_TargetEditorSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: sel ? _C.jade.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+                  color: sel ? _C.jade.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
                   border: Border.all(
-                    color: sel ? _C.jade : Colors.white.withOpacity(0.10),
+                    color: sel ? _C.jade : Colors.white.withValues(alpha: 0.10),
                   ),
                 ),
                 child: Text("$p",
@@ -1002,8 +1002,8 @@ class _GlassCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withOpacity(0.04),
-            border: Border.all(color: Colors.white.withOpacity(0.07)),
+            color: Colors.white.withValues(alpha: 0.04),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
           ),
           child: child,
         ),
@@ -1031,8 +1031,8 @@ class _GlassIconBtn extends StatelessWidget {
             width: 44, height: 44,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: color.withOpacity(0.10),
-              border: Border.all(color: color.withOpacity(0.20)),
+              color: color.withValues(alpha: 0.10),
+              border: Border.all(color: color.withValues(alpha: 0.20)),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -1059,8 +1059,8 @@ class _ActionBtn extends StatelessWidget {
         height: 52,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: color.withOpacity(0.10),
-          border: Border.all(color: color.withOpacity(0.22)),
+          color: color.withValues(alpha: 0.10),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, color: color, size: 18),
@@ -1110,8 +1110,8 @@ class _SheetInput extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withOpacity(0.06),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        color: Colors.white.withValues(alpha: 0.06),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Directionality(
         textDirection: textDirection ?? TextDirection.ltr,
@@ -1156,7 +1156,7 @@ class _ConfirmDialog extends StatelessWidget {
       backgroundColor: _C.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withOpacity(0.07)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.07)),
       ),
       title: Text(message, textAlign: TextAlign.center,
           style: const TextStyle(color: _C.textMain, fontSize: 16)),
@@ -1203,7 +1203,7 @@ class _ArcPainter extends CustomPainter {
       Rect.fromCircle(center: Offset(cx, cy), radius: radius),
       startAngle, sweepFull, false,
       Paint()
-        ..color = trackColor.withOpacity(0.18)
+        ..color = trackColor.withValues(alpha: 0.18)
         ..strokeWidth = 4
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
@@ -1227,7 +1227,7 @@ class _ArcPainter extends CustomPainter {
     final dx = cx + radius * cos(angle);
     final dy = cy + radius * sin(angle);
     canvas.drawCircle(Offset(dx, dy), 6,
-        Paint()..color = activeColor.withOpacity(0.5)
+        Paint()..color = activeColor.withValues(alpha: 0.5)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
     canvas.drawCircle(Offset(dx, dy), 4, Paint()..color = activeColor);
   }
@@ -1252,7 +1252,7 @@ class _RipplePainter extends CustomPainter {
     // Static glow
     canvas.drawCircle(center, baseR + 6,
         Paint()
-          ..color = jade.withOpacity(0.10)
+          ..color = jade.withValues(alpha: 0.10)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18));
 
     if (progress > 0) {
@@ -1260,7 +1260,7 @@ class _RipplePainter extends CustomPainter {
       final ringR = baseR + 20 + progress * 70;
       canvas.drawCircle(center, ringR,
           Paint()
-            ..color = jade.withOpacity((1 - progress) * 0.35)
+            ..color = jade.withValues(alpha: (1 - progress) * 0.35)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.8 * (1 - progress));
 
@@ -1268,7 +1268,7 @@ class _RipplePainter extends CustomPainter {
         final r2 = baseR + 6 + (progress - 0.15) * 45;
         canvas.drawCircle(center, r2,
             Paint()
-              ..color = jade.withOpacity((1 - progress) * 0.18)
+              ..color = jade.withValues(alpha: (1 - progress) * 0.18)
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.2 * (1 - progress));
       }
@@ -1283,7 +1283,7 @@ class _RipplePainter extends CustomPainter {
         final r = baseR + 10 + p * (80 + i * 20);
         canvas.drawCircle(center, r,
             Paint()
-              ..color = gold.withOpacity((1 - p) * 0.45)
+              ..color = gold.withValues(alpha: (1 - p) * 0.45)
               ..style = PaintingStyle.stroke
               ..strokeWidth = (2.5 - i * 0.5) * (1 - p));
       }
@@ -1325,7 +1325,7 @@ class _SparkPainter extends CustomPainter {
       canvas.drawCircle(
         center + Offset(dx, dy),
         s.radius * opacity,
-        Paint()..color = color.withOpacity(opacity * 0.85),
+        Paint()..color = color.withValues(alpha: opacity * 0.85),
       );
     }
   }

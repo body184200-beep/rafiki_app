@@ -216,8 +216,8 @@ class _NotificationPageState extends State<NotificationPage>
             dialBackgroundColor: _T.surf3,
             dialHandColor: _T.acc,
             entryModeIconColor: _T.txt2,
-            dialTextColor: MaterialStateColor.resolveWith(
-                  (states) => states.contains(MaterialState.selected)
+            dialTextColor: WidgetStateColor.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
                   ? _T.bg
                   : _T.txt,
             ),
@@ -285,8 +285,8 @@ class _NotificationPageState extends State<NotificationPage>
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
               color: isError
-                  ? _T.errorAcc.withOpacity(0.4)
-                  : _T.acc2.withOpacity(0.35),
+                  ? _T.errorAcc.withValues(alpha: 0.4)
+                  : _T.acc2.withValues(alpha: 0.35),
             ),
           ),
           duration: const Duration(seconds: 3),
@@ -361,7 +361,7 @@ class _NotificationPageState extends State<NotificationPage>
                 ),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? _T.acc3.withOpacity(0.22)
+                      ? _T.acc3.withValues(alpha: 0.22)
                       : _T.surf2,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
@@ -371,7 +371,7 @@ class _NotificationPageState extends State<NotificationPage>
                   boxShadow: isActive
                       ? [
                     BoxShadow(
-                      color: _T.acc.withOpacity(0.12),
+                      color: _T.acc.withValues(alpha: 0.12),
                       blurRadius: 12,
                       spreadRadius: 0,
                     ),
@@ -447,7 +447,7 @@ class _NotificationPageState extends State<NotificationPage>
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: _T.acc3.withOpacity(0.18),
+            color: _T.acc3.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(14),
           ),
           child: const Icon(
@@ -527,7 +527,7 @@ class _NotificationPageState extends State<NotificationPage>
                 height: 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSel ? _T.acc3.withOpacity(0.22) : _T.surf2,
+                  color: isSel ? _T.acc3.withValues(alpha: 0.22) : _T.surf2,
                   border: Border.all(
                     color: isSel ? _T.acc : _T.border2,
                     width: isSel ? 1.8 : 1,
@@ -535,7 +535,7 @@ class _NotificationPageState extends State<NotificationPage>
                   boxShadow: isSel
                       ? [
                     BoxShadow(
-                      color: _T.acc.withOpacity(0.18),
+                      color: _T.acc.withValues(alpha: 0.18),
                       blurRadius: 10,
                     ),
                   ]
@@ -571,10 +571,10 @@ class _NotificationPageState extends State<NotificationPage>
                 vertical: 10,
               ),
               decoration: BoxDecoration(
-                color: _T.acc3.withOpacity(0.12),
+                color: _T.acc3.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _T.acc2.withOpacity(0.28),
+                  color: _T.acc2.withValues(alpha: 0.28),
                 ),
               ),
               child: Text(
@@ -601,14 +601,14 @@ class _NotificationPageState extends State<NotificationPage>
       onPressed: _isSaving ? null : _onSave,
       style: ElevatedButton.styleFrom(
         backgroundColor: _T.acc,
-        disabledBackgroundColor: _T.acc3.withOpacity(0.4),
+        disabledBackgroundColor: _T.acc3.withValues(alpha: 0.4),
         foregroundColor: _T.bg,
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        overlayColor: Colors.black.withOpacity(0.12),
+        overlayColor: Colors.black.withValues(alpha: 0.12),
       ),
       child: _isSaving
           ? const SizedBox(

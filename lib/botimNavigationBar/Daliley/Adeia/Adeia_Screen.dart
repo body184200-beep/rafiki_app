@@ -617,11 +617,11 @@ class _AdeiaState extends State<Adeia> with TickerProviderStateMixin {
             ),
             Positioned.fill(child: CustomPaint(painter: _StaticStarPainter(_stars))),
             Positioned(top: -10, right: -30,
-                child: _CrescentWidget(color: _gold.withOpacity(0.06), bgColor: _bgDeep, size: 230)),
+                child: _CrescentWidget(color: _gold.withValues(alpha: 0.06), bgColor: _bgDeep, size: 230)),
             Positioned(top: 120, left: -80,
-                child: _GlowBlob(color: const Color(0xff0D5C61).withOpacity(0.13), size: 300)),
+                child: _GlowBlob(color: const Color(0xff0D5C61).withValues(alpha: 0.13), size: 300)),
             Positioned(bottom: 100, right: -70,
-                child: _GlowBlob(color: const Color(0xffA855F7).withOpacity(0.09), size: 250)),
+                child: _GlowBlob(color: const Color(0xffA855F7).withValues(alpha: 0.09), size: 250)),
 
             // Content
             SafeArea(
@@ -699,9 +699,9 @@ class _AdeiaState extends State<Adeia> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(22),
               gradient: LinearGradient(
                 begin: Alignment.topRight, end: Alignment.bottomLeft,
-                colors: [_goldDark.withOpacity(0.22), _bgMid.withOpacity(0.30)],
+                colors: [_goldDark.withValues(alpha: 0.22), _bgMid.withValues(alpha: 0.30)],
               ),
-              border: Border.all(color: _gold.withOpacity(0.24), width: 1),
+              border: Border.all(color: _gold.withValues(alpha: 0.24), width: 1),
             ),
             child: Row(
               children: [
@@ -713,7 +713,7 @@ class _AdeiaState extends State<Adeia> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(colors: [_goldDark, _gold]),
                       boxShadow: [BoxShadow(
-                        color: _gold.withOpacity(0.25 + 0.2 * _pulseCtrl.value),
+                        color: _gold.withValues(alpha: 0.25 + 0.2 * _pulseCtrl.value),
                         blurRadius: 14 + 8 * _pulseCtrl.value,
                       )],
                     ),
@@ -768,12 +768,12 @@ class _AdeiaState extends State<Adeia> with TickerProviderStateMixin {
                 gradient: selected
                     ? const LinearGradient(colors: [_goldDark, _gold])
                     : null,
-                color: selected ? null : Colors.white.withOpacity(0.07),
+                color: selected ? null : Colors.white.withValues(alpha: 0.07),
                 border: Border.all(
-                  color: selected ? _goldGlow.withOpacity(0.5) : Colors.white.withOpacity(0.12),
+                  color: selected ? _goldGlow.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.12),
                 ),
                 boxShadow: selected
-                    ? [BoxShadow(color: _gold.withOpacity(0.35), blurRadius: 12)]
+                    ? [BoxShadow(color: _gold.withValues(alpha: 0.35), blurRadius: 12)]
                     : [],
               ),
               child: Row(
@@ -916,19 +916,19 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                 gradient: LinearGradient(
                   begin: Alignment.topRight, end: Alignment.bottomLeft,
                   colors: [
-                    d.accentA.withOpacity(_expanded ? 0.32 : 0.18),
-                    Colors.white.withOpacity(0.03),
-                    d.accentB.withOpacity(0.07),
+                    d.accentA.withValues(alpha: _expanded ? 0.32 : 0.18),
+                    Colors.white.withValues(alpha: 0.03),
+                    d.accentB.withValues(alpha: 0.07),
                   ],
                   stops: const [0, 0.5, 1],
                 ),
                 border: Border.all(
-                  color: d.accentB.withOpacity(_expanded ? 0.42 : 0.22),
+                  color: d.accentB.withValues(alpha: _expanded ? 0.42 : 0.22),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: d.accentA.withOpacity(_expanded ? 0.28 : 0.12),
+                    color: d.accentA.withValues(alpha: _expanded ? 0.28 : 0.12),
                     blurRadius: _expanded ? 34 : 20,
                     offset: const Offset(0, 8),
                   ),
@@ -943,8 +943,8 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                       gradient: LinearGradient(
-                        colors: [Colors.transparent, d.accentB.withOpacity(0.65),
-                          d.accentB.withOpacity(0.90), d.accentB.withOpacity(0.50), Colors.transparent],
+                        colors: [Colors.transparent, d.accentB.withValues(alpha: 0.65),
+                          d.accentB.withValues(alpha: 0.90), d.accentB.withValues(alpha: 0.50), Colors.transparent],
                         stops: const [0, 0.2, 0.5, 0.8, 1],
                       ),
                     ),
@@ -968,7 +968,7 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                   colors: [d.accentA, d.accentB],
                                 ),
                                 boxShadow: [BoxShadow(
-                                  color: d.accentB.withOpacity(0.45),
+                                  color: d.accentB.withValues(alpha: 0.45),
                                   blurRadius: 16, offset: const Offset(0, 4),
                                 )],
                               ),
@@ -1000,7 +1000,7 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: d.accentB.withOpacity(0.13),
+                                      color: d.accentB.withValues(alpha: 0.13),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(d.category,
@@ -1011,7 +1011,7 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.08),
+                                        color: Colors.white.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text("× ${d.repeat}",
@@ -1027,7 +1027,7 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                       fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.2)),
                               const SizedBox(height: 3),
                               Text(d.when,
-                                  style: TextStyle(color: d.accentB.withOpacity(0.70), fontSize: 10.5, height: 1.4)),
+                                  style: TextStyle(color: d.accentB.withValues(alpha: 0.70), fontSize: 10.5, height: 1.4)),
                             ],
                           ),
                         ),
@@ -1041,8 +1041,8 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                             width: 32, height: 32,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: d.accentB.withOpacity(0.12),
-                              border: Border.all(color: d.accentB.withOpacity(0.25)),
+                              color: d.accentB.withValues(alpha: 0.12),
+                              border: Border.all(color: d.accentB.withValues(alpha: 0.25)),
                             ),
                             child: Icon(Icons.keyboard_arrow_down_rounded, color: d.accentB, size: 18),
                           ),
@@ -1067,7 +1067,7 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                             height: 1,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [Colors.transparent, d.accentB.withOpacity(0.28), Colors.transparent],
+                                colors: [Colors.transparent, d.accentB.withValues(alpha: 0.28), Colors.transparent],
                               ),
                             ),
                           ),
@@ -1082,13 +1082,13 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(18),
-                              color: Colors.white.withOpacity(0.04),
-                              border: Border.all(color: d.accentB.withOpacity(0.18)),
+                              color: Colors.white.withValues(alpha: 0.04),
+                              border: Border.all(color: d.accentB.withValues(alpha: 0.18)),
                             ),
                             child: Column(
                               children: [
                                 Text("بِسْمِ ٱللَّهِ",
-                                    style: TextStyle(color: d.accentB.withOpacity(0.6), fontSize: 11, fontWeight: FontWeight.w600)),
+                                    style: TextStyle(color: d.accentB.withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 12),
                                 Text(
                                   d.dua,
@@ -1166,14 +1166,14 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                       gradient: LinearGradient(
                                         colors: _copied
                                             ? [const Color(0xff1A5C30), const Color(0xff2ECC71)]
-                                            : [d.accentA.withOpacity(0.55), d.accentB.withOpacity(0.40)],
+                                            : [d.accentA.withValues(alpha: 0.55), d.accentB.withValues(alpha: 0.40)],
                                       ),
                                       border: Border.all(
                                           color: _copied
-                                              ? const Color(0xff2ECC71).withOpacity(0.6)
-                                              : d.accentB.withOpacity(0.40)),
+                                              ? const Color(0xff2ECC71).withValues(alpha: 0.6)
+                                              : d.accentB.withValues(alpha: 0.40)),
                                       boxShadow: _copied
-                                          ? [BoxShadow(color: const Color(0xff2ECC71).withOpacity(0.30), blurRadius: 16)]
+                                          ? [BoxShadow(color: const Color(0xff2ECC71).withValues(alpha: 0.30), blurRadius: 16)]
                                           : [],
                                     ),
                                     child: Row(
@@ -1198,8 +1198,8 @@ class _DuaCardState extends State<_DuaCard> with SingleTickerProviderStateMixin 
                                   width: 44, height: 44,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.07),
-                                    border: Border.all(color: d.accentB.withOpacity(0.30)),
+                                    color: Colors.white.withValues(alpha: 0.07),
+                                    border: Border.all(color: d.accentB.withValues(alpha: 0.30)),
                                   ),
                                   child: Icon(Icons.ios_share_rounded, color: d.accentB, size: 18),
                                 ),
@@ -1244,8 +1244,8 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withOpacity(0.04),
-        border: Border.all(color: accentB.withOpacity(0.12)),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(color: accentB.withValues(alpha: 0.12)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1255,7 +1255,7 @@ class _DetailRow extends StatelessWidget {
           Container(
             width: 2, height: 15,
             decoration: BoxDecoration(
-              color: accentB.withOpacity(0.35),
+              color: accentB.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1393,7 +1393,7 @@ class _StaticStarPainter extends CustomPainter {
     for (final s in stars) {
       canvas.drawCircle(
           Offset(s.x * size.width, s.y * size.height),
-          s.r, Paint()..color = Colors.white.withOpacity(s.opacity));
+          s.r, Paint()..color = Colors.white.withValues(alpha: s.opacity));
     }
   }
 

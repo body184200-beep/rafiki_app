@@ -236,7 +236,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
               top: -20,
               left: -40,
               child: _CrescentPainterWidget(
-                color: _gold.withOpacity(0.07),
+                color: _gold.withValues(alpha: 0.07),
                 bgColor: _bgDeep,
                 size: 280,
               ),
@@ -247,7 +247,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
               top: 80,
               right: -100,
               child: _GlowBlob(
-                color: const Color(0xff0D5C61).withOpacity(0.18),
+                color: const Color(0xff0D5C61).withValues(alpha: 0.18),
                 size: 320,
               ),
             ),
@@ -255,7 +255,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
               bottom: 60,
               left: -80,
               child: _GlowBlob(
-                color: const Color(0xff6C82FF).withOpacity(0.12),
+                color: const Color(0xff6C82FF).withValues(alpha: 0.12),
                 size: 280,
               ),
             ),
@@ -263,7 +263,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
               bottom: 200,
               right: -60,
               child: _GlowBlob(
-                color: const Color(0xff2ECC71).withOpacity(0.07),
+                color: const Color(0xff2ECC71).withValues(alpha: 0.07),
                 size: 200,
               ),
             ),
@@ -339,12 +339,12 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [
-                  Colors.white.withOpacity(0.10),
-                  Colors.white.withOpacity(0.03),
+                  Colors.white.withValues(alpha: 0.10),
+                  Colors.white.withValues(alpha: 0.03),
                 ],
               ),
               border: Border.all(
-                color: _gold.withOpacity(0.22),
+                color: _gold.withValues(alpha: 0.22),
                 width: 1.2,
               ),
             ),
@@ -365,8 +365,8 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: _gold.withOpacity(
-                              0.3 + 0.2 * _pulseCtrl.value),
+                          color: _gold.withValues(
+                              alpha: 0.3 + 0.2 * _pulseCtrl.value),
                           blurRadius: 18 + 8 * _pulseCtrl.value,
                           spreadRadius: 1,
                         ),
@@ -426,11 +426,11 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [
-              _goldDark.withOpacity(0.28),
-              _bgMid.withOpacity(0.40),
+              _goldDark.withValues(alpha: 0.28),
+              _bgMid.withValues(alpha: 0.40),
             ],
           ),
-          border: Border.all(color: _gold.withOpacity(0.28), width: 1),
+          border: Border.all(color: _gold.withValues(alpha: 0.28), width: 1),
         ),
         child: Column(
           children: [
@@ -440,10 +440,10 @@ class _QuState extends State<Qu> with TickerProviderStateMixin {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _gold.withOpacity(0.15),
+                    color: _gold.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(30),
                     border:
-                    Border.all(color: _gold.withOpacity(0.35)),
+                    Border.all(color: _gold.withValues(alpha: 0.35)),
                   ),
                   child: const Text(
                     "آية اليوم",
@@ -623,16 +623,16 @@ class _ContentCardState extends State<_ContentCard>
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                   colors: [
-                    d.accentA.withOpacity(0.22),
-                    Colors.white.withOpacity(0.04),
-                    d.accentB.withOpacity(0.06),
+                    d.accentA.withValues(alpha: 0.22),
+                    Colors.white.withValues(alpha: 0.04),
+                    d.accentB.withValues(alpha: 0.06),
                   ],
                   stops: const [0, 0.5, 1],
                 ),
-                border: Border.all(color: d.accentB.withOpacity(0.25), width: 1),
+                border: Border.all(color: d.accentB.withValues(alpha: 0.25), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: d.accentA.withOpacity(0.20),
+                    color: d.accentA.withValues(alpha: 0.20),
                     blurRadius: 28,
                     offset: const Offset(0, 10),
                   ),
@@ -650,9 +650,9 @@ class _ContentCardState extends State<_ContentCard>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          d.accentB.withOpacity(0.7),
-                          d.accentB.withOpacity(0.9),
-                          d.accentB.withOpacity(0.5),
+                          d.accentB.withValues(alpha: 0.7),
+                          d.accentB.withValues(alpha: 0.9),
+                          d.accentB.withValues(alpha: 0.5),
                           Colors.transparent,
                         ],
                         stops: const [0, 0.2, 0.5, 0.8, 1],
@@ -681,7 +681,7 @@ class _ContentCardState extends State<_ContentCard>
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: d.accentB.withOpacity(0.50),
+                                    color: d.accentB.withValues(alpha: 0.50),
                                     blurRadius: 22,
                                     spreadRadius: 0,
                                     offset: const Offset(0, 4),
@@ -702,7 +702,7 @@ class _ContentCardState extends State<_ContentCard>
                                   shape: BoxShape.circle,
                                   color: const Color(0xff020A12),
                                   border: Border.all(
-                                      color: d.accentB.withOpacity(0.5),
+                                      color: d.accentB.withValues(alpha: 0.5),
                                       width: 1),
                                 ),
                                 child: Center(
@@ -732,7 +732,7 @@ class _ContentCardState extends State<_ContentCard>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: d.accentB.withOpacity(0.12),
+                                  color: d.accentB.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -778,12 +778,12 @@ class _ContentCardState extends State<_ContentCard>
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                d.accentA.withOpacity(0.6),
-                                d.accentB.withOpacity(0.35),
+                                d.accentA.withValues(alpha: 0.6),
+                                d.accentB.withValues(alpha: 0.35),
                               ],
                             ),
                             border: Border.all(
-                                color: d.accentB.withOpacity(0.35)),
+                                color: d.accentB.withValues(alpha: 0.35)),
                           ),
                           child: const Icon(
                             Icons.arrow_back_ios_new_rounded, // ← RTL correct
@@ -961,7 +961,7 @@ class _StarFieldPainter extends CustomPainter {
           Offset(s.x * size.width, s.y * size.height),
           s.r * 2.5,
           Paint()
-            ..color = Colors.white.withOpacity(opacity * 0.15)
+            ..color = Colors.white.withValues(alpha: opacity * 0.15)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
         );
       }
@@ -969,7 +969,7 @@ class _StarFieldPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(s.x * size.width, s.y * size.height),
         s.r,
-        Paint()..color = Colors.white.withOpacity(opacity),
+        Paint()..color = Colors.white.withValues(alpha: opacity),
       );
     }
   }

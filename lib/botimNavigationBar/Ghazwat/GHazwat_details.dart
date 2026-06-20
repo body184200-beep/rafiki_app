@@ -1563,7 +1563,7 @@ class _BattleDetailsState extends State<BattleDetails>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), Colors.transparent],
+            colors: [color.withValues(alpha: opacity), Colors.transparent],
           ),
         ),
       ),
@@ -1578,7 +1578,7 @@ class _BattleDetailsState extends State<BattleDetails>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter, end: Alignment.bottomCenter,
-              colors: [_bg, _bg.withOpacity(0)],
+              colors: [_bg, _bg.withValues(alpha: 0)],
             ),
           ),
         ),
@@ -1602,7 +1602,7 @@ class _BattleDetailsState extends State<BattleDetails>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.black38,
-              border: Border.all(color: _crimson.withOpacity(0.4)),
+              border: Border.all(color: _crimson.withValues(alpha: 0.4)),
             ),
             child: const Icon(Icons.arrow_back_ios_new_rounded, color: _crimsonLt, size: 18),
           ),
@@ -1641,7 +1641,7 @@ class _BattleDetailsState extends State<BattleDetails>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _crimson.withOpacity(0.3 + 0.15 * _shimmer.value),
+                      _crimson.withValues(alpha: 0.3 + 0.15 * _shimmer.value),
                       Colors.transparent,
                     ],
                   ),
@@ -1652,11 +1652,11 @@ class _BattleDetailsState extends State<BattleDetails>
                     shape: BoxShape.circle,
                     color: const Color(0xFF1A0808),
                     border: Border.all(
-                      color: _crimson.withOpacity(0.5 + 0.3 * _shimmer.value),
+                      color: _crimson.withValues(alpha: 0.5 + 0.3 * _shimmer.value),
                       width: 2,
                     ),
                     boxShadow: [
-                      BoxShadow(color: _crimson.withOpacity(0.4), blurRadius: 20),
+                      BoxShadow(color: _crimson.withValues(alpha: 0.4), blurRadius: 20),
                     ],
                   ),
                   child: const Icon(Icons.local_fire_department_rounded, color: _crimsonLt, size: 36),
@@ -1689,8 +1689,8 @@ class _BattleDetailsState extends State<BattleDetails>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: color.withOpacity(0.12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, color: color, size: 13),
@@ -1716,14 +1716,14 @@ class _BattleDetailsState extends State<BattleDetails>
             borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
               colors: [
-                color.withOpacity(0.18 + 0.06 * _shimmer.value),
-                color.withOpacity(0.05),
+                color.withValues(alpha: 0.18 + 0.06 * _shimmer.value),
+                color.withValues(alpha: 0.05),
               ],
               begin: Alignment.centerRight, end: Alignment.centerLeft,
             ),
-            border: Border.all(color: color.withOpacity(0.35)),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
             boxShadow: [
-              BoxShadow(color: color.withOpacity(0.15), blurRadius: 20, spreadRadius: -2),
+              BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 20, spreadRadius: -2),
             ],
           ),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -1755,7 +1755,7 @@ class _BattleDetailsState extends State<BattleDetails>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: const Color(0xFF0F1525),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: const [
           BoxShadow(color: Colors.black45, blurRadius: 12, offset: Offset(0, 4)),
         ],
@@ -1826,7 +1826,7 @@ class _BattleDetailsState extends State<BattleDetails>
               height: 10,
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
-                color: _green.withOpacity(0.7),
+                color: _green.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -1836,7 +1836,7 @@ class _BattleDetailsState extends State<BattleDetails>
               height: 10,
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
-                color: _crimson.withOpacity(0.7),
+                color: _crimson.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -1856,8 +1856,8 @@ class _BattleDetailsState extends State<BattleDetails>
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: color.withOpacity(0.08),
-        border: Border.all(color: color.withOpacity(0.2)),
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(children: [
         Text(value,
@@ -1884,8 +1884,8 @@ class _BattleDetailsState extends State<BattleDetails>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: _gold.withOpacity(0.1),
-                border: Border.all(color: _gold.withOpacity(0.25)),
+                color: _gold.withValues(alpha: 0.1),
+                border: Border.all(color: _gold.withValues(alpha: 0.25)),
               ),
               child: Text(p, style: const TextStyle(color: _goldLight, fontSize: 13)),
             )).toList(),
@@ -1904,10 +1904,10 @@ class _BattleDetailsState extends State<BattleDetails>
           colors: [Color(0xFF140A08), Color(0xFF0A0F1A)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        border: Border.all(color: _crimson.withOpacity(0.2), width: 1.2),
+        border: Border.all(color: _crimson.withValues(alpha: 0.2), width: 1.2),
         boxShadow: [
-          BoxShadow(color: _crimson.withOpacity(0.08), blurRadius: 30, spreadRadius: 2),
-          BoxShadow(color: Colors.black.withOpacity(0.7), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: _crimson.withValues(alpha: 0.08), blurRadius: 30, spreadRadius: 2),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.7), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1916,7 +1916,7 @@ class _BattleDetailsState extends State<BattleDetails>
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             gradient: LinearGradient(
-              colors: [_crimson.withOpacity(0.2), _crimson.withOpacity(0.04)],
+              colors: [_crimson.withValues(alpha: 0.2), _crimson.withValues(alpha: 0.04)],
             ),
           ),
           child: Row(children: [
@@ -1932,14 +1932,14 @@ class _BattleDetailsState extends State<BattleDetails>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: _crimson.withOpacity(0.15),
-                border: Border.all(color: _crimson.withOpacity(0.3)),
+                color: _crimson.withValues(alpha: 0.15),
+                border: Border.all(color: _crimson.withValues(alpha: 0.3)),
               ),
               child: const Text("رواية", style: TextStyle(color: _crimsonLt, fontSize: 11)),
             ),
           ]),
         ),
-        Container(height: 1, color: _crimson.withOpacity(0.1)),
+        Container(height: 1, color: _crimson.withValues(alpha: 0.1)),
         Padding(
           padding: const EdgeInsets.all(22),
           child: Text(widget.ahdas,
@@ -1990,7 +1990,7 @@ class _Card extends StatelessWidget {
         border: Border.all(color: const Color(0xFF1E2535), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -2008,7 +2008,7 @@ class _WarMeshPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFC0392B).withOpacity(0.025)
+      ..color = const Color(0xFFC0392B).withValues(alpha: 0.025)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
     const s = 70.0;
@@ -2019,7 +2019,7 @@ class _WarMeshPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
     final paint2 = Paint()
-      ..color = const Color(0xFFC0392B).withOpacity(0.012)
+      ..color = const Color(0xFFC0392B).withValues(alpha: 0.012)
       ..strokeWidth = 0.4;
     for (double i = -size.height; i < size.width + size.height; i += 100) {
       canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), paint2);

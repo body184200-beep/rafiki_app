@@ -45,7 +45,6 @@ class PrayerTaskHandler extends TaskHandler {
 
     prayers.forEach((prayer, time) async {
       final diff = time.difference(now);
-      final minutes = diff.inMinutes;
       final seconds = diff.inSeconds;
 
       // 🔔 قبل الصلاة بـ 10 دقائق (نطاق 9:31 - 10:00 دقيقة قبل الموعد)

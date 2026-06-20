@@ -1542,7 +1542,7 @@ class _TafsirPageState extends State<TafsirPage> with TickerProviderStateMixin {
               ),
             ),
           ),
-          if (expanded && cardState != null) ...[
+          if (expanded) ...[
             _ornamentDivider(),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
@@ -1771,24 +1771,26 @@ class _StoryTab extends StatelessWidget {
                 .toList(),
           ),
           const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 16, 18, 16),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(14),
-              border: Border(
-                right: BorderSide(color: _kGold.withAlpha(140), width: 3),
-                top:   BorderSide(color: _kBorder, width: 0.5),
-                bottom: BorderSide(color: _kBorder, width: 0.5),
-                left:  BorderSide(color: _kBorder, width: 0.5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(14, 16, 18, 16),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                border: Border(
+                  right: BorderSide(color: _kGold.withAlpha(140), width: 3),
+                  top:   BorderSide(color: _kBorder, width: 0.5),
+                  bottom: BorderSide(color: _kBorder, width: 0.5),
+                  left:  BorderSide(color: _kBorder, width: 0.5),
+                ),
               ),
-            ),
-            child: Text(
-              reciter.story,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: _kStoryText, fontSize: 13.5,
-                height: 2.15, fontWeight: FontWeight.w400,
+              child: Text(
+                reciter.story,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: _kStoryText, fontSize: 13.5,
+                  height: 2.15, fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ),

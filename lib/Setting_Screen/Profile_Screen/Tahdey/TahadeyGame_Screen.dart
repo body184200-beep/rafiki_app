@@ -364,7 +364,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                       colors: [
                         _bg,
                         Color.lerp(_surface,
-                            accent.withOpacity(0.08), _bgCtrl.value)!,
+                            accent.withValues(alpha: 0.08), _bgCtrl.value)!,
                         _bg,
                       ],
                     ),
@@ -385,11 +385,11 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
               // ── Glow blobs ───────────────────────────────────────────────
               Positioned(
                 top: -80, left: -60,
-                child: _Blob(color: accent.withOpacity(0.08), size: 300),
+                child: _Blob(color: accent.withValues(alpha: 0.08), size: 300),
               ),
               Positioned(
                 bottom: 20, right: -70,
-                child: _Blob(color: _gold.withOpacity(0.07), size: 260),
+                child: _Blob(color: _gold.withValues(alpha: 0.07), size: 260),
               ),
 
               // ── Confetti ─────────────────────────────────────────────────
@@ -475,11 +475,11 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.08),
-                  Colors.white.withOpacity(0.03),
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.03),
                 ],
               ),
-              border: Border.all(color: _gold.withOpacity(0.18)),
+              border: Border.all(color: _gold.withValues(alpha: 0.18)),
             ),
             child: Column(
               children: [
@@ -510,7 +510,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                       value: "$level",
                       label: "LVL",
                       colorA: accent,
-                      colorB: accent.withOpacity(0.6),
+                      colorB: accent.withValues(alpha: 0.6),
                     ),
 
                     const SizedBox(width: 12),
@@ -520,7 +520,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                       value: "$streak",
                       label: "🔥",
                       colorA: _amber,
-                      colorB: _amber.withOpacity(0.6),
+                      colorB: _amber.withValues(alpha: 0.6),
                     ),
 
                     const Spacer(),
@@ -534,9 +534,9 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: _gold.withOpacity(0.12),
+                            color: _gold.withValues(alpha: 0.12),
                             border: Border.all(
-                                color: _gold.withOpacity(0.3)),
+                                color: _gold.withValues(alpha: 0.3)),
                           ),
                           child: Text(b,
                               style: const TextStyle(
@@ -574,7 +574,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                       child: LinearProgressIndicator(
                         value: _xpProgress,
                         minHeight: 7,
-                        backgroundColor: Colors.white.withOpacity(0.07),
+                        backgroundColor: Colors.white.withValues(alpha: 0.07),
                         valueColor: AlwaysStoppedAnimation(accent),
                       ),
                     ),
@@ -623,22 +623,22 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                 gradient: selected
                     ? LinearGradient(colors: [
                   chipColor,
-                  chipColor.withOpacity(0.65)
+                  chipColor.withValues(alpha: 0.65)
                 ])
                     : null,
-                color: selected ? null : Colors.white.withOpacity(0.07),
+                color: selected ? null : Colors.white.withValues(alpha: 0.07),
                 border: Border.all(
                   color: selected
                       ? chipColor
                       : allDone
-                      ? chipColor.withOpacity(0.4)
-                      : Colors.white.withOpacity(0.10),
+                      ? chipColor.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.10),
                   width: selected ? 1.5 : 1,
                 ),
                 boxShadow: selected
                     ? [
                   BoxShadow(
-                    color: chipColor.withOpacity(0.35),
+                    color: chipColor.withValues(alpha: 0.35),
                     blurRadius: 12,
                     spreadRadius: 1,
                   )
@@ -691,8 +691,8 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: accent.withOpacity(0.08),
-              border: Border.all(color: accent.withOpacity(0.22)),
+              color: accent.withValues(alpha: 0.08),
+              border: Border.all(color: accent.withValues(alpha: 0.22)),
             ),
             child: Row(
               children: [
@@ -701,8 +701,8 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                   width: 50, height: 50,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: accent.withOpacity(0.15),
-                    border: Border.all(color: accent.withOpacity(0.35)),
+                    color: accent.withValues(alpha: 0.15),
+                    border: Border.all(color: accent.withValues(alpha: 0.35)),
                   ),
                   child: Center(
                     child: Text(emoji,
@@ -732,7 +732,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
                                 value: pct,
                                 minHeight: 5,
                                 backgroundColor:
-                                Colors.white.withOpacity(0.08),
+                                Colors.white.withValues(alpha: 0.08),
                                 valueColor:
                                 AlwaysStoppedAnimation(accent),
                               ),
@@ -862,24 +862,24 @@ class _TaskCardState extends State<_TaskCard>
               end: Alignment.bottomRight,
               colors: widget.done
                   ? [
-                acc.withOpacity(0.18),
-                acc.withOpacity(0.07),
+                acc.withValues(alpha: 0.18),
+                acc.withValues(alpha: 0.07),
               ]
                   : [
-                Colors.white.withOpacity(0.07),
-                Colors.white.withOpacity(0.02),
+                Colors.white.withValues(alpha: 0.07),
+                Colors.white.withValues(alpha: 0.02),
               ],
             ),
             border: Border.all(
               color: widget.done
-                  ? acc.withOpacity(0.50)
-                  : Colors.white.withOpacity(0.09),
+                  ? acc.withValues(alpha: 0.50)
+                  : Colors.white.withValues(alpha: 0.09),
               width: widget.done ? 1.5 : 1,
             ),
             boxShadow: widget.done
                 ? [
               BoxShadow(
-                color: acc.withOpacity(0.16),
+                color: acc.withValues(alpha: 0.16),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               )
@@ -901,12 +901,12 @@ class _TaskCardState extends State<_TaskCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.done
-                            ? acc.withOpacity(0.25)
-                            : Colors.white.withOpacity(0.07),
+                            ? acc.withValues(alpha: 0.25)
+                            : Colors.white.withValues(alpha: 0.07),
                         border: Border.all(
                           color: widget.done
-                              ? acc.withOpacity(0.50)
-                              : Colors.white.withOpacity(0.10),
+                              ? acc.withValues(alpha: 0.50)
+                              : Colors.white.withValues(alpha: 0.10),
                         ),
                       ),
                       child: Icon(
@@ -942,12 +942,12 @@ class _TaskCardState extends State<_TaskCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.done
-                            ? acc.withOpacity(0.2)
+                            ? acc.withValues(alpha: 0.2)
                             : Colors.transparent,
                         border: Border.all(
                           color: widget.done
                               ? acc
-                              : Colors.white.withOpacity(0.20),
+                              : Colors.white.withValues(alpha: 0.20),
                           width: 1.5,
                         ),
                       ),
@@ -994,7 +994,7 @@ class _StatBadge extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: colorA.withOpacity(0.35),
+            color: colorA.withValues(alpha: 0.35),
             blurRadius: 14,
             spreadRadius: 1,
           )
@@ -1011,7 +1011,7 @@ class _StatBadge extends StatelessWidget {
                   height: 1)),
           Text(label,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 9,
                   fontWeight: FontWeight.w600)),
         ],
@@ -1037,8 +1037,8 @@ class _GlassButton extends StatelessWidget {
             width: 44, height: 44,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: Colors.white.withOpacity(0.06),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              color: Colors.white.withValues(alpha: 0.06),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             ),
             child: Center(child: child),
           ),
@@ -1074,7 +1074,7 @@ class _ConfirmDialog extends StatelessWidget {
       backgroundColor: const Color(0xff0C1820),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withOpacity(0.08)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1104,7 +1104,7 @@ class _ConfirmDialog extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
                     side: BorderSide(
-                        color: Colors.white.withOpacity(0.15)),
+                        color: Colors.white.withValues(alpha: 0.15)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1160,7 +1160,7 @@ class _StarPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(s.x * size.width, s.y * size.height),
         s.r,
-        Paint()..color = Colors.white.withOpacity(opacity),
+        Paint()..color = Colors.white.withValues(alpha: opacity),
       );
     }
   }

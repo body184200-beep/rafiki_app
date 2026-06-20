@@ -203,7 +203,7 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
       // Prayer.none = انتهت العشاء → نحسب فجر الغد مباشرة
       if (nextPrayer == Prayer.none) {
         final tomorrow      = DateComponents.from(now.add(const Duration(days: 1)));
-        final tomorrowTimes = PrayerTimes(coords, tomorrow!, params);
+        final tomorrowTimes = PrayerTimes(coords, tomorrow, params);
         final fajrNext      = tomorrowTimes.fajr;
         final diff          = fajrNext.difference(now);
         if (diff.isNegative) return 'جاري الحساب...';
@@ -650,7 +650,7 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
       final params    = PrayerConfig.params;
       final now       = DateTime.now();
       final tomorrow  = DateComponents.from(now.add(const Duration(days: 1)));
-      final nextTimes = PrayerTimes(coords, tomorrow!, params);
+      final nextTimes = PrayerTimes(coords, tomorrow, params);
       final fajr      = nextTimes.fajr;
       fajrTime        = '${fajr.hour.toString().padLeft(2, '0')}:${fajr.minute.toString().padLeft(2, '0')}';
     } catch (_) {}

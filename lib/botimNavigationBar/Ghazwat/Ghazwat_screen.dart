@@ -157,7 +157,7 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
             height: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, _C.gold.withOpacity(0.5)],
+                colors: [Colors.transparent, _C.gold.withValues(alpha: 0.5)],
               ),
             ),
           ),
@@ -340,18 +340,18 @@ class _BattleCardState extends State<_BattleCard>
           color: _C.surface,
           border: Border.all(
             color: _pressed
-                ? _C.gold.withOpacity(0.5)
-                : accent.withOpacity(0.35),
+                ? _C.gold.withValues(alpha: 0.5)
+                : accent.withValues(alpha: 0.35),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: accent.withOpacity(_pressed ? 0.35 : 0.18),
+              color: accent.withValues(alpha: _pressed ? 0.35 : 0.18),
               blurRadius: _pressed ? 22 : 14,
               offset: const Offset(0, 4),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -370,7 +370,7 @@ class _BattleCardState extends State<_BattleCard>
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: accent.withOpacity(0.15),
+                    color: accent.withValues(alpha: 0.15),
                   ),
                 ),
               ),
@@ -381,7 +381,7 @@ class _BattleCardState extends State<_BattleCard>
                   height: 3,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [accent.withOpacity(0.0), accent, accent.withOpacity(0.0)],
+                      colors: [accent.withValues(alpha: 0.0), accent, accent.withValues(alpha: 0.0)],
                     ),
                   ),
                 ),
@@ -398,14 +398,14 @@ class _BattleCardState extends State<_BattleCard>
                       height: 60,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: accent.withOpacity(0.15),
+                        color: accent.withValues(alpha: 0.15),
                         border: Border.all(
-                          color: accent.withOpacity(0.4),
+                          color: accent.withValues(alpha: 0.4),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: accent.withOpacity(0.2),
+                            color: accent.withValues(alpha: 0.2),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -438,9 +438,9 @@ class _BattleCardState extends State<_BattleCard>
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: _C.gold.withOpacity(0.1),
+                        color: _C.gold.withValues(alpha: 0.1),
                         border: Border.all(
-                          color: _C.gold.withOpacity(0.3),
+                          color: _C.gold.withValues(alpha: 0.3),
                           width: 0.8,
                         ),
                       ),
@@ -533,7 +533,7 @@ class _BgPainter extends CustomPainter {
           center: const Alignment(0.8, -0.7),
           radius: 0.6,
           colors: [
-            const Color(0xFFD4A843).withOpacity(0.06),
+            const Color(0xFFD4A843).withValues(alpha: 0.06),
             Colors.transparent,
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -547,7 +547,7 @@ class _BgPainter extends CustomPainter {
           center: const Alignment(-0.7, 0.9),
           radius: 0.5,
           colors: [
-            const Color(0xFF8B2020).withOpacity(0.06),
+            const Color(0xFF8B2020).withValues(alpha: 0.06),
             Colors.transparent,
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -556,7 +556,7 @@ class _BgPainter extends CustomPainter {
     // Stars
     final p = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      p.color = Colors.white.withOpacity(s.o);
+      p.color = Colors.white.withValues(alpha: s.o);
       canvas.drawCircle(Offset(s.x * size.width, s.y * size.height), s.r, p);
     }
   }

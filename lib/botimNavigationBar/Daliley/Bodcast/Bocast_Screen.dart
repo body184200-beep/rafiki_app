@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -540,7 +539,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage>
                   border: Border.all(
                     color: sel
                         ? _P.amber
-                        : _P.text3.withOpacity(0.3),
+                        : _P.text3.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -663,21 +662,21 @@ class _EpisodeCardState extends State<_EpisodeCard>
             color: widget.isPlaying ? ep.palette[0] : _P.card,
             border: Border.all(
               color: widget.isPlaying
-                  ? accent.withOpacity(0.5)
-                  : _P.text3.withOpacity(0.15),
+                  ? accent.withValues(alpha: 0.5)
+                  : _P.text3.withValues(alpha: 0.15),
               width: 1,
             ),
             boxShadow: widget.isPlaying
                 ? [
               BoxShadow(
-                color: accent.withOpacity(0.25),
+                color: accent.withValues(alpha: 0.25),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               )
             ]
                 : [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               )
@@ -696,7 +695,7 @@ class _EpisodeCardState extends State<_EpisodeCard>
                     width: 4,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [accent.withOpacity(0.8), accent.withOpacity(0.2)],
+                        colors: [accent.withValues(alpha: 0.8), accent.withValues(alpha: 0.2)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -728,10 +727,10 @@ class _EpisodeCardState extends State<_EpisodeCard>
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 7, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: accent.withOpacity(0.12),
+                                        color: accent.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
-                                            color: accent.withOpacity(0.25),
+                                            color: accent.withValues(alpha: 0.25),
                                             width: 0.8),
                                       ),
                                       child: Text(
@@ -756,7 +755,7 @@ class _EpisodeCardState extends State<_EpisodeCard>
                                   style: TextStyle(
                                     color: widget.isPlaying
                                         ? _P.text1
-                                        : _P.text1.withOpacity(0.9),
+                                        : _P.text1.withValues(alpha: 0.9),
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     height: 1.3,
@@ -813,9 +812,9 @@ class _EpisodeCardState extends State<_EpisodeCard>
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: _P.bg.withOpacity(0.5),
+        color: _P.bg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withOpacity(0.2), width: 0.8),
+        border: Border.all(color: accent.withValues(alpha: 0.2), width: 0.8),
       ),
       child: Column(
         children: [
@@ -829,7 +828,7 @@ class _EpisodeCardState extends State<_EpisodeCard>
                 width: 3,
                 height: h.clamp(4, 20).toDouble(),
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.4 + (i % 4) * 0.15),
+                  color: accent.withValues(alpha: 0.4 + (i % 4) * 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               );
@@ -875,10 +874,10 @@ class _EpisodeCardState extends State<_EpisodeCard>
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _P.bg.withOpacity(0.45),
+        color: _P.bg.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
         border:
-        Border.all(color: accent.withOpacity(0.15), width: 0.8),
+        Border.all(color: accent.withValues(alpha: 0.15), width: 0.8),
       ),
       child: Text(
         widget.episode.body,
@@ -916,17 +915,17 @@ class _PlayButton extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: isPlaying
-                ? [accent, accent.withOpacity(0.6)]
+                ? [accent, accent.withValues(alpha: 0.6)]
                 : [_P.cardHigh, _P.surface],
           ),
           border: Border.all(
-            color: accent.withOpacity(isPlaying ? 0.6 : 0.3),
+            color: accent.withValues(alpha: isPlaying ? 0.6 : 0.3),
             width: 1.5,
           ),
           boxShadow: isPlaying
               ? [
             BoxShadow(
-                color: accent.withOpacity(0.4),
+                color: accent.withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 4))
           ]
@@ -961,8 +960,8 @@ class _ControlBtn extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color.withOpacity(0.1),
-          border: Border.all(color: color.withOpacity(0.25), width: 0.8),
+          color: color.withValues(alpha: 0.1),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
         ),
         child: Icon(icon, color: color, size: 16),
       ),
@@ -986,9 +985,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 0.8),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1043,7 +1042,7 @@ class _DonutPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final track = Paint()
-      ..color = _P.text3.withOpacity(0.2)
+      ..color = _P.text3.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
@@ -1087,7 +1086,7 @@ class _BgPainter extends CustomPainter {
 
     // Ambient glow top-right (amber)
     final glowPaint = Paint()
-      ..color = const Color(0xFFE8A030).withOpacity(0.04)
+      ..color = const Color(0xFFE8A030).withValues(alpha: 0.04)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 120);
     canvas.drawCircle(
       Offset(size.width * 0.8, size.height * 0.1 + sin(t * 2 * pi) * 20),
@@ -1097,7 +1096,7 @@ class _BgPainter extends CustomPainter {
 
     // Ambient glow bottom-left (teal)
     final glow2 = Paint()
-      ..color = const Color(0xFF28B8A4).withOpacity(0.035)
+      ..color = const Color(0xFF28B8A4).withValues(alpha: 0.035)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 120);
     canvas.drawCircle(
       Offset(size.width * 0.15, size.height * 0.8 + cos(t * 2 * pi) * 15),
@@ -1107,7 +1106,7 @@ class _BgPainter extends CustomPainter {
 
     // Subtle dot grid
     final dot = Paint()
-      ..color = Colors.white.withOpacity(0.025);
+      ..color = Colors.white.withValues(alpha: 0.025);
     const spacing = 40.0;
     for (double x = 0; x < size.width; x += spacing) {
       for (double y = 0; y < size.height; y += spacing) {

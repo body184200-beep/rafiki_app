@@ -703,12 +703,12 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
-            colors: [_T.jadeDim.withOpacity(0.25), _T.card],
+            colors: [_T.jadeDim.withValues(alpha: 0.25), _T.card],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: _T.jade.withOpacity(0.2), width: 1.2),
-          boxShadow: [BoxShadow(color: _T.jade.withOpacity(0.1), blurRadius: 32, offset: const Offset(0, 12))],
+          border: Border.all(color: _T.jade.withValues(alpha: 0.2), width: 1.2),
+          boxShadow: [BoxShadow(color: _T.jade.withValues(alpha: 0.1), blurRadius: 32, offset: const Offset(0, 12))],
         ),
         child: Row(
           children: [
@@ -738,7 +738,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                     child: LinearProgressIndicator(
                       value: _progress,
                       minHeight: 6,
-                      backgroundColor: _T.t3.withOpacity(0.2),
+                      backgroundColor: _T.t3.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation(_T.jade),
                     ),
                   ),
@@ -784,7 +784,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         decoration: BoxDecoration(
           color: _T.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _T.gold.withOpacity(0.25)),
+          border: Border.all(color: _T.gold.withValues(alpha: 0.25)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,9 +817,9 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
     child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _T.ruby.withOpacity(0.07),
+        color: _T.ruby.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _T.ruby.withOpacity(0.3)),
+        border: Border.all(color: _T.ruby.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,9 +884,9 @@ class _QadaCarryCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _T.ruby.withOpacity(0.15),
+                color: _T.ruby.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _T.ruby.withOpacity(0.4)),
+                border: Border.all(color: _T.ruby.withValues(alpha: 0.4)),
               ),
               child: const Text('قضيتها', style: TextStyle(color: _T.rubyL, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
@@ -911,13 +911,13 @@ class _DayChip extends StatelessWidget {
     String label;
     IconData icon;
     if (isEmpty) {
-      bg = _T.t3.withOpacity(0.1); border = _T.t3.withOpacity(0.25); text = _T.t3;
+      bg = _T.t3.withValues(alpha: 0.1); border = _T.t3.withValues(alpha: 0.25); text = _T.t3;
       label = 'لا يوجد تاريخ'; icon = Icons.calendar_today_rounded;
     } else if (completed) {
-      bg = _T.jade.withOpacity(0.12); border = _T.jade.withOpacity(0.35); text = _T.jade;
+      bg = _T.jade.withValues(alpha: 0.12); border = _T.jade.withValues(alpha: 0.35); text = _T.jade;
       label = 'مكتمل'; icon = Icons.check_circle_rounded;
     } else {
-      bg = _T.t3.withOpacity(0.1); border = _T.t3.withOpacity(0.25); text = _T.t3;
+      bg = _T.t3.withValues(alpha: 0.1); border = _T.t3.withValues(alpha: 0.25); text = _T.t3;
       label = 'غير مكتمل'; icon = Icons.remove_circle_outline_rounded;
     }
     return Container(
@@ -948,9 +948,9 @@ class _BannerWidget extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: _T.flame.withOpacity(0.08),
+        color: _T.flame.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _T.flame.withOpacity(0.25)),
+        border: Border.all(color: _T.flame.withValues(alpha: 0.25)),
       ),
       child: Text(text, textAlign: TextAlign.center,
           style: const TextStyle(color: _T.flameL, fontSize: 13)),
@@ -1047,12 +1047,12 @@ class _PrayerCardState extends State<_PrayerCard>
               borderRadius: BorderRadius.circular(22),
               color: _stateBg,
               border: Border.all(
-                color: sc.withOpacity(state == PrayerState.locked ? 0.12 : 0.4),
+                color: sc.withValues(alpha: state == PrayerState.locked ? 0.12 : 0.4),
                 width: state == PrayerState.locked ? 1 : 1.4,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: sc.withOpacity(state == PrayerState.locked ? 0.05 : 0.15),
+                  color: sc.withValues(alpha: state == PrayerState.locked ? 0.05 : 0.15),
                   blurRadius: state == PrayerState.locked ? 8 : 24,
                   offset: const Offset(0, 6),
                 ),
@@ -1069,7 +1069,7 @@ class _PrayerCardState extends State<_PrayerCard>
                       width: 4,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [sc, sc.withOpacity(0.2)],
+                          colors: [sc, sc.withValues(alpha: 0.2)],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -1144,12 +1144,12 @@ class _PrayerCardState extends State<_PrayerCard>
     width: 46, height: 46,
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(13),
-      color: sc.withOpacity(state == PrayerState.locked ? 0.05 : 0.12),
-      border: Border.all(color: sc.withOpacity(state == PrayerState.locked ? 0.15 : 0.3)),
+      color: sc.withValues(alpha: state == PrayerState.locked ? 0.05 : 0.12),
+      border: Border.all(color: sc.withValues(alpha: state == PrayerState.locked ? 0.15 : 0.3)),
     ),
     child: Icon(
       state == PrayerState.locked ? Icons.lock_outline_rounded : p.icon,
-      color: sc.withOpacity(state == PrayerState.locked ? 0.4 : 1),
+      color: sc.withValues(alpha: state == PrayerState.locked ? 0.4 : 1),
       size: 22,
     ),
   );
@@ -1177,9 +1177,9 @@ class _PrayerCardState extends State<_PrayerCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1258,9 +1258,9 @@ class _PrayerCardState extends State<_PrayerCard>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            color: _T.ruby.withOpacity(0.12),
+            color: _T.ruby.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _T.ruby.withOpacity(0.4)),
+            border: Border.all(color: _T.ruby.withValues(alpha: 0.4)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1297,9 +1297,9 @@ class _PrayerCardState extends State<_PrayerCard>
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: sel ? sc.withOpacity(0.18) : _T.bg.withOpacity(0.5),
-                  border: Border.all(color: sel ? sc : _T.t3.withOpacity(0.3)),
-                  boxShadow: sel ? [BoxShadow(color: sc.withOpacity(0.2), blurRadius: 8)] : [],
+                  color: sel ? sc.withValues(alpha: 0.18) : _T.bg.withValues(alpha: 0.5),
+                  border: Border.all(color: sel ? sc : _T.t3.withValues(alpha: 0.3)),
+                  boxShadow: sel ? [BoxShadow(color: sc.withValues(alpha: 0.2), blurRadius: 8)] : [],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1345,10 +1345,10 @@ class _ActionBtn extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.4)),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 3))],
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 3))],
       ),
       child: Column(
         children: [
@@ -1379,8 +1379,8 @@ class _RakatDots extends StatelessWidget {
       margin: const EdgeInsets.only(left: 3),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: done ? accent : accent.withOpacity(0.3 + i * 0.1),
-        boxShadow: done ? [BoxShadow(color: accent.withOpacity(0.4), blurRadius: 4)] : [],
+        color: done ? accent : accent.withValues(alpha: 0.3 + i * 0.1),
+        boxShadow: done ? [BoxShadow(color: accent.withValues(alpha: 0.4), blurRadius: 4)] : [],
       ),
     )),
   );
@@ -1403,8 +1403,8 @@ class _MiniStatCard extends StatelessWidget {
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       color: _T.card,
-      border: Border.all(color: color.withOpacity(0.2)),
-      boxShadow: [BoxShadow(color: color.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4))],
+      border: Border.all(color: color.withValues(alpha: 0.2)),
+      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 4))],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1433,7 +1433,7 @@ class _ArcProgressPainter extends CustomPainter {
     final radius = min(size.width, size.height) / 2 - 6;
 
     canvas.drawCircle(center, radius,
-        Paint()..color = color.withOpacity(0.1)..style = PaintingStyle.stroke..strokeWidth = 6);
+        Paint()..color = color.withValues(alpha: 0.1)..style = PaintingStyle.stroke..strokeWidth = 6);
 
     if (progress > 0) {
       canvas.drawArc(
@@ -1445,7 +1445,7 @@ class _ArcProgressPainter extends CustomPainter {
         Rect.fromCircle(center: center, radius: radius),
         -pi / 2, 2 * pi * progress, false,
         Paint()
-          ..color = color.withOpacity(0.25)..style = PaintingStyle.stroke
+          ..color = color.withValues(alpha: 0.25)..style = PaintingStyle.stroke
           ..strokeWidth = 12..strokeCap = StrokeCap.round
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
       );
@@ -1484,17 +1484,17 @@ class _BgPainter extends CustomPainter {
       Offset(size.width * 0.85, size.height * 0.08 + sin(t * 2 * pi) * 25),
       200,
       Paint()
-        ..color = const Color(0xFF2EC4A0).withOpacity(0.05)
+        ..color = const Color(0xFF2EC4A0).withValues(alpha: 0.05)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100),
     );
     canvas.drawCircle(
       Offset(size.width * 0.1, size.height * 0.85 + cos(t * 2 * pi) * 20),
       180,
       Paint()
-        ..color = const Color(0xFFD4A030).withOpacity(0.04)
+        ..color = const Color(0xFFD4A030).withValues(alpha: 0.04)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100),
     );
-    final dot = Paint()..color = Colors.white.withOpacity(0.02);
+    final dot = Paint()..color = Colors.white.withValues(alpha: 0.02);
     const s = 36.0;
     for (double x = 0; x < size.width; x += s) {
       for (double y = 0; y < size.height; y += s) {

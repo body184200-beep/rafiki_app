@@ -782,7 +782,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), Colors.transparent],
+            colors: [color.withValues(alpha: opacity), Colors.transparent],
           ),
         ),
       ),
@@ -797,7 +797,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter, end: Alignment.bottomCenter,
-              colors: [_bg, _bg.withOpacity(0)],
+              colors: [_bg, _bg.withValues(alpha: 0)],
             ),
           ),
         ),
@@ -821,7 +821,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.black38,
-              border: Border.all(color: _gold.withOpacity(0.4)),
+              border: Border.all(color: _gold.withValues(alpha: 0.4)),
             ),
             child: const Icon(Icons.arrow_back_ios_new_rounded, color: _goldLight, size: 18),
           ),
@@ -861,7 +861,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _gold.withOpacity(0.25 + 0.1 * _shimmer.value),
+                      _gold.withValues(alpha: 0.25 + 0.1 * _shimmer.value),
                       Colors.transparent,
                     ],
                   ),
@@ -875,11 +875,11 @@ class _SahabiDetailsState extends State<SahabiDetails>
                       begin: Alignment.topLeft, end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: _gold.withOpacity(0.5 + 0.3 * _shimmer.value),
+                      color: _gold.withValues(alpha: 0.5 + 0.3 * _shimmer.value),
                       width: 2.5,
                     ),
                     boxShadow: [
-                      BoxShadow(color: _gold.withOpacity(0.3), blurRadius: 24),
+                      BoxShadow(color: _gold.withValues(alpha: 0.3), blurRadius: 24),
                     ],
                   ),
                   child: Center(
@@ -888,7 +888,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
                       style: TextStyle(
                         fontSize: 44,
                         fontWeight: FontWeight.bold,
-                        color: _goldLight.withOpacity(0.9),
+                        color: _goldLight.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -930,8 +930,8 @@ class _SahabiDetailsState extends State<SahabiDetails>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: color.withOpacity(0.12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, color: color, size: 14),
@@ -953,15 +953,15 @@ class _SahabiDetailsState extends State<SahabiDetails>
           borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
             colors: [
-              _teal.withOpacity(0.15 + 0.05 * _shimmer.value),
-              _teal.withOpacity(0.04),
+              _teal.withValues(alpha: 0.15 + 0.05 * _shimmer.value),
+              _teal.withValues(alpha: 0.04),
             ],
             begin: Alignment.centerRight, end: Alignment.centerLeft,
           ),
-          border: Border.all(color: _teal.withOpacity(0.3)),
+          border: Border.all(color: _teal.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
-                color: _teal.withOpacity(0.1), blurRadius: 20, spreadRadius: -2),
+                color: _teal.withValues(alpha: 0.1), blurRadius: 20, spreadRadius: -2),
           ],
         ),
         child: Row(children: [
@@ -977,8 +977,8 @@ class _SahabiDetailsState extends State<SahabiDetails>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _teal.withOpacity(0.15),
-              border: Border.all(color: _teal.withOpacity(0.4)),
+              color: _teal.withValues(alpha: 0.15),
+              border: Border.all(color: _teal.withValues(alpha: 0.4)),
             ),
             child: const Icon(Icons.person_rounded, color: _teal, size: 22),
           ),
@@ -1039,8 +1039,8 @@ class _SahabiDetailsState extends State<SahabiDetails>
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: _gold.withOpacity(0.07),
-            border: Border.all(color: _gold.withOpacity(0.2)),
+            color: _gold.withValues(alpha: 0.07),
+            border: Border.all(color: _gold.withValues(alpha: 0.2)),
           ),
           child: Text(widget.additionalInfo,
               textAlign: TextAlign.right,
@@ -1060,11 +1060,11 @@ class _SahabiDetailsState extends State<SahabiDetails>
           colors: [Color(0xFF0A1020), Color(0xFF0D1A2E)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        border: Border.all(color: _gold.withOpacity(0.2), width: 1.2),
+        border: Border.all(color: _gold.withValues(alpha: 0.2), width: 1.2),
         boxShadow: [
-          BoxShadow(color: _gold.withOpacity(0.07), blurRadius: 30, spreadRadius: 2),
+          BoxShadow(color: _gold.withValues(alpha: 0.07), blurRadius: 30, spreadRadius: 2),
           BoxShadow(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withValues(alpha: 0.6),
               blurRadius: 20,
               offset: const Offset(0, 10)),
         ],
@@ -1076,7 +1076,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             gradient: LinearGradient(
-              colors: [_gold.withOpacity(0.18), _gold.withOpacity(0.04)],
+              colors: [_gold.withValues(alpha: 0.18), _gold.withValues(alpha: 0.04)],
             ),
           ),
           child: Row(children: [
@@ -1091,15 +1091,15 @@ class _SahabiDetailsState extends State<SahabiDetails>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: _gold.withOpacity(0.15),
-                border: Border.all(color: _gold.withOpacity(0.3)),
+                color: _gold.withValues(alpha: 0.15),
+                border: Border.all(color: _gold.withValues(alpha: 0.3)),
               ),
               child: const Text("رواية",
                   style: TextStyle(color: _goldLight, fontSize: 11)),
             ),
           ]),
         ),
-        Container(height: 1, color: _gold.withOpacity(0.1)),
+        Container(height: 1, color: _gold.withValues(alpha: 0.1)),
         // ── Content ─────────────────────────────────────
         Padding(
           padding: const EdgeInsets.all(22),
@@ -1122,7 +1122,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.4)],
+            colors: [color, color.withValues(alpha: 0.4)],
             begin: Alignment.topCenter, end: Alignment.bottomCenter,
           ),
         ),
@@ -1139,8 +1139,8 @@ class _SahabiDetailsState extends State<SahabiDetails>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(label,
           style: TextStyle(
@@ -1167,7 +1167,7 @@ class _GlassCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFF1C2840), width: 1),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8)),
         ],
@@ -1184,7 +1184,7 @@ class _MeshPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final p1 = Paint()
-      ..color = const Color(0xFF1ABC9C).withOpacity(0.025)
+      ..color = const Color(0xFF1ABC9C).withValues(alpha: 0.025)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
     const s = 65.0;
@@ -1195,7 +1195,7 @@ class _MeshPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), p1);
     }
     final p2 = Paint()
-      ..color = const Color(0xFFD4A853).withOpacity(0.015)
+      ..color = const Color(0xFFD4A853).withValues(alpha: 0.015)
       ..strokeWidth = 0.4;
     for (double i = -size.height; i < size.width + size.height; i += 90) {
       canvas.drawLine(Offset(i, 0), Offset(i + size.height, size.height), p2);

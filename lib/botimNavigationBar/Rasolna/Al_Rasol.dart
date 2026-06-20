@@ -292,7 +292,7 @@ class _RasolnaState extends State<Rasolna> with TickerProviderStateMixin {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: _C.gold.withOpacity(0.15), width: 1),
+            bottom: BorderSide(color: _C.gold.withValues(alpha: 0.15), width: 1),
           ),
         ),
         child: Column(
@@ -308,7 +308,7 @@ class _RasolnaState extends State<Rasolna> with TickerProviderStateMixin {
                     style: TextStyle(
                       color: _C.gold,
                       fontSize: 22,
-                      shadows: [Shadow(color: _C.gold.withOpacity(0.5), blurRadius: 16)],
+                      shadows: [Shadow(color: _C.gold.withValues(alpha: 0.5), blurRadius: 16)],
                     ),
                   ),
                 ),
@@ -449,10 +449,10 @@ class _SectionCardState extends State<_SectionCard>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           color: _C.surface,
-          border: Border.all(color: s.accent.withOpacity(0.25), width: 1),
+          border: Border.all(color: s.accent.withValues(alpha: 0.25), width: 1),
           boxShadow: [
             BoxShadow(
-              color: s.accent.withOpacity(0.10),
+              color: s.accent.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -470,7 +470,7 @@ class _SectionCardState extends State<_SectionCard>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [s.accent.withOpacity(0.0), s.accent, s.accent.withOpacity(0.0)],
+                    colors: [s.accent.withValues(alpha: 0.0), s.accent, s.accent.withValues(alpha: 0.0)],
                   ),
                 ),
               ),
@@ -481,8 +481,8 @@ class _SectionCardState extends State<_SectionCard>
                 height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: s.accent.withOpacity(0.12),
-                  border: Border.all(color: s.accent.withOpacity(0.35), width: 1),
+                  color: s.accent.withValues(alpha: 0.12),
+                  border: Border.all(color: s.accent.withValues(alpha: 0.35), width: 1),
                 ),
                 child: Icon(s.icon, color: s.accent, size: 22),
               ),
@@ -507,7 +507,7 @@ class _SectionCardState extends State<_SectionCard>
                       Text(
                         s.subtitle,
                         style: TextStyle(
-                          color: s.accent.withOpacity(0.75),
+                          color: s.accent.withValues(alpha: 0.75),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -524,11 +524,11 @@ class _SectionCardState extends State<_SectionCard>
                   height: 28,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: s.accent.withOpacity(0.08),
+                    color: s.accent.withValues(alpha: 0.08),
                   ),
                   child: Icon(
                     Icons.arrow_back_ios_new_rounded,
-                    color: s.accent.withOpacity(0.6),
+                    color: s.accent.withValues(alpha: 0.6),
                     size: 12,
                   ),
                 ),
@@ -562,10 +562,10 @@ class _DetailSheet extends StatelessWidget {
           decoration: BoxDecoration(
             color: _C.surfaceAlt,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: s.accent.withOpacity(0.25), width: 1),
+            border: Border.all(color: s.accent.withValues(alpha: 0.25), width: 1),
             boxShadow: [
               BoxShadow(
-                color: s.accent.withOpacity(0.12),
+                color: s.accent.withValues(alpha: 0.12),
                 blurRadius: 40,
                 spreadRadius: 2,
                 offset: const Offset(0, -4),
@@ -597,11 +597,11 @@ class _DetailSheet extends StatelessWidget {
                       height: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: s.accent.withOpacity(0.14),
-                        border: Border.all(color: s.accent.withOpacity(0.4), width: 1.2),
+                        color: s.accent.withValues(alpha: 0.14),
+                        border: Border.all(color: s.accent.withValues(alpha: 0.4), width: 1.2),
                         boxShadow: [
                           BoxShadow(
-                            color: s.accent.withOpacity(0.2),
+                            color: s.accent.withValues(alpha: 0.2),
                             blurRadius: 16,
                           ),
                         ],
@@ -637,7 +637,7 @@ class _DetailSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              Divider(color: s.accent.withOpacity(0.15), thickness: 1, indent: 24, endIndent: 24),
+              Divider(color: s.accent.withValues(alpha: 0.15), thickness: 1, indent: 24, endIndent: 24),
               const SizedBox(height: 8),
               // Body
               Expanded(
@@ -666,12 +666,12 @@ class _DetailSheet extends StatelessWidget {
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      backgroundColor: s.accent.withOpacity(0.12),
+                      backgroundColor: s.accent.withValues(alpha: 0.12),
                       foregroundColor: s.accent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(color: s.accent.withOpacity(0.3), width: 1),
+                        side: BorderSide(color: s.accent.withValues(alpha: 0.3), width: 1),
                       ),
                     ),
                     child: const Text(
@@ -703,8 +703,8 @@ class _GoldDivider extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: reversed
-                ? [_C.gold.withOpacity(0.4), Colors.transparent]
-                : [Colors.transparent, _C.gold.withOpacity(0.4)],
+                ? [_C.gold.withValues(alpha: 0.4), Colors.transparent]
+                : [Colors.transparent, _C.gold.withValues(alpha: 0.4)],
           ),
         ),
       ),
@@ -750,13 +750,13 @@ class _BgPainter extends CustomPainter {
         ..shader = RadialGradient(
           center: const Alignment(0.5, -0.8),
           radius: 0.55,
-          colors: [const Color(0xFFD4A843).withOpacity(0.055), Colors.transparent],
+          colors: [const Color(0xFFD4A843).withValues(alpha: 0.055), Colors.transparent],
         ).createShader(Rect.fromLTWH(0, 0, sz.width, sz.height)),
     );
 
     final p = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      p.color = Colors.white.withOpacity(s.o);
+      p.color = Colors.white.withValues(alpha: s.o);
       canvas.drawCircle(Offset(s.x * sz.width, s.y * sz.height), s.rad, p);
     }
   }

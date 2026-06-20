@@ -222,9 +222,9 @@ class _SonaState extends State<Sona> with TickerProviderStateMixin {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _Palette.surfaceHigh.withOpacity(0.6),
+            color: _Palette.surfaceHigh.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _Palette.gold.withOpacity(0.2)),
+            border: Border.all(color: _Palette.gold.withValues(alpha: 0.2)),
           ),
           child: IconButton(
             onPressed: () {
@@ -282,15 +282,15 @@ class _SonaState extends State<Sona> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      _Palette.goldDim.withOpacity(0.18),
-                      _Palette.surfaceHigh.withOpacity(0.35),
+                      _Palette.goldDim.withValues(alpha: 0.18),
+                      _Palette.surfaceHigh.withValues(alpha: 0.35),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: _Palette.gold.withOpacity(0.35),
+                    color: _Palette.gold.withValues(alpha: 0.35),
                     width: 1.2,
                   ),
                 ),
@@ -348,7 +348,7 @@ class _SonaState extends State<Sona> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                                 color: i == 0
                                     ? _Palette.gold
-                                    : _Palette.gold.withOpacity(0.25),
+                                    : _Palette.gold.withValues(alpha: 0.25),
                               ),
                             ),
                       ),
@@ -444,12 +444,12 @@ class _SonaCardState extends State<_SonaCard>
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _Palette.gold.withOpacity(0.18),
+          color: _Palette.gold.withValues(alpha: 0.18),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -476,9 +476,9 @@ class _SonaCardState extends State<_SonaCard>
                     height: 52,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      color: _Palette.gold.withOpacity(0.12),
+                      color: _Palette.gold.withValues(alpha: 0.12),
                       border: Border.all(
-                        color: _Palette.gold.withOpacity(0.3),
+                        color: _Palette.gold.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -508,7 +508,7 @@ class _SonaCardState extends State<_SonaCard>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: _Palette.textSecondary.withOpacity(0.8),
+                            color: _Palette.textSecondary.withValues(alpha: 0.8),
                             fontSize: 12.5,
                           ),
                         ),
@@ -521,9 +521,9 @@ class _SonaCardState extends State<_SonaCard>
                     height: 32,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _Palette.gold.withOpacity(0.12),
+                      color: _Palette.gold.withValues(alpha: 0.12),
                       border: Border.all(
-                          color: _Palette.gold.withOpacity(0.25), width: 1),
+                          color: _Palette.gold.withValues(alpha: 0.25), width: 1),
                     ),
                     child: const Icon(
                       Icons.chevron_left_rounded,
@@ -572,10 +572,10 @@ class _SonaBottomSheet extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(28, 16, 28, 36),
             decoration: BoxDecoration(
-              color: _Palette.bg2.withOpacity(0.95),
+              color: _Palette.bg2.withValues(alpha: 0.95),
               border: Border(
                 top: BorderSide(
-                  color: _Palette.gold.withOpacity(0.3),
+                  color: _Palette.gold.withValues(alpha: 0.3),
                   width: 1.2,
                 ),
               ),
@@ -590,7 +590,7 @@ class _SonaBottomSheet extends StatelessWidget {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
-                      color: _Palette.gold.withOpacity(0.4),
+                      color: _Palette.gold.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -604,14 +604,14 @@ class _SonaBottomSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
                       colors: [
-                        _Palette.goldDim.withOpacity(0.3),
-                        _Palette.gold.withOpacity(0.1),
+                        _Palette.goldDim.withValues(alpha: 0.3),
+                        _Palette.gold.withValues(alpha: 0.1),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: _Palette.gold.withOpacity(0.4),
+                      color: _Palette.gold.withValues(alpha: 0.4),
                       width: 1.2,
                     ),
                   ),
@@ -633,7 +633,7 @@ class _SonaBottomSheet extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Divider(
-                          color: _Palette.gold.withOpacity(0.2), height: 1),
+                          color: _Palette.gold.withValues(alpha: 0.2), height: 1),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -641,7 +641,7 @@ class _SonaBottomSheet extends StatelessWidget {
                     ),
                     Expanded(
                       child: Divider(
-                          color: _Palette.gold.withOpacity(0.2), height: 1),
+                          color: _Palette.gold.withValues(alpha: 0.2), height: 1),
                     ),
                   ],
                 ),
@@ -650,10 +650,10 @@ class _SonaBottomSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _Palette.surfaceHigh.withOpacity(0.5),
+                    color: _Palette.surfaceHigh.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: _Palette.gold.withOpacity(0.12), width: 1),
+                        color: _Palette.gold.withValues(alpha: 0.12), width: 1),
                   ),
                   child: Text(
                     item.content,
@@ -769,7 +769,7 @@ class _GeometricPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = _Palette.gold.withOpacity(0.04)
+      ..color = _Palette.gold.withValues(alpha: 0.04)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -810,7 +810,7 @@ class _IslamicPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = _Palette.gold.withOpacity(0.03)
+      ..color = _Palette.gold.withValues(alpha: 0.03)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
 

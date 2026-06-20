@@ -118,7 +118,7 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
                     style: TextStyle(
                       color: _C.gold,
                       fontSize: 16,
-                      shadows: [Shadow(color: _C.gold.withOpacity(0.6), blurRadius: 14)],
+                      shadows: [Shadow(color: _C.gold.withValues(alpha: 0.6), blurRadius: 14)],
                     ),
                   ),
                 ),
@@ -148,7 +148,7 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    _C.gold.withOpacity(0.35),
+                    _C.gold.withValues(alpha: 0.35),
                     Colors.transparent,
                   ],
                 ),
@@ -274,15 +274,15 @@ class _SahabiCardState extends State<_SahabiCard>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             color: _C.surface,
-            border: Border.all(color: s.accent.withOpacity(0.28), width: 1.2),
+            border: Border.all(color: s.accent.withValues(alpha: 0.28), width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: s.accent.withOpacity(0.14),
+                color: s.accent.withValues(alpha: 0.14),
                 blurRadius: 18,
                 offset: const Offset(0, 5),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -301,7 +301,7 @@ class _SahabiCardState extends State<_SahabiCard>
                     height: 90,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: s.accent.withOpacity(0.12),
+                      color: s.accent.withValues(alpha: 0.12),
                     ),
                   ),
                 ),
@@ -314,7 +314,7 @@ class _SahabiCardState extends State<_SahabiCard>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          s.accent.withOpacity(0.9),
+                          s.accent.withValues(alpha: 0.9),
                           Colors.transparent,
                         ],
                       ),
@@ -333,11 +333,11 @@ class _SahabiCardState extends State<_SahabiCard>
                         height: 76,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: s.accent.withOpacity(0.12),
-                          border: Border.all(color: s.accent.withOpacity(0.45), width: 1.5),
+                          color: s.accent.withValues(alpha: 0.12),
+                          border: Border.all(color: s.accent.withValues(alpha: 0.45), width: 1.5),
                           boxShadow: [
                             BoxShadow(
-                              color: s.accent.withOpacity(0.25),
+                              color: s.accent.withValues(alpha: 0.25),
                               blurRadius: 16,
                               spreadRadius: 2,
                             ),
@@ -374,15 +374,15 @@ class _SahabiCardState extends State<_SahabiCard>
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
-                          color: s.accent.withOpacity(0.1),
-                          border: Border.all(color: s.accent.withOpacity(0.3), width: 0.8),
+                          color: s.accent.withValues(alpha: 0.1),
+                          border: Border.all(color: s.accent.withValues(alpha: 0.3), width: 0.8),
                         ),
                         child: Text(
                           s.title,
                           textDirection: TextDirection.rtl,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: s.accent.withOpacity(0.9),
+                            color: s.accent.withValues(alpha: 0.9),
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.2,
@@ -429,8 +429,8 @@ class _GoldLine extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: leftToRight
-                ? [_C.gold.withOpacity(0.4), Colors.transparent]
-                : [Colors.transparent, _C.gold.withOpacity(0.4)],
+                ? [_C.gold.withValues(alpha: 0.4), Colors.transparent]
+                : [Colors.transparent, _C.gold.withValues(alpha: 0.4)],
           ),
         ),
       ),
@@ -482,14 +482,14 @@ class _BgPainter extends CustomPainter {
         ..shader = RadialGradient(
           center: const Alignment(0.75, -0.75),
           radius: 0.55,
-          colors: [const Color(0xFFD4A843).withOpacity(0.055), Colors.transparent],
+          colors: [const Color(0xFFD4A843).withValues(alpha: 0.055), Colors.transparent],
         ).createShader(Rect.fromLTWH(0, 0, sz.width, sz.height)),
     );
 
     // Stars
     final p = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      p.color = Colors.white.withOpacity(s.o);
+      p.color = Colors.white.withValues(alpha: s.o);
       canvas.drawCircle(Offset(s.x * sz.width, s.y * sz.height), s.rad, p);
     }
   }

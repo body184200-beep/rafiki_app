@@ -701,7 +701,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                     child: Text(
                       '${filtered.length} من ${prophets.length} نبي',
                       style: TextStyle(
-                        color: kGoldDim.withOpacity(0.7),
+                        color: kGoldDim.withValues(alpha: 0.7),
                         fontSize: 12,
                         fontFamily: 'sans-serif',
                       ),
@@ -744,7 +744,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: kGold.withOpacity(0.15), width: 1),
+          bottom: BorderSide(color: kGold.withValues(alpha: 0.15), width: 1),
         ),
       ),
       child: Column(
@@ -782,7 +782,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           Text(
             'Stories of the Prophets',
             style: TextStyle(
-              color: kGold.withOpacity(0.45),
+              color: kGold.withValues(alpha: 0.45),
               fontSize: 12,
               letterSpacing: 2,
             ),
@@ -797,9 +797,9 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       child: Container(
         decoration: BoxDecoration(
-          color: kGold.withOpacity(0.06),
+          color: kGold.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: kGold.withOpacity(0.2)),
+          border: Border.all(color: kGold.withValues(alpha: 0.2)),
         ),
         child: TextField(
           controller: searchController,
@@ -809,7 +809,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           cursorColor: kGold,
           decoration: InputDecoration(
             hintText: 'ابحث عن نبي...',
-            hintStyle: TextStyle(color: kGold.withOpacity(0.35), fontSize: 14),
+            hintStyle: TextStyle(color: kGold.withValues(alpha: 0.35), fontSize: 14),
             prefixIcon: Icon(Icons.search_rounded, color: kGoldDim, size: 20),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -828,7 +828,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           const SizedBox(height: 12),
           Text(
             'لم يُعثر على نبي بهذا الاسم',
-            style: TextStyle(color: kGold.withOpacity(0.4), fontSize: 16),
+            style: TextStyle(color: kGold.withValues(alpha: 0.4), fontSize: 16),
           ),
         ],
       ),
@@ -904,11 +904,11 @@ class _ProphetCardState extends State<_ProphetCard>
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color: kGold.withOpacity(0.05),
-                border: Border.all(color: kGold.withOpacity(0.18), width: 1),
+                color: kGold.withValues(alpha: 0.05),
+                border: Border.all(color: kGold.withValues(alpha: 0.18), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -928,7 +928,7 @@ class _ProphetCardState extends State<_ProphetCard>
                         decoration: BoxDecoration(
                           gradient: RadialGradient(
                             colors: [
-                              kGold.withOpacity(0.06),
+                              kGold.withValues(alpha: 0.06),
                               Colors.transparent,
                             ],
                           ),
@@ -946,9 +946,9 @@ class _ProphetCardState extends State<_ProphetCard>
                             height: 56,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: kGold.withOpacity(0.1),
+                              color: kGold.withValues(alpha: 0.1),
                               border: Border.all(
-                                  color: kGold.withOpacity(0.25), width: 1),
+                                  color: kGold.withValues(alpha: 0.25), width: 1),
                             ),
                             child: Center(
                               child: Text(
@@ -979,7 +979,7 @@ class _ProphetCardState extends State<_ProphetCard>
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: kGold.withOpacity(0.4),
+                              color: kGold.withValues(alpha: 0.4),
                               fontSize: 11,
                               height: 1.5,
                             ),
@@ -990,14 +990,14 @@ class _ProphetCardState extends State<_ProphetCard>
                                 horizontal: 12, vertical: 4),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(50),
-                              color: kGold.withOpacity(0.1),
+                              color: kGold.withValues(alpha: 0.1),
                               border: Border.all(
-                                  color: kGold.withOpacity(0.2), width: 0.8),
+                                  color: kGold.withValues(alpha: 0.2), width: 0.8),
                             ),
                             child: Text(
                               'اقرأ القصة',
                               style: TextStyle(
-                                color: kGold.withOpacity(0.7),
+                                color: kGold.withValues(alpha: 0.7),
                                 fontSize: 10,
                               ),
                             ),
@@ -1039,7 +1039,7 @@ class _StorySheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: kInkMid,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: kGold.withOpacity(0.2), width: 1),
+          border: Border.all(color: kGold.withValues(alpha: 0.2), width: 1),
         ),
         child: Column(
           children: [
@@ -1049,7 +1049,7 @@ class _StorySheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: kGold.withOpacity(0.3),
+                color: kGold.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -1059,7 +1059,7 @@ class _StorySheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: kGold.withOpacity(0.15)),
+                  bottom: BorderSide(color: kGold.withValues(alpha: 0.15)),
                 ),
               ),
               child: Column(
@@ -1069,8 +1069,8 @@ class _StorySheet extends StatelessWidget {
                     height: 60,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: kGold.withOpacity(0.12),
-                      border: Border.all(color: kGold.withOpacity(0.3), width: 1),
+                      color: kGold.withValues(alpha: 0.12),
+                      border: Border.all(color: kGold.withValues(alpha: 0.3), width: 1),
                     ),
                     child: Center(
                       child: Text(
@@ -1129,7 +1129,7 @@ class _StorySheet extends StatelessWidget {
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: kParchment.withOpacity(0.85),
+                    color: kParchment.withValues(alpha: 0.85),
                     fontSize: 15,
                     height: 2.0,
                     fontFamily: 'serif',
@@ -1143,7 +1143,7 @@ class _StorySheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: kGold.withOpacity(0.1)),
+                  top: BorderSide(color: kGold.withValues(alpha: 0.1)),
                 ),
               ),
               child: SizedBox(
@@ -1151,9 +1151,9 @@ class _StorySheet extends StatelessWidget {
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
-                    backgroundColor: kGold.withOpacity(0.1),
+                    backgroundColor: kGold.withValues(alpha: 0.1),
                     foregroundColor: kGoldLight,
-                    side: BorderSide(color: kGold.withOpacity(0.3)),
+                    side: BorderSide(color: kGold.withValues(alpha: 0.3)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50),

@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -448,7 +447,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: bg ?? _t.surface.withOpacity(0.88),
+              color: bg ?? _t.surface.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(radius),
               border: border ?? Border.all(color: _t.border, width: 0.8),
             ),
@@ -472,10 +471,10 @@ class _SurahDetailPageState extends State<SurahDetailPage>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: active ? _t.accent.withOpacity(0.15) : _t.surfaceHigh,
+              color: active ? _t.accent.withValues(alpha: 0.15) : _t.surfaceHigh,
               borderRadius: BorderRadius.circular(11),
               border: Border.all(
-                color: active ? _t.accent.withOpacity(0.5) : _t.border,
+                color: active ? _t.accent.withValues(alpha: 0.5) : _t.border,
                 width: 0.8,
               ),
             ),
@@ -532,7 +531,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
           width: w,
           height: isActive ? 7.0 : 5.0,
           decoration: BoxDecoration(
-            color: _t.accent.withOpacity(op),
+            color: _t.accent.withValues(alpha: op),
             borderRadius: BorderRadius.circular(10),
           ),
         );
@@ -601,7 +600,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                           boxShadow: selected
                               ? [
                             BoxShadow(
-                              color: theme.accent.withOpacity(0.4),
+                              color: theme.accent.withValues(alpha: 0.4),
                               blurRadius: 12,
                               spreadRadius: 1,
                             ),
@@ -646,8 +645,8 @@ class _SurahDetailPageState extends State<SurahDetailPage>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: reverse
-                ? [_t.accent.withOpacity(0.4), Colors.transparent]
-                : [Colors.transparent, _t.accent.withOpacity(0.4)],
+                ? [_t.accent.withValues(alpha: 0.4), Colors.transparent]
+                : [Colors.transparent, _t.accent.withValues(alpha: 0.4)],
           ),
         ),
       ),
@@ -666,7 +665,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(Icons.stars_rounded,
-                    color: _t.accent.withOpacity(0.6), size: 12),
+                    color: _t.accent.withValues(alpha: 0.6), size: 12),
               ),
               _ornamentLine(reverse: true),
             ],
@@ -693,7 +692,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(Icons.stars_rounded,
-                    color: _t.accent.withOpacity(0.6), size: 12),
+                    color: _t.accent.withValues(alpha: 0.6), size: 12),
               ),
               _ornamentLine(reverse: true),
             ],
@@ -736,10 +735,10 @@ class _SurahDetailPageState extends State<SurahDetailPage>
             margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: _t.numBg.withOpacity(0.85),
+              color: _t.numBg.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _t.accent.withOpacity(0.3),
+                color: _t.accent.withValues(alpha: 0.3),
                 width: 0.7,
               ),
             ),
@@ -914,7 +913,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
         Container(
           padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
           decoration: BoxDecoration(
-            color: _t.surface.withOpacity(0.95),
+            color: _t.surface.withValues(alpha: 0.95),
             border: Border(top: BorderSide(color: _t.border, width: 0.8)),
           ),
           child: Row(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'botimNavigationBar/Main_Screen/Start.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 

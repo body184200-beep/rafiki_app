@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin {
   int  _prevScore = 0;
   Map<String, Map<String, int>> progress = {};
   DateTime? lastReadDate;
+  Timer? _dayCheckTimer;
 
   // ── Palette ────────────────────────────────────────────────────────────────
   static const Color _bg       = Color(0xff030810);
@@ -104,6 +106,11 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin {
     ));
 
     _load();
+
+    // Check for day/midnight changes every 30 seconds
+    _dayCheckTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _checkDayChange();
+    });
   }
 
   @override
@@ -113,6 +120,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin {
     _entryCtrl.dispose();
     _scoreCtrl.dispose();
     _arcCtrl.dispose();
+    _dayCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -136,19 +144,58 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin {
     if (lastStr != null) lastReadDate = DateTime.tryParse(lastStr);
 
     if (lastReadDate != null) {
-      final diff = DateTime.now().difference(lastReadDate!).inDays;
-      if (diff >= 2) {
-        score = 0; _prevScore = 0; progress.clear();
-        await prefs.setInt('score', 0);
+      final now = DateTime.now();
+      final todayDate = DateTime(now.year, now.month, now.day);
+      final lastReadDateOnly = DateTime(lastReadDate!.year, lastReadDate!.month, lastReadDate!.day);
+      final diff = todayDate.difference(lastReadDateOnly).inDays;
+
+      if (diff >= 1) {
+        progress.clear();
         await prefs.setStringList('progress', []);
-        WidgetsBinding.instance.addPostFrameCallback(
-                (_) => _showStreakLostDialog(diff));
+
+        if (diff >= 2) {
+          score = 0;
+          _prevScore = 0;
+          await prefs.setInt('score', 0);
+          WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _showStreakLostDialog(diff));
+        }
+
+        lastReadDate = now;
+        await prefs.setString('lastReadDate', now.toIso8601String());
       }
     }
 
     if (mounted) {
       setState(() {});
       _arcCtrl.forward(from: 0);
+    }
+  }
+
+  Future<void> _checkDayChange() async {
+    if (lastReadDate == null) return;
+
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+    final lastReadDateOnly = DateTime(lastReadDate!.year, lastReadDate!.month, lastReadDate!.day);
+    final diff = todayDate.difference(lastReadDateOnly).inDays;
+
+    if (diff >= 1) {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        progress.clear();
+        if (diff >= 2) {
+          score = 0;
+          _prevScore = 0;
+        }
+        lastReadDate = now;
+      });
+      await prefs.setStringList('progress', []);
+      await prefs.setString('lastReadDate', now.toIso8601String());
+      if (diff >= 2) {
+        await prefs.setInt('score', 0);
+        _showStreakLostDialog(diff);
+      }
     }
   }
 
@@ -473,14 +520,18 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin {
                       // Progress pills
                       Row(
                         children: [
-                          _ProgressPill(
-                            label: '☀️', done: mDone, total: mTotal,
-                            color: _gold,
+                          Expanded(
+                            child: _ProgressPill(
+                              label: '☀️', done: mDone, total: mTotal,
+                              color: _gold,
+                            ),
                           ),
                           const SizedBox(width: 10),
-                          _ProgressPill(
-                            label: '🌙', done: eDone, total: eTotal,
-                            color: _teal,
+                          Expanded(
+                            child: _ProgressPill(
+                              label: '🌙', done: eDone, total: eTotal,
+                              color: _teal,
+                            ),
                           ),
                         ],
                       ),
@@ -1040,12 +1091,10 @@ class _ProgressPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final pct = total > 0 ? done / total : 0.0;
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Text(label, style: const TextStyle(fontSize: 14)),
         const SizedBox(width: 6),
-        SizedBox(
-          width: 64,
+        Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(

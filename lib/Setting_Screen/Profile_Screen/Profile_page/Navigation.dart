@@ -277,7 +277,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: bg ?? Colors.white.withOpacity(0.04),
+            color: bg ?? Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(color: borderColor ?? _DT.border, width: 0.8),
           ),
@@ -303,13 +303,13 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [clr.withOpacity(0.85), clr.withOpacity(0.45)],
+              colors: [clr.withValues(alpha: 0.85), clr.withValues(alpha: 0.45)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
-              BoxShadow(color: clr.withOpacity(0.32), blurRadius: 22, spreadRadius: 2),
-              BoxShadow(color: clr.withOpacity(0.10), blurRadius: 42, spreadRadius: 8),
+              BoxShadow(color: clr.withValues(alpha: 0.32), blurRadius: 22, spreadRadius: 2),
+              BoxShadow(color: clr.withValues(alpha: 0.10), blurRadius: 42, spreadRadius: 8),
             ],
           ),
           child: Center(
@@ -335,7 +335,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
     return _glass(
       padding: const EdgeInsets.all(20),
       borderColor: _DT.borderHi,
-      bg: _DT.surfaceHi.withOpacity(0.7),
+      bg: _DT.surfaceHi.withValues(alpha: 0.7),
       child: Row(
         children: [
           _avatar(),
@@ -360,9 +360,9 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _gender.color.withOpacity(0.12),
+                          color: _gender.color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: _gender.color.withOpacity(0.28)),
+                          border: Border.all(color: _gender.color.withValues(alpha: 0.28)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -415,7 +415,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
           ? Padding(
         padding: const EdgeInsets.only(top: 10),
         child: _glass(
-          bg: _DT.surface.withOpacity(0.95),
+          bg: _DT.surface.withValues(alpha: 0.95),
           borderColor: _DT.borderHi,
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -563,7 +563,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
                     flexibleSpace: ClipRect(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(color: _DT.bg.withOpacity(0.65)),
+                        child: Container(color: _DT.bg.withValues(alpha: 0.65)),
                       ),
                     ),
                     title: const Text(
@@ -731,13 +731,13 @@ class _GenderTileState extends State<_GenderTile>
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: selected ? clr.withOpacity(0.1) : _DT.surfaceHi,
+            color: selected ? clr.withValues(alpha: 0.1) : _DT.surfaceHi,
             border: Border.all(
-              color: selected ? clr.withOpacity(0.45) : _DT.border,
+              color: selected ? clr.withValues(alpha: 0.45) : _DT.border,
               width: selected ? 1.2 : 0.8,
             ),
             boxShadow: selected
-                ? [BoxShadow(color: clr.withOpacity(0.12), blurRadius: 18, spreadRadius: 0)]
+                ? [BoxShadow(color: clr.withValues(alpha: 0.12), blurRadius: 18, spreadRadius: 0)]
                 : [],
           ),
           child: Column(
@@ -749,9 +749,9 @@ class _GenderTileState extends State<_GenderTile>
                 height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: selected ? clr.withOpacity(0.18) : _DT.surface,
+                  color: selected ? clr.withValues(alpha: 0.18) : _DT.surface,
                   border: Border.all(
-                    color: selected ? clr.withOpacity(0.38) : _DT.borderHi,
+                    color: selected ? clr.withValues(alpha: 0.38) : _DT.borderHi,
                     width: 0.8,
                   ),
                 ),
@@ -774,7 +774,7 @@ class _GenderTileState extends State<_GenderTile>
               Text(
                 isMale ? 'أخ' : 'أخت',
                 style: TextStyle(
-                  color: selected ? clr.withOpacity(0.6) : _DT.textSec,
+                  color: selected ? clr.withValues(alpha: 0.6) : _DT.textSec,
                   fontSize: 11,
                 ),
               ),
@@ -822,9 +822,9 @@ class _StatChip extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.07),
+              color: color.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withOpacity(0.18), width: 0.8),
+              border: Border.all(color: color.withValues(alpha: 0.18), width: 0.8),
             ),
             child: Column(
               children: [
@@ -862,7 +862,7 @@ class _EditButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: isEditing ? _DT.accentDark.withOpacity(0.22) : _DT.surfaceHi,
+          color: isEditing ? _DT.accentDark.withValues(alpha: 0.22) : _DT.surfaceHi,
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
             color: isEditing ? _DT.accentMid : _DT.border,
@@ -917,7 +917,7 @@ class _SaveButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: _DT.accent.withOpacity(0.28),
+              color: _DT.accent.withValues(alpha: 0.28),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -950,7 +950,7 @@ class _GlassIconButton extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _DT.border, width: 0.8),
             ),
@@ -979,7 +979,7 @@ class _AmbientOrb extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          colors: [color.withOpacity(0.07), Colors.transparent],
+          colors: [color.withValues(alpha: 0.07), Colors.transparent],
         ),
       ),
     );
@@ -1051,7 +1051,7 @@ class _MenuCardTileState extends State<_MenuCardTile>
                 border: Border.all(color: _DT.border, width: 0.8),
                 boxShadow: [
                   BoxShadow(
-                    color: item.accentClr.withOpacity(0.06),
+                    color: item.accentClr.withValues(alpha: 0.06),
                     blurRadius: 24,
                     offset: const Offset(0, 6),
                   ),
@@ -1066,12 +1066,12 @@ class _MenuCardTileState extends State<_MenuCardTile>
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: item.accentClr.withOpacity(0.1),
+                        color: item.accentClr.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: item.accentClr.withOpacity(0.22), width: 0.8),
+                        border: Border.all(color: item.accentClr.withValues(alpha: 0.22), width: 0.8),
                         boxShadow: [
                           BoxShadow(
-                            color: item.accentClr.withOpacity(0.1),
+                            color: item.accentClr.withValues(alpha: 0.1),
                             blurRadius: 12,
                           ),
                         ],
@@ -1099,9 +1099,9 @@ class _MenuCardTileState extends State<_MenuCardTile>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                   decoration: BoxDecoration(
-                                    color: item.accentClr.withOpacity(0.16),
+                                    color: item.accentClr.withValues(alpha: 0.16),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: item.accentClr.withOpacity(0.32), width: 0.8),
+                                    border: Border.all(color: item.accentClr.withValues(alpha: 0.32), width: 0.8),
                                   ),
                                   child: Text(
                                     item.badge,
@@ -1129,12 +1129,12 @@ class _MenuCardTileState extends State<_MenuCardTile>
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: item.accentClr.withOpacity(0.08),
+                        color: item.accentClr.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.arrow_forward_ios_rounded,
-                        color: item.accentClr.withOpacity(0.5),
+                        color: item.accentClr.withValues(alpha: 0.5),
                         size: 13,
                       ),
                     ),
