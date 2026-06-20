@@ -70,7 +70,7 @@ class _HadithScreenState extends State<HadithScreen> {
       final prefs = await SharedPreferences.getInstance();
       _favNums = (prefs.getStringList('hadith_fav') ?? []).map(int.parse).toSet();
 
-      const url = 'https://api.hadith.gading.dev/books/muslim?range=1-150';
+      const url = 'https://hadith-api.vercel.app/books/muslim?range=1-150';
       final res = await http.get(Uri.parse(url));
 
       if (res.statusCode == 200) {
