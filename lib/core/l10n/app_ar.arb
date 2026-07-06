@@ -1,0 +1,219 @@
+{
+  "@@locale": "ar",
+
+  "appTitle": "رفيقي",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+
+  "nav_companions": "الصحابة",
+  "nav_battles": "الغزوات",
+  "nav_prophet": "الرسول",
+  "nav_guide": "دليلي",
+  "nav_deeds": "حسناتي",
+
+  "prayer_fajr": "الفجر",
+  "prayer_sunrise": "الشروق",
+  "prayer_dhuhr": "الظهر",
+  "prayer_asr": "العصر",
+  "prayer_maghrib": "المغرب",
+  "prayer_isha": "العشاء",
+
+  "alert_fajr": "حان وقت صلاة الفجر\nفلا تتأخر في النهوض",
+  "alert_dhuhr": "حان وقت صلاة الظهر\nأقم الصلاة لله",
+  "alert_asr": "حان وقت صلاة العصر\nلا تفوِّتها",
+  "alert_maghrib": "حان وقت صلاة المغرب\nبادر قبل أن يذهب الوقت",
+  "alert_isha": "حان وقت صلاة العشاء\nأختم يومك بطاعة الله",
+
+  "alert_now": "حان وقت {prayerName}",
+  "@alert_now": {
+    "placeholders": {
+      "prayerName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "next_prayer_title": "🕌 الصلاة القادمة",
+  "next_prayer_calculating": "جاري الحساب...",
+  "next_prayer_tomorrow_fajr": "فجر الغد · {time}",
+  "@next_prayer_tomorrow_fajr": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "tooltip_quran": "المصحف",
+  "tooltip_azkar": "الأذكار",
+  "tooltip_next_prayer": "الصلاة القادمة",
+  "tooltip_notifications": "التنبيهات",
+  "tooltip_settings": "الإعدادات",
+
+  "banner_isha_ended": "انتهت صلاة العشاء",
+  "banner_next_tomorrow_fajr": "الصلاة القادمة: فجر الغد الساعة {time}",
+  "@banner_next_tomorrow_fajr": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "settings_title": "الإعدادات",
+  "settings_sections_label": "الأقسام",
+  "settings_footer": "صُنع بحب للمسلمين",
+  "settings_no_username_hint": "اضغط تعديل لإضافة اسمك",
+  "settings_welcome_back": "يسعدنا وجودك معنا ✨",
+
+  "settings_menu_rewards_title": "المكافآت والصناديق",
+  "settings_menu_rewards_subtitle": "نظام نقاطك والمكافآت",
+  "settings_menu_rewards_badge": "جديد",
+  "settings_menu_quran_radio_title": "إذاعة القرآن",
+  "settings_menu_quran_radio_subtitle": "استمع للقرآن الكريم",
+  "settings_menu_quran_radio_badge": "مباشر",
+  "settings_menu_prayer_schedule_title": "جدول الصلاة",
+  "settings_menu_prayer_schedule_subtitle": "مواقيت الصلاة اليومية",
+  "settings_menu_challenge_title": "تحدي الصحابة",
+  "settings_menu_challenge_subtitle": "اختبر معلوماتك الإسلامية",
+  "settings_menu_challenge_badge": "جديد",
+  "settings_menu_prophets_title": "قصص الأنبياء",
+  "settings_menu_prophets_subtitle": "سير وقصص مباركة",
+
+  "profile_name_hint": "اكتب اسمك...",
+  "profile_gender_label": "النوع",
+  "profile_gender_male": "ذكر",
+  "profile_gender_female": "أنثى",
+  "profile_gender_male_label": "أخ",
+  "profile_gender_female_label": "أخت",
+  "profile_edit_button": "تعديل",
+  "profile_close_button": "إغلاق",
+
+  "greeting_male": "أهلاً أخي",
+  "greeting_female": "أهلاً أختي",
+  "greeting_neutral": "أهلاً بيك",
+  "greeting_male_badge": "أخ",
+  "greeting_female_badge": "أخت",
+
+  "notif_title": "إشعارات الأذكار",
+  "notif_subtitle": "تحكم في تنبيهاتك اليومية",
+  "notif_permission_disabled": "الإشعارات معطلة. يرجى تفعيل صلاحية الإشعارات لاستلام أذكارك المخصصة.",
+  "notif_enable_button": "تفعيل",
+  "notif_empty": "لا توجد إشعارات مجدولة بعد",
+  "notif_add_title": "إضافة تذكير",
+  "notif_edit_title": "تعديل التذكير",
+  "notif_select_ready_zekr": "اختر ذكراً جاهزاً",
+  "notif_custom_zekr_label": "أو اكتب ذكراً مخصصاً",
+  "notif_zekr_hint": "اكتب ذكرك هنا...",
+  "notif_time_label": "وقت التذكير",
+  "notif_days_label": "أيام التذكير",
+  "notif_save": "حفظ",
+  "notif_error_no_zekr": "يرجى كتابة أو اختيار ذكر أولاً",
+  "notif_error_no_days": "يرجى اختيار يوم واحد على الأقل",
+  "notif_default_title": "🤍 ذكر لطيف ليومك",
+
+  "day_sat": "السبت",
+  "day_sat_short": "سبت",
+  "day_sun": "الأحد",
+  "day_sun_short": "أحد",
+  "day_mon": "الاثنين",
+  "day_mon_short": "إثن",
+  "day_tue": "الثلاثاء",
+  "day_tue_short": "ثلا",
+  "day_wed": "الأربعاء",
+  "day_wed_short": "أرب",
+  "day_thu": "الخميس",
+  "day_thu_short": "خمس",
+  "day_fri": "الجمعة",
+  "day_fri_short": "جمع",
+
+  "tahdey_title": "✦  تحدي الصحابة  ✦",
+  "tahdey_level_progress": "المستوى {nextLevel} — {current}/{max} XP",
+  "@tahdey_level_progress": {
+    "placeholders": {
+      "nextLevel": { "type": "String" },
+      "current": { "type": "String" },
+      "max": { "type": "String" }
+    }
+  },
+  "tahdey_done_count": "{done}/{total} مهام",
+  "@tahdey_done_count": {
+    "placeholders": {
+      "done": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "tahdey_daily_tasks": "مهام اليوم",
+  "tahdey_completed_all": "أتممت كل المهام! 🎉",
+  "tahdey_reset_title": "إعادة ضبط التقدم؟",
+  "tahdey_reset_body": "سيتم مسح كل XP والمستويات والشارات بشكل دائم.",
+  "tahdey_reset_confirm": "إعادة ضبط",
+  "tahdey_reset_cancel": "إلغاء",
+  "tahdey_badge_beginner": "🥉 مبتدئ",
+  "tahdey_badge_strong": "🥈 قوي",
+  "tahdey_badge_legend": "🏆 أسطورة",
+
+  "companion_the_prophet": "النبي ﷺ",
+  "companion_abu_bakr": "أبو بكر الصديق",
+  "companion_umar": "عمر بن الخطاب",
+  "companion_uthman": "عثمان بن عفان",
+  "companion_ali": "علي بن أبي طالب",
+  "companion_talha": "طلحة بن عبيد الله",
+  "companion_zubayr": "الزبير بن العوام",
+  "companion_abd_rahman": "عبد الرحمن بن عوف",
+  "companion_saad": "سعد بن أبي وقاص",
+  "companion_khalid": "خالد بن الوليد",
+  "companion_bilal": "بلال بن رباح",
+  "companion_salman": "سلمان الفارسي",
+  "companion_anas": "أنس بن مالك",
+
+  "task_night_prayer": "قيام الليل",
+  "task_fajr_congregation": "صلاة الفجر جماعة",
+  "task_morning_evening_azkar": "أذكار الصباح والمساء",
+  "task_dawah": "الدعوة إلى الله",
+  "task_charity": "الصدقة",
+  "task_maintain_ties": "صلة الرحم",
+  "task_fajr": "صلاة الفجر",
+  "task_secret_charity": "الصدقة السرية",
+  "task_defend_islam": "الدفاع عن الإسلام",
+  "task_dhikr": "ذكر الله",
+  "task_accompany_prophet": "صحبة النبي ﷺ",
+  "task_justice": "العدل بين الناس",
+  "task_care_for_people": "تفقد الرعية",
+  "task_strength_of_truth": "قوة الحق",
+  "task_establish_state": "إقامة الدولة",
+  "task_quran_reading": "قراءة القرآن",
+  "task_prepare_army": "تجهيز جيش العسرة",
+  "task_modesty": "الحياء",
+  "task_copy_quran": "نسخ المصحف",
+  "task_knowledge_judiciary": "العلم والقضاء",
+  "task_bravery": "الشجاعة في المعارك",
+  "task_zuhd": "الزهد والتقوى",
+  "task_support_truth": "نصرة الحق",
+  "task_protect_prophet": "حماية النبي ﷺ",
+  "task_generosity": "الكرم والجود",
+  "task_support_muslims": "نصرة المسلمين",
+  "task_jihad": "الجهاد",
+  "task_halal_trade": "التجارة الحلال",
+  "task_big_charity": "الصدقة الكبيرة",
+  "task_support_muslims2": "دعم المسلمين",
+  "task_zuhd_in_wealth": "الزهد في المال",
+  "task_dua": "الدعاء",
+  "task_lead_armies": "قيادة الجيوش",
+  "task_first_arrow": "الرمية الأولى",
+  "task_lead_battles": "قيادة المعارك",
+  "task_victories": "الانتصارات",
+  "task_adhan": "رفع الأذان",
+  "task_patience_torture": "الصبر على التعذيب",
+  "task_steadfast_islam": "الثبات على الإسلام",
+  "task_seeking_knowledge": "طلب العلم",
+  "task_wisdom": "الحكمة",
+  "task_digging_trench": "حفر الخندق",
+  "task_serve_prophet": "خدمة النبي ﷺ",
+  "task_preserve_hadith": "حفظ الحديث",
+  "task_transmit_sunnah": "نقل السنة",
+  "task_prayer": "الصلاة",
+  "task_support_religion": "نصرة الدين",
+  "task_courage": "الشجاعة"
+}

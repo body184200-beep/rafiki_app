@@ -1,0 +1,439 @@
+{
+  "code": 200,
+  "message": "43 authentic hadiths loaded.",
+  "data": {
+    "name": "الكتب المعتمدة (البخاري ومسلم وغيرهما)",
+    "hadiths": [
+      {
+        "number": 1,
+        "arab": "إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى اللَّهِ وَرَسُولِهِ فَهِجْرَتُهُ إِلَى اللَّهِ وَرَسُولِهِ، وَمَنْ كَانَت *هِجْرَتُهُ لِدُنْيَا يُصِيبُهَا أَوِ امْرَأَةٍ يَتَزَوَّجُهَا فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ.",
+        "english": "Actions are but by intention, and every man shall have only that which he intended. Thus he whose migration was for Allah and His Messenger, his migration was for Allah and His Messenger, and he whose migration was for a worldly benefit or for a woman to marry, his migration was for that which he migrated.",
+        "narrator": "عمر بن الخطاب",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["النية", "الأعمال", "الهجرة", "الإخلاص"]
+      },
+      {
+        "number": 2,
+        "arab": "بُنِيَ الْإِسْلَامُ عَلَى خَمْسٍ: شَهَادَةِ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللَّهِ، وَإِقَامِ الصَّلَاةِ، وَإِيتَاءِ الزَّكَاةِ، وَحَجِّ الْبَيْتِ، وَصَوْمِ رَمَضَانَ.",
+        "english": "Islam has been built on five [pillars]: testifying that there is no deity worthy of worship except Allah and that Muhammad is the Messenger of Allah, establishing the prayer, paying the zakah, making the pilgrimage to the House, and fasting Ramadan.",
+        "narrator": "عبد الله بن عمر",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["أركان الإسلام", "الصلاة", "الزكاة", "الحج", "الصيام"]
+      },
+      {
+        "number": 3,
+        "arab": "الدِّينُ النَّصِيحَةُ. قُلْنَا: لِمَنْ؟ قَالَ: لِلَّهِ، وَلِكِتَابِهِ، وَلِرَسُولِهِ، وَلِأَئِمَّةِ الْمُسْلِمِينَ وَعَامَّتِهِمْ.",
+        "english": "Religion is sincerity (Ad-Deen An-Nasihah). We said: 'To whom?' He said: 'To Allah, His Book, His Messenger, and to the leaders of the Muslims and their common folk.'",
+        "narrator": "تميم الداري",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["النصيحة", "الدين", "الأمانة", "الصدق"]
+      },
+      {
+        "number": 4,
+        "arab": "أُمِرْتُ أَنْ أُقَاتِلَ النَّاسَ حَتَّى يَشْهَدُوا أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللَّهِ، وَيُقِيمُوا الصَّلَاةَ، وَيُؤْتُوا الزَّكَاةَ، فَإِذَا فَعَلُوا ذَلِكَ عَصَمُوا مِنِّي دِمَاءَهُمْ وَأَمْوَالَهُمْ إِلَّا بِحَقِّ الْإِسْلَامِ، وَحِسَابُهُمْ عَلَى اللَّهِ.",
+        "english": "I have been commanded to fight against people so long as they do not bear witness that there is no deity worthy of worship except Allah and that Muhammad is the Messenger of Allah, and establish the prayer, and pay the zakah. If they do that, their blood and wealth are safe from me, except for a right of Islam, and their accounts will be with Allah.",
+        "narrator": "عبد الله بن عمر",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["الشهادة", "حق الإسلام", "عصمة الدماء"]
+      },
+      {
+        "number": 5,
+        "arab": "مَا نَهَيْتُكُمْ عَنْهُ فَاجْتَنِبُوهُ، وَمَا أَمَرْتُكُمْ بِهِ فَأْتُوا مِنْهُ مَا اسْتَطَعْتُمْ، فَإِنَّمَا أَهْلَكَ الَّذِينَ مِنْ قَبْلِكُمْ كَثْرَةُ سُؤَالِهِمْ وَاخْتِلَافُهُمْ عَلَى أَنْبِيَائِهِمْ.",
+        "english": "What I have forbidden you, avoid; and what I have ordered you, do of it as much as you are able. It was only the excessive questioning and their disagreeing with their Prophets that destroyed those who were before you.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "المعاملات",
+        "keywords": ["الالتزام", "الأمر والنهي", "اتباع السنة"]
+      },
+      {
+        "number": 6,
+        "arab": "إِنَّ اللَّهَ طَيِّبٌ لَا يَقْبَلُ إِلَّا طَيِّبًا، وَإِنَّ اللَّهَ أَمَرَ الْمُؤْمِنِينَ بِمَا أَمَرَ بِهِ الْمُرْسَلِينَ... ثُمَّ ذَكَرَ الرَّجُلَ يُطِيلُ السَّفَرَ أَشْعَثَ أَغْبَرَمَدَّ يَدَيْهِ إِلَى السَّمَاءِ: يَا رَبِّ، يَا رَبِّ، وَمَطْعَمُهُ حَرَامٌ، وَمَشْرَبُهُ حَرَامٌ، وَمَلْبَسُهُ حَرَامٌ، وَغُذِيَ بِالْحَرَامِ، فَأَنَّى يُسْتَجَابُ لِذَلِكَ؟",
+        "english": "Allah the Almighty is Pure and accepts only that which is pure. And verily Allah has commanded the believers to do that which He has commanded the Messengers... Then he mentioned [the case of] a man who, having journeyed far, is disheveled and dusty, and who spreads out his hands to the sky saying 'O Lord! O Lord!', while his food is haram, his drink is haram, his clothing is haram, and he has been nourished with haram, so how can his supplication be answered?",
+        "narrator": "أبو هريرة",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الدعاء",
+        "keywords": ["الحلال والحرام", "استجابة الدعاء", "الطيب"]
+      },
+      {
+        "number": 7,
+        "arab": "دَعْ مَا يَرِيبُكَ إِلَى مَا لَا يَرِيبُكَ.",
+        "english": "Leave that which makes you doubt for that which does not make you doubt.",
+        "narrator": "الحسن بن علي",
+        "source": "سنن الترمذي والنسائي",
+        "grade": "صحيح",
+        "category": "المعاملات",
+        "keywords": ["الورع", "الشبهات", "اليقين"]
+      },
+      {
+        "number": 8,
+        "arab": "مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ.",
+        "english": "Part of the perfection of one's Islam is his leaving that which does not concern him.",
+        "narrator": "أبو هريرة",
+        "source": "سنن الترمذي",
+        "grade": "حسن",
+        "category": "الأخلاق",
+        "keywords": ["حفظ الوقت", "الفضول", "الأخلاق"]
+      },
+      {
+        "number": 9,
+        "arab": "لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ.",
+        "english": "None of you [truly] believes until he loves for his brother that which he loves for himself.",
+        "narrator": "أنس بن مالك",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["المحبة", "الإيمان", "الإيثار", "النصيحة"]
+      },
+      {
+        "number": 10,
+        "arab": "لَا يَحِلُّ دَمُ امْرِئٍ مُسْلِمٍ، يَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنِّي رَسُولُ اللَّهِ، إِلَّا بِإِحْدَى ثَلَاثٍ: الثَّيِّبُ الزَّانِي، وَالنَّفْسُ بِالنَّفْسِ، وَالتَّارِكُ لِدِينِهِ الْمُفَارِقُ لِلْجَمَاعَةِ.",
+        "english": "The blood of a Muslim who confesses that none has the right to be worshipped but Allah and that I am the Messenger of Allah, cannot be shed except in three cases: the married person who commits adultery, life for life, and the one who reverts from his religion and abandons the community.",
+        "narrator": "عبد الله بن مسعود",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["عصمة الدماء", "القصاص", "حدود الله"]
+      },
+      {
+        "number": 11,
+        "arab": "مَنْ كَانَتْ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ، وَمَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيُكْرِمْ جَارَهُ، وَمَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيُكْرِمْ ضَيْفَهُ.",
+        "english": "Let him who believes in Allah and the Last Day speak good or remain silent. Let him who believes in Allah and the Last Day be generous to his neighbor. And let him who believes in Allah and the Last Day be generous to his guest.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["حفظ اللسان", "إكرام الجار", "إكرام الضيف"]
+      },
+      {
+        "number": 12,
+        "arab": "أَنَّ رَجُلًا قَالَ لِلنَّبِيِّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ: أَوْصِنِي. قَالَ: لَا تَغْضَبْ. فَرَدَّدَ مِرَارًا، قَالَ: لَا تَغْضَبْ.",
+        "english": "A man said to the Prophet, 'Advise me.' He said, 'Do not become angry.' The man repeated his request several times, and each time the Prophet said, 'Do not become angry.'",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري",
+        "grade": "صحيح",
+        "category": "الصبر",
+        "keywords": ["الغضب", "الصبر", "الأخلاق", "النصيحة"]
+      },
+      {
+        "number": 13,
+        "arab": "إِنَّ اللَّهَ كَتَبَ الْإِحْسَانَ عَلَى كُلِّ شَيْءٍ، فَإِذَا قَتَلْتُمْ فَأَحْسِنُوا الْقِتْلَةَ، وَإِذَا ذَبَحْتُمْ فَأَحْسِنُوا الذِّبْحَةَ، وَلْيُحِدَّ أَحَدُكُمْ شَفْرَتَهُ، وَلْيُرِحْ ذَبِيحَتَهُ.",
+        "english": "Verily Allah has prescribed proficiency (Ihsan) in all things. So when you kill, kill well; and when you slaughter, slaughter well. Let each one of you sharpen his blade and let him put his slaughtered animal at ease.",
+        "narrator": "شداد بن أوس",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["الإحسان", "الرفق بالحيوان", "الذبح"]
+      },
+      {
+        "number": 14,
+        "arab": "اتَّقِ اللَّهِ حَيْثُمَا كُنْتَ، وَأَتْبِعِ السَّيِّئَةَ الْحَسَنَةَ تَمْحُهَا، وَخَالِقِ النَّاسَ بِخُلُقٍ حَسَنٍ.",
+        "english": "Fear Allah wherever you may be, and follow up an evil deed with a good deed which will wipe it out, and behave towards people with good character.",
+        "narrator": "معاذ بن جبل",
+        "source": "سنن الترمذي",
+        "grade": "حسن صحيح",
+        "category": "التوبة",
+        "keywords": ["تقوى الله", "التوبة", "حسن الخلق", "السيئات"]
+      },
+      {
+        "number": 15,
+        "arab": "احْفَظِ اللَّهَ يَحْفَظْكَ، احْفَظِ اللَّهَ تَجِدْهُ تُجَاهَكَ، إِذَا سَأَلْتَ فَاسْأَلِ اللَّهَ، وَإِذَا اسْتَعَنْتَ فَاسْتَعِنْ بِاللَّهِ.",
+        "english": "Be mindful of Allah and Allah will protect you. Be mindful of Allah and you will find Him in front of you. If you ask, ask of Allah; and if you seek help, seek help of Allah.",
+        "narrator": "عبد الله بن عباس",
+        "source": "سنن الترمذي",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["التوكل", "حفظ الله", "الدعاء", "الاستعانة"]
+      },
+      {
+        "number": 16,
+        "arab": "إِنَّ مِمَّا أَدْرَكَ النَّاسُ مِنْ كَلَامِ النُّبُوَّةِ الْأُولَى: إِذَا لَمْ تَسْتَحِ فَاصْنَعْ مَا شِئْتَ.",
+        "english": "Among the words that people obtained from the first prophecy are: If you feel no shame, then do as you wish.",
+        "narrator": "أبو مسعود البدري",
+        "source": "صحيح البخاري",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["الحياء", "الأخلاق", "الضمير"]
+      },
+      {
+        "number": 17,
+        "arab": "قُلْتُ: يَا رَسُولَ اللَّهِ، قُلْ لِي فِي الْإِسْلَامِ قَوْلًا لَا أَسْأَلُ عَنْهُ أَحَدًا غَيْرَكَ. قَالَ: قُلْ: آمَنْتُ بِاللَّهِ ثُمَّ اسْتَقِمْ.",
+        "english": "I said, 'O Messenger of Allah, tell me something about Islam which I can ask of no one but you.' He said, 'Say: I believe in Allah, and then remain steadfast.'",
+        "narrator": "سفيان بن عبد الله",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["الاستقامة", "الإيمان", "الثبات"]
+      },
+      {
+        "number": 18,
+        "arab": "الطَّهُورُ شَطْرُ الْإِيمَانِ، وَالْحَمْدُ لِلَّهِ تَمْلَأُ الْمِيزَانَ، وَسُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ تَمْلَآنِ -أَوْ تَمْلَأُ- مَا بَيْنَ السَّمَوَاتِ وَالْأَرْضِ، وَالصَّلَاةُ نُورٌ، وَالصَّدَقَةُ بُرْهَانٌ، وَالصَّبْرُ ضِيَاءٌ، وَالْقُرْآنُ حُجَّةٌ لَكَ أَوْ عَلَيْكَ.",
+        "english": "Purity is half of faith, and 'Al-hamdu lillah' (Praise be to Allah) fills the scale. 'Subhanallah' (Glory be to Allah) and 'Al-hamdu lillah' fill that which is between heaven and earth. Prayer is light, charity is a proof, patience is illumination, and the Qur'an is an argument for or against you.",
+        "narrator": "أبو مالك الأشعري",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الصلاة",
+        "keywords": ["الطهور", "الصلاة", "الصدقة", "الصبر", "القرآن"]
+      },
+      {
+        "number": 19,
+        "arab": "يَا عِبَادِي إِنِّي حَرَّمْتُ الظُّلْمَ عَلَى نَفْسِي وَجَعَلْتُهُ بَيْنَكُمْ مُحَرَّمًا فَلَا تَظَالَمُوا، يَا عِبَادِي كُلُّكُمْ ضَالٌّ إِلَّا مَنْ هَدَيْتُهُ فَاسْتَهْدُونِي أَهْدِكُمْ.",
+        "english": "O My servants, I have forbidden injustice for Myself and have made it forbidden amongst you, so do not oppress one another. O My servants, all of you are astray except for those I have guided, so seek guidance of Me and I shall guide you.",
+        "narrator": "أبو ذر الغفاري",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "العقيدة",
+        "keywords": ["العدل", "تحريم الظلم", "الهداية"]
+      },
+      {
+        "number": 20,
+        "arab": "كُلُّ سُلَامَى مِنَ النَّاسِ عَلَيْهِ صَدَقَةٌ كُلَّ يَوْمٍ تَطْلُعُ فِيهِ الشَّمْسُ: تَعْدِلُ بَيْنَ الِاثْنَيْنِ صَدَقَةٌ، وَتُعِينُ الرَّجُلَ فِي دَابَّتِهِ فَتَحْمِلُهُ عَلَيْهَا أَوْ تَرْفَعُ لَهُ عَلَيْهَا مَتَاعَهُ صَدَقَةٌ، وَالْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ، وَبِكُلِّ خُطْوَةٍ تَمْشِيهَا إِلَى الصَّلَاةِ صَدَقَةٌ، وَتُمِيطُ الْأَذَى عَنِ الطَّرِيقِ صَدَقَةٌ.",
+        "english": "Every joint of a person's body must perform a charity each day that the sun rises: to judge justly between two people is a charity, to help a man with his mount, lifting him onto it or hoisting up his belongings onto it is a charity, a good word is a charity, every step you take towards the prayer is a charity, and removing a harmful thing from the path is a charity.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["الصدقة", "مساعدة الناس", "الكلمة الطيبة", "إماطة الأذى"]
+      },
+      {
+        "number": 21,
+        "arab": "الْبِرُّ حُسْنُ الْخُلُقِ، وَالْإِثْمُ مَا حَاكَ فِي صَدْرِكَ وَكَرِهْتَ أَنْ يَطَّلِعَ عَلَيْهِ النَّاسُ.",
+        "english": "Righteousness is good character, and sin is that which wavers in your chest and which you do not want people to know about.",
+        "narrator": "النواس بن سمعان",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الأخلاق",
+        "keywords": ["البر", "الإثم", "حسن الخلق", "الضمير"]
+      },
+      {
+        "number": 22,
+        "arab": "سَبَقَ الْمُفَرِّدُونَ. قَالُوا: وَمَا الْمُفَرِّدُونَ يَا رَسُولَ اللَّهِ؟ قَالَ: الذَّاكِرُونَ اللَّهَ كَثِيرًا وَالذَّاكِرَاتِ.",
+        "english": "The Mufarridun have gone ahead. They said: 'O Messenger of Allah, who are the Mufarridun?' He said: 'Those men and women who remember Allah much.'",
+        "narrator": "أبو هريرة",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الذكر",
+        "keywords": ["ذكر الله", "المفردون", "الأجر"]
+      },
+      {
+        "number": 23,
+        "arab": "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ، وَمَا اجْتَمَعَ قَوْمٌ فِي بَيْتٍ مِنْ بُيُوتِ اللَّهِ يَتْلُونَ كِتَابَ اللَّهِ وَيَتَدَارَسُونَهُ بَيْنَهُمْ إِلَّا نَزَلَتْ عَلَيْهِمُ السَّكِينَةُ، وَغَشِيَتْهُمُ الرَّحْمَةُ وَحَفَّتْهُمُ الْمَلَائِكَةُ، وَذَكَرَهُمُ اللَّهُ فِيمَنْ عِنْدَهُ.",
+        "english": "Whoever follows a path to seek knowledge, Allah will make easy for him a path to Paradise. And no people gather in one of the houses of Allah, reciting the Book of Allah and studying it among themselves, except that tranquility descends upon them, mercy envelops them, the angels surround them, and Allah mentions them to those in His presence.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "طلب العلم",
+        "keywords": ["العلم", "القرآن", "السكينة", "بيوت الله"]
+      },
+      {
+        "number": 24,
+        "arab": "كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي الْمِيزَانِ، حَبِيبَتَانِ إِلَى الرَّحْمَنِ: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ.",
+        "english": "Two words are light on the tongue, heavy in the scales, and beloved to the Most Merciful: 'Subhan-Allahi wa bihamdihi' (Glory be to Allah and His is the praise), and 'Subhan-Allahil-Azheem' (Glory be to Allah the Supreme).",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الذكر",
+        "keywords": ["التسبيح", "الذكر", "الميزان"]
+      },
+      {
+        "number": 25,
+        "arab": "مَثَلُ الَّذِي يَذْكُرُ رَبَّهُ وَالَّذِي لَا يَذْكُرُ رَبَّهُ مَثَلُ الْحَيِّ وَالْمَيِّتِ.",
+        "english": "The comparison of the one who remembers his Lord and the one who does not remember his Lord is like that of the living and the dead.",
+        "narrator": "أبو موسى الأشعري",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الذكر",
+        "keywords": ["الذكر", "حياة القلوب", "حفظ اللسان"]
+      },
+      {
+        "number": 26,
+        "arab": "رِضَا الرَّبِّ فِي رِضَا الْوَالِدِ، وَسَخَطُ الرَّبِّ فِي سَخَطُ الْوَالِدِ.",
+        "english": "The pleasure of the Lord is in the pleasure of the parent, and the displeasure of the Lord is in the displeasure of the parent.",
+        "narrator": "عبد الله بن عمرو",
+        "source": "سنن الترمذي",
+        "grade": "صحيح",
+        "category": "بر الوالدين",
+        "keywords": ["بر الوالدين", "رضا الله", "طاعة الوالدين"]
+      },
+      {
+        "number": 27,
+        "arab": "جَاءَ رَجُلٌ إِلَى رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَقَالَ: يَا رَسُولَ اللَّهِ، مَنْ أَحَقُّ النَّاسِ بِحُسْنِ صَحَابَتِي؟ قَالَ: أُمُّكَ. قَالَ: ثُمَّ مَنْ؟ قَالَ: ثُمَّ أُمُّكَ. قَالَ: ثُمَّ مَنْ؟ قَالَ: ثُمَّ أُمُّكَ. قَالَ: ثُمَّ مَنْ؟ قَالَ: ثُمَّ أَبُوكَ.",
+        "english": "A man came to the Messenger of Allah and said, 'O Messenger of Allah, who among the people is most deserving of my good companionship?' He said, 'Your mother.' The man said, 'Then who?' He said, 'Then your mother.' The man said, 'Then who?' He said, 'Then your mother.' The man said, 'Then who?' He said, 'Then your father.'",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "بر الوالدين",
+        "keywords": ["الأم", "بر الوالدين", "الأب", "حسن الصحبة"]
+      },
+      {
+        "number": 28,
+        "arab": "الدُّعَاءُ هُوَ الْعِبَادَةُ.",
+        "english": "Supplication is worship itself.",
+        "narrator": "النعمان بن بشير",
+        "source": "سنن الترمذي وأبي داود",
+        "grade": "صحيح",
+        "category": "الدعاء",
+        "keywords": ["الدعاء", "العبادة", "التضرع"]
+      },
+      {
+        "number": 29,
+        "arab": "أَقْرَبُ مَا يَكُونُ الْعَبْدُ مِنْ رَبِّهِ وَهُوَ سَاجِدٌ، فَأَكْثِرُوا الدُّعَاءَ.",
+        "english": "The nearest a servant comes to his Lord is when he is prostrating, so make much supplication [in this state].",
+        "narrator": "أبو هريرة",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الدعاء",
+        "keywords": ["السجود", "الدعاء", "القرب من الله"]
+      },
+      {
+        "number": 30,
+        "arab": "التَّائِبُ مِنَ الذَّنْبِ كَمَنْ لَا ذَنْبَ لَهُ.",
+        "english": "The one who repents from sin is like the one who has no sin.",
+        "narrator": "عبد الله بن مسعود",
+        "source": "سنن ابن ماجه",
+        "grade": "حسن",
+        "category": "التوبة",
+        "keywords": ["التوبة", "الاستغفار", "الرحمة"]
+      },
+      {
+        "number": 31,
+        "arab": "يَا أَيُّهَا النَّاسُ تُوبُوا إِلَى اللَّهِ، فَإِنِّي أَتُوبُ فِي الْيَوْمِ مِائَةَ مَرَّةٍ.",
+        "english": "O people, repent to Allah, for indeed I repent to Him a hundred times a day.",
+        "narrator": "الأغر المزني",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "التوبة",
+        "keywords": ["الاستغفار", "التوبة", "القدوة"]
+      },
+      {
+        "number": 32,
+        "arab": "عَجَبًا لِأَمْرِ الْمُؤْمِنِ، إِنَّ أَمْرَهُ كُلَّهُ خَيْرٌ، وَلَيْسَ ذَاكَ لِأَحَدٍ إِلَّا لِلْمُؤْمِنِ: إِنْ أَصَابَتْهُ سَرَّاءُ شَكَرَ فَكَانَ خَيْرًا لَهُ، وَإِنْ أَصَابَتْهُ ضَرَّاءُ صَبَرَ فَكَانَ خَيْرًا لَهُ.",
+        "english": "How wonderful is the affair of the believer, for his affair is all good, and this is for no one except the believer: if prosperity comes to him he is thankful and that is good for him, and if adversity befalls him he is patient and that is good for him.",
+        "narrator": "صهيب بن سنان",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "الصبر",
+        "keywords": ["الصبر", "الشكر", "المؤمن", "الرضا"]
+      },
+      {
+        "number": 33,
+        "arab": "مَنْ بَنَى لِلَّهِ مَسْجِدًا يَبْتَغِي بِهِ وَجْهَ اللَّهِ، بَنَى اللَّهُ لَهُ بَيْتًا فِي الْجَنَّةِ.",
+        "english": "Whoever builds a mosque for Allah, seeking the pleasure of Allah, Allah will build for him a house in Paradise.",
+        "narrator": "عثمان بن عفان",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الصلاة",
+        "keywords": ["بناء المساجد", "الجنة", "الصدقة الجارية"]
+      },
+      {
+        "number": 34,
+        "arab": "صَلُّوا كَمَا رَأَيْتُمُونِي أُصَلِّي.",
+        "english": "Pray as you have seen me pray.",
+        "narrator": "مالك بن الحويرث",
+        "source": "صحيح البخاري",
+        "grade": "صحيح",
+        "category": "الصلاة",
+        "keywords": ["الصلاة", "اتباع السنة", "تعليم الصلاة"]
+      },
+      {
+        "number": 35,
+        "arab": "مَنْ صَامَ رَمَضَانَ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ.",
+        "english": "Whoever fasts Ramadan out of faith and hoping for reward, his previous sins will be forgiven.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الصيام",
+        "keywords": ["رمضان", "الصيام", "مغفرة الذنوب"]
+      },
+      {
+        "number": 36,
+        "arab": "إِذَا دَخَلَ رَمَضَانُ فُتِّحَتْ أَبْوَابُ الْجَنَّةِ، وَغُلِّقَتْ أَبْوَابُ جَهَنَّمَ، وَسُلْسِلَتِ الشَّيَاطِينُ.",
+        "english": "When Ramadan begins, the gates of Paradise are opened, the gates of Hell are closed, and the devils are chained.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الصيام",
+        "keywords": ["رمضان", "الجنة", "الشياطين"]
+      },
+      {
+        "number": 37,
+        "arab": "الْعُمْرَةُ إِلَى الْعُمْرَةِ كَفَّارَةٌ لِمَا بَيْنَهُمَا، وَالْحَجُّ الْمَبْرُورُ لَيْسَ لَهُ جَزَاءٌ إِلَّا الْجَنَّةِ.",
+        "english": "An Umrah to another Umrah is an expiation for what is between them, and the accepted Hajj (Hajj Mabrur) has no reward other than Paradise.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الحج",
+        "keywords": ["الحج", "العمرة", "الجنة", "الكفارة"]
+      },
+      {
+        "number": 38,
+        "arab": "مَنْ حَجَّ لِلَّهِ فَلَمْ يَرْفُثْ وَلَمْ يَفْسُقْ رَجَعَ كَيَوْمِ وَلَدَتْهُ أُمُّهُ.",
+        "english": "Whoever performs Hajj for Allah and does not commit obscenity or commit sin will return [free from sin] as on the day his mother bore him.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "الحج",
+        "keywords": ["الحج", "مغفرة الذنوب", "الطهارة"]
+      },
+      {
+        "number": 39,
+        "arab": "أَدِّ الْأَمَانَةَ إِلَى مَنِ ائْتَمَنَكَ، وَلَا تَخُنْ مَنْ خَانَكَ.",
+        "english": "Fulfill the trust to the one who entrusted you, and do not betray the one who betrays you.",
+        "narrator": "أبو هريرة",
+        "source": "سنن أبي داود والترمذي",
+        "grade": "حسن",
+        "category": "المعاملات",
+        "keywords": ["الأمانة", "الخيانة", "الوفاء بالعهد"]
+      },
+      {
+        "number": 40,
+        "arab": "الْبَيِّعَانِ بِالْخِيَارِ مَا لَمْ يَتَفَرَّقَا، فَإِنْ صَدَقَا وَبَيَّنَا بُورِكَ لَهُمَا فِي بَيْعِهِمَا، وَإِنْ كَتَمَا وَكَذَبَا مُحِقَتْ بَرَكَةُ بَيْعِهِمَا.",
+        "english": "The buyer and the seller have the option [to cancel the sale] as long as they have not separated. If they speak the truth and make everything clear, they will be blessed in their transaction; but if they tell lies and conceal things, the blessing of their transaction will be wiped out.",
+        "narrator": "حكيم بن حزام",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "المعاملات",
+        "keywords": ["البيع والشراء", "البركة", "الصدق", "الأمانة"]
+      },
+      {
+        "number": 41,
+        "arab": "اتَّقُوا اللَّهَ، وَصَلُّوا خَمْسَكُمْ، وَصُومُوا شَهْرَكُمْ، وَأَدُّوا زَكَاةَ أَمْوَالِكُمْ، وَأَطِيعُوا ذَا أَمْرِكُمْ تَدْخُلُوا جَنَّةَ رَبِّكُمْ.",
+        "english": "Fear Allah, perform your five daily prayers, fast your month [of Ramadan], pay the zakah on your wealth, and obey your leaders; you will enter the Paradise of your Lord.",
+        "narrator": "أبو أمامة الباهلي",
+        "source": "سنن الترمذي",
+        "grade": "صحيح",
+        "category": "الزكاة",
+        "keywords": ["تقوى الله", "الزكاة", "طاعة ولاة الأمر", "الجنة"]
+      },
+      {
+        "number": 42,
+        "arab": "مَنْ يَسَّرَ عَلَى مُعْسِرٍ يَسَّرَ اللَّهُ عَلَيْهِ فِي الدُّنْيَا وَالْآخِرَةِ، وَاللَّهُ فِي عَوْنِ الْعَبْدِ مَا كَانَ الْعَبْدُ فِي عَوْنِ أَخِيهِ.",
+        "english": "Whoever makes things easy for one in difficulty, Allah will make things easy for him in this world and in the Hereafter. Allah is in the help of a servant as long as the servant is in the help of his brother.",
+        "narrator": "أبو هريرة",
+        "source": "صحيح مسلم",
+        "grade": "صحيح",
+        "category": "المعاملات",
+        "keywords": ["التيسير", "مساعدة الناس", "عون الله"]
+      },
+      {
+        "number": 43,
+        "arab": "لَا يَدْخُلُ الْجَنَّةَ قَاطِعٌ. (يَعْنِي: قَاطِعَ رَحِمٍ).",
+        "english": "The one who cuts relations (i.e., of kinship) will not enter Paradise.",
+        "narrator": "جبير بن مطعم",
+        "source": "صحيح البخاري وصحيح مسلم",
+        "grade": "صحيح",
+        "category": "بر الوالدين",
+        "keywords": ["صلة الرحم", "الأخلاق", "قرابة الرحم"]
+      }
+    ]
+  }
+}
