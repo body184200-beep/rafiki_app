@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rafiki_app/Al_Azkar/Azkar_screen.dart';
+import 'package:rafiki_app/features/azkar/presentation/pages/azkar_page.dart';
 
 void main() {
   setUp(() {
