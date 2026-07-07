@@ -35,7 +35,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin, WidgetsBindingOb
   static const Color _goldDark  = Color(0xff8B6914);
   static const Color _textMain  = Color(0xffEEE8D5);
   static const Color _textSub   = Color(0xff7A9AAD);
-  static const Color _divider   = Color(0xff1A3045);
+
 
   // ── Stars ─────────────────────────────────────────────────────────────────────
   late final List<_Star> _stars;

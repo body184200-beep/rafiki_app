@@ -20,11 +20,18 @@ abstract class ScoreRepository {
   Future<void> saveScoreHistory(List<String> history);
   Future<String?> loadLastResetDate();
   Future<void> saveLastResetDate(String date);
+  Future<void> saveScoreState({
+    required double todayScore,
+    required double totalScore,
+    required List<String> processedTransactions,
+    String? lastResetDate,
+    List<String>? history,
+  });
 }
 
 abstract class StreakRepository {
   Future<int> loadGlobalStreak();
   Future<void> saveGlobalStreak(int streak);
-  Future<Map<String, int>> loadFardhStreaks();
-  Future<void> saveFardhStreaks(Map<String, int> streaks);
+  Future<Map<String, double>> loadFardhStreaks();
+  Future<void> saveFardhStreaks(Map<String, double> streaks);
 }

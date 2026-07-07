@@ -47,7 +47,29 @@ class PrayerStreakEngine {
       final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
       final savedDate = prefs.getString('streak_engine_date');
 
-      if (savedDate == todayKey) {
+      if (savedDate != null && savedDate != todayKey) {
+        // We have missed days!
+        // Load the completed today list for the saved day before running rollovers
+        final completedList = prefs.getStringList('streak_engine_completed_today') ?? [];
+        _completedToday.clear();
+        for (var name in completedList) {
+          final p = Prayer.values.firstWhere((e) => e.name == name, orElse: () => Prayer.none);
+          if (p != Prayer.none) _completedToday.add(p);
+        }
+        dailyStreak.value = prefs.getInt('streak_engine_daily') ?? _completedToday.length;
+
+        // Parse and loop through each missed day
+        try {
+          final parts = savedDate.split('-');
+          DateTime current = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+          final todayDate = DateTime(now.year, now.month, now.day);
+
+          while (current.isBefore(todayDate)) {
+            await handleMidnightRollover(overrideDate: current);
+            current = current.add(const Duration(days: 1));
+          }
+        } catch (_) {}
+      } else if (savedDate == todayKey) {
         final completedList = prefs.getStringList('streak_engine_completed_today') ?? [];
         _completedToday.clear();
         for (var name in completedList) {
@@ -70,6 +92,9 @@ class PrayerStreakEngine {
         handleMidnightRollover();
       }
     });
+
+    // Run ScoreEngine midnight check now that StreakEngine has initialized
+    await ScoreEngine.instance.checkMidnightReset();
   }
 
   void clearStateForTesting() {
@@ -157,24 +182,20 @@ class PrayerStreakEngine {
     AppLogger.info('Streaks boosted by +$amount via BonusEngine consistency rule', tag: 'StreakEngine');
   }
 
-  Future<void> handleMidnightRollover() async {
+  Future<void> handleMidnightRollover({DateTime? overrideDate}) async {
     final allFardh = [Prayer.fajr, Prayer.dhuhr, Prayer.asr, Prayer.maghrib, Prayer.isha];
-    final now = DateTime.now();
-    final yesterday = now.subtract(const Duration(days: 1));
+    final yesterday = overrideDate ?? DateTime.now().subtract(const Duration(days: 1));
     final dateKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
 
     final currentMap = Map<String, double>.from(fardhStreaks.value);
     
     final coords = await PrayerConfig.getCoordinates();
     final params = PrayerConfig.params;
-    final times = PrayerTimes.today(coords, params);
+    final times = PrayerTimes(coords, DateComponents.from(yesterday), params);
     final ruleEngine = PrayerRuleEngine(times);
 
-    int completedCount = 0;
     for (final p in allFardh) {
-      if (_completedToday.contains(p)) {
-        completedCount++;
-      } else {
+      if (!_completedToday.contains(p)) {
         // Penalty for missed prayer score from PrayerRuleEngine
         final dummyContext = DayContext(
           allFardhCongregation: false,
@@ -304,23 +325,23 @@ class PrayerStreakEngine {
     fardhStreaks.value = currentMap;
     _completedToday.clear();
     dailyStreak.value = 0;
-    await _saveState();
+    final nextDay = yesterday.add(const Duration(days: 1));
+    await _saveState(overrideToday: nextDay);
     
     // Tell score engine to check/perform rollover
     await ScoreEngine.instance.checkMidnightReset();
   }
 
-  Future<void> _saveState() async {
+  Future<void> _saveState({DateTime? overrideToday}) async {
     await _repository.saveGlobalStreak(globalStreak.value);
     
     // Save fardh streaks
-    final saveMap = fardhStreaks.value.map((k, v) => MapEntry(k, v.toInt()));
-    await _repository.saveFardhStreaks(saveMap);
+    await _repository.saveFardhStreaks(fardhStreaks.value);
 
     // Save completed list for backward compatibility
     try {
       final prefs = await SharedPreferences.getInstance();
-      final now = DateTime.now();
+      final now = overrideToday ?? DateTime.now();
       final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
       await prefs.setString('streak_engine_date', todayKey);
       await prefs.setStringList('streak_engine_completed_today', _completedToday.map((e) => e.name).toList());

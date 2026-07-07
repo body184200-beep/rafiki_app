@@ -531,7 +531,7 @@ class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderState
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -561,7 +561,7 @@ class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderState
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Text(
                         s.name,
                         textDirection: TextDirection.rtl,
@@ -576,7 +576,7 @@ class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderState
                           letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         s.title,
                         textDirection: TextDirection.rtl,
@@ -590,7 +590,7 @@ class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderState
                           letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

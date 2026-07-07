@@ -27,6 +27,8 @@ import 'package:rafiki_app/features/prayer/data/services/prayer_rule_engine.dart
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 import 'package:rafiki_app/features/prayer/domain/repositories/prayer_repository.dart';
 import 'package:rafiki_app/features/prayer/data/repositories/prayer_repository_impl.dart';
+import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
+import 'package:rafiki_app/features/quran/data/repositories/quran_repository_impl.dart';
 import 'package:rafiki_app/features/gamification/data/repositories/discovery_repository_impl.dart';
 import 'package:adhan/adhan.dart';
 
@@ -64,6 +66,7 @@ class ServiceLocator {
     sl.registerLazySingleton<PrayerRepository>(() => PrayerRepositoryImpl());
     sl.registerLazySingleton<ScoreRepository>(() => ScoreRepositoryImpl());
     sl.registerLazySingleton<StreakRepository>(() => StreakRepositoryImpl());
+    sl.registerLazySingleton<quran.QuranRepository>(() => QuranRepository());
     
     // Register PrayerRuleEngine with current coordinates
     final coords = await PrayerConfig.getCoordinates();
@@ -91,6 +94,7 @@ class ServiceLocator {
     sl.registerSingleton<NotificationEngine>(notificationEngine);
 
     final lootBoxEngine = LootBoxEngine.instance;
+    await lootBoxEngine.initialize();
     sl.registerSingleton<LootBoxEngine>(lootBoxEngine);
 
     final discoveryRepo = DiscoveryRepositoryImpl();

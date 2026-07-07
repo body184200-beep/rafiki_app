@@ -43,6 +43,10 @@ void main() {
     if (!sl.isRegistered<LootBoxEngine>()) {
       sl.registerSingleton<LootBoxEngine>(LootBoxEngine.instance);
     }
+
+    LootBoxEngine.instance.resetForTesting();
+    ScoreEngine.instance.clearStateForTesting();
+    PrayerStreakEngine.instance.clearStateForTesting();
   });
 
   group('ScoreEngine Tests', () {
@@ -106,6 +110,21 @@ void main() {
       
       final hasCoins = rewards.any((r) => r.type == RewardType.coin);
       expect(hasCoins, isTrue);
+    });
+
+    test('LootBoxEngine retroactively syncs plain transaction IDs correctly', () async {
+      SharedPreferences.setMockInitialValues({
+        'score_engine_transactions': ['fardh_fajr_2026-07-06', 'streak_bonus_2026-07-06'],
+        'loot_box_keys': 0,
+      });
+
+      final engine = LootBoxEngine.instance;
+      await engine.initialize();
+
+      // 'fardh_fajr_2026-07-06' should award 1 key
+      // 'streak_bonus_2026-07-06' should award 2 keys
+      // Total keys: 3
+      expect(engine.keys.value, 3);
     });
   });
 

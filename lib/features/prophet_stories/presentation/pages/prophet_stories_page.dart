@@ -18,10 +18,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
   static const Color kGoldLight = Color(0xFFe8cc7a);
   static const Color kGoldDim = Color(0xFF8a6f30);
   static const Color kInk = Color(0xFF0e0c18);
-  static const Color kInkMid = Color(0xFF1a1628);
-  static const Color kInkSoft = Color(0xFF241f38);
   static const Color kParchment = Color(0xFFf5edd6);
-  static const Color kParchmentDim = Color(0xFFe8d9b5);
 
   final List<Map<String, String>> prophets = [
     {
@@ -862,8 +859,6 @@ class _ProphetCardState extends State<_ProphetCard>
 
   static const Color kGold = Color(0xFFc9a84c);
   static const Color kGoldLight = Color(0xFFe8cc7a);
-  static const Color kGoldDim = Color(0xFF8a6f30);
-  static const Color kInkSoft = Color(0xFF241f38);
 
   @override
   void initState() {

@@ -955,54 +955,6 @@ class _GenderTileState extends State<_GenderTile>
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// STAT CHIP
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String sub;
-  final Color color;
-
-  const _StatChip({
-    required this.icon,
-    required this.label,
-    required this.sub,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withValues(alpha: 0.18), width: 0.8),
-            ),
-            child: Column(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800),
-                ),
-                Text(sub, style: const TextStyle(color: _DT.textSec, fontSize: 10.5)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // EDIT BUTTON

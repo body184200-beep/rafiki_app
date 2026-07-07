@@ -3,6 +3,7 @@ import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/core/logging/app_logger.dart';
 import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
 import 'package:rafiki_app/features/prayer/domain/repositories/prayer_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'prayer_streak_engine.dart';
 import 'score_engine.dart';
 
@@ -51,9 +52,15 @@ class BonusEngine {
     if (isConsistent) {
       final now = DateTime.now();
       final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      // Boost Fardh streaks
-      await PrayerStreakEngine.instance.boostStreaks(1.0);
-      AppLogger.info('Consistency bonus applied for date: $dateKey', tag: 'BonusEngine');
+      final txId = 'consistency_bonus_$dateKey';
+      
+      final prefs = await SharedPreferences.getInstance();
+      if (!prefs.containsKey(txId)) {
+        await prefs.setBool(txId, true);
+        // Boost Fardh streaks
+        await PrayerStreakEngine.instance.boostStreaks(1.0);
+        AppLogger.info('Consistency bonus applied for date: $dateKey', tag: 'BonusEngine');
+      }
     }
   }
 

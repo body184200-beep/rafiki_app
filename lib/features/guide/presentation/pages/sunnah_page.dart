@@ -14,9 +14,6 @@ class _Palette {
   static const gold = Color(0xFFD4A847);
   static const goldLight = Color(0xFFF5D680);
   static const goldDim = Color(0xFF8A6A20);
-  static const teal = Color(0xFF2BBFAA);
-  static const tealDim = Color(0xFF1A7A6E);
-  static const surface = Color(0xFF14213D);
   static const surfaceHigh = Color(0xFF1C2D50);
   static const textPrimary = Color(0xFFF0EAD6);
   static const textSecondary = Color(0xFFAEAA97);

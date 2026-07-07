@@ -998,7 +998,6 @@ class _SahabiDetailsState extends State<SahabiDetails>
   static const Color _gold      = Color(0xFFD4A853);
   static const Color _goldLight = Color(0xFFF0C97A);
   static const Color _teal      = Color(0xFF1ABC9C);
-  static const Color _tealDark  = Color(0xFF148F77);
   static const Color _text      = Color(0xFFF0EAD6);
   static const Color _textMuted = Color(0xFF6B7280);
   static const Color _purple    = Color(0xFF6C3483);

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_streak_engine.dart';
-import 'package:rafiki_app/features/prayer/data/services/score_engine.dart';
+
 import 'package:adhan/adhan.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_engine.dart';
 import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
@@ -13,9 +13,7 @@ import 'package:rafiki_app/features/prayer/presentation/controllers/prayer_sched
 
 class _T {
   static const bg      = T.bg;
-  static const surface = T.surface;
   static const card    = T.card;
-  static const cardHi  = T.cardHi;
 
   static const jade    = T.jade;
   static const jadeDim = T.jadeDim;
@@ -33,15 +31,9 @@ class _T {
   static const ruby    = T.ruby;
   static const rubyL   = T.rubyL;
 
-  static const sky     = T.sky;
-  static const skyL    = T.skyL;
-
   static const t1 = T.t1;
   static const t2 = T.t2;
   static const t3 = T.t3;
-
-  static const prayerColors = T.prayerColors;
-  static const prayerIcons  = T.prayerIcons;
 }
 
 String _dateKey(DateTime d) => dateKey(d);
@@ -95,7 +87,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   // Historical completed days (last 7)
   List<DayRecord> _history = [];
   
-  double get _grandTotal => sl<ScoreEngine>().totalScore.value;
   int get _streak => sl<PrayerStreakEngine>().globalStreak.value;
 
   // Banner message
@@ -117,16 +108,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
 
   int get _sunnahDone => kPrayers.fold(
       0, (a, p) => a + _today.recordFor(p).completedSunnah.length);
-
-  double get _todayLiveScore {
-    double s = 0;
-    for (final p in kPrayers) {
-      final rec = _today.recordFor(p);
-      s += PrayerTimeService.scoreFor(rec.state);
-      s += rec.sunnahScoreAwarded;
-    }
-    return double.parse(s.toStringAsFixed(2));
-  }
 
   double get _progress {
     const total = kTotalPrayers + kTotalSunnah;
@@ -227,7 +208,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
 
     while (currentDate.isBefore(todayDate)) {
       // ── Finalise the current day ──────────────────────────────
-      double pts = 0;
       for (final p in kPrayers) {
         final rec = _today.recordFor(p);
 
@@ -235,9 +215,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         if (!rec.state.isFinal && rec.state != PrayerState.oadaPending) {
           rec.state = PrayerState.oadaPending;
         }
-
-        pts += PrayerTimeService.scoreFor(rec.state);
-        pts += rec.sunnahScoreAwarded;
       }
       // Engines handle total score internally now
 
@@ -292,12 +269,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   }
 
   // ── Persistence ──────────────────────────────────────────────
-  static const _kPrefToday   = 'pt2_today';
-  static const _kPrefHistory = 'pt2_history';
-  static const _kPrefTotal   = 'pt2_total';
-  static const _kPrefStreak  = 'pt2_streak';
-  static const _kPrefQada    = 'pt2_qada';
-
   Future<void> _saveData() async {
     await sl<PrayerRepository>().saveTodayRecord(_today);
     await sl<PrayerRepository>().saveHistory(_history);
@@ -824,8 +795,6 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
               final rec        = _today.recordFor(p);
               final pScore     = PrayerTimeService.scoreFor(rec.state);
               final pSunnah    = rec.sunnahScoreAwarded;
-              final pTotal     = double.parse((pScore + pSunnah).toStringAsFixed(2));
-              final isComplete = rec.state.isCompleted;
               final isPending  = rec.state == PrayerState.oadaPending;
               final isLocked   = rec.state == PrayerState.locked;
               final isAvail    = rec.state == PrayerState.available;
@@ -1006,24 +975,12 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
 class _QadaEntry {
   final String prayerName;
   final String dateKey;
-  bool completed;
+  bool completed = false;
 
   _QadaEntry(
       {required this.prayerName,
-        required this.dateKey,
-        this.completed = false});
+        required this.dateKey});
 
-  Map<String, dynamic> toJson() => {
-    'prayer': prayerName,
-    'date': dateKey,
-    'done': completed,
-  };
-
-  factory _QadaEntry.fromJson(Map<String, dynamic> j) => _QadaEntry(
-    prayerName: j['prayer'] as String,
-    dateKey:    j['date'] as String,
-    completed:  j['done'] as bool? ?? false,
-  );
 }
 
 class _QadaCarryCard extends StatelessWidget {

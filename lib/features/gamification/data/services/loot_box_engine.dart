@@ -30,7 +30,12 @@ class LootBoxEngine {
   static const String _kChestsForged = 'loot_box_forged';
   static const String _kChestsOpened = 'loot_box_opened';
 
+  bool _isInitialized = false;
+
   Future<void> initialize() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
     final prefs = await SharedPreferences.getInstance();
     
     keys.value = prefs.getInt(_kKeys) ?? 0;
@@ -62,16 +67,11 @@ class LootBoxEngine {
     // --- Retroactive Syncing ---
     // Safely sync transactions that occurred while Gamification was unloaded
     final scorePrefsStrList = prefs.getStringList('score_engine_transactions') ?? [];
-    for (final txJson in scorePrefsStrList) {
-      try {
-        final Map<String, dynamic> j = jsonDecode(txJson);
-        final txId = j['id'] as String;
-        final amount = (j['amount'] as num).toDouble();
-        if (!_processedTxs.contains(txId)) {
-          _handleRetroactiveEvent(txId, amount);
-          _processedTxs.add(txId);
-        }
-      } catch (_) {}
+    for (final txId in scorePrefsStrList) {
+      if (!_processedTxs.contains(txId)) {
+        _handleRetroactiveEvent(txId, 0.0);
+        _processedTxs.add(txId);
+      }
     }
     
     // Save the retroactively processed txs
@@ -235,5 +235,15 @@ class LootBoxEngine {
     ]);
 
     return generatedRewards;
+  }
+
+  void resetForTesting() {
+    _isInitialized = false;
+    keys.value = 0;
+    unopenedChests.value = [];
+    inventory.value = [];
+    _processedTxs.clear();
+    _chestsForged = 0;
+    _chestsOpened = 0;
   }
 }

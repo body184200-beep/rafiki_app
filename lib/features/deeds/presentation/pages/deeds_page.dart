@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 
 void main() => runApp(const Hasanatey());
@@ -41,7 +43,7 @@ class Hasanatey extends StatelessWidget {
 class _C {
   static const Color bg        = Color(0xff060D12);
   static const Color surface   = Color(0xff0E1A22);
-  static const Color surface2  = Color(0xff142030);
+
   static const Color gold      = Color(0xffC9A84C);
   static const Color goldLight = Color(0xffF0CC7A);
   static const Color goldDim   = Color(0xff8A6E2A);
@@ -52,7 +54,7 @@ class _C {
   static const Color textSub   = Color(0xff7A8F98);
   static const Color textHint  = Color(0xff3E5260);
   static const Color red       = Color(0xffE05252);
-  static const Color redDim    = Color(0xff3A1818);
+
 }
 
 // ── Data model ────────────────────────────────────────────────────────────────
@@ -61,6 +63,18 @@ class DhikrEntry {
   int count;
   int target;     // 0 = no target
   DhikrEntry({required this.text, this.count = 0, this.target = 0});
+
+  Map<String, dynamic> toJson() => {
+    'text': text,
+    'count': count,
+    'target': target,
+  };
+
+  factory DhikrEntry.fromJson(Map<String, dynamic> json) => DhikrEntry(
+    text: json['text'] as String,
+    count: json['count'] as int? ?? 0,
+    target: json['target'] as int? ?? 0,
+  );
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -90,6 +104,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
   late Animation<double> _scaleAnim;
   late Animation<double> _rippleAnim;
   late Animation<double> _burstAnim;
+  // ignore: unused_field
   late Animation<double> _counterAnim;
   late Animation<double> _pageAnim;
 
@@ -133,6 +148,37 @@ class _HasanateyScreenState extends State<HasanateyScreen>
     _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
     _pageAnim = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
     _pageCtrl.forward();
+
+    _loadState();
+  }
+
+  Future<void> _saveState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = _adhkar.map((e) => e.toJson()).toList();
+      await prefs.setString('deeds_adhkar_list', jsonEncode(jsonList));
+      await prefs.setInt('deeds_selected_index', _selectedIndex);
+    } catch (_) {}
+  }
+
+  Future<void> _loadState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getString('deeds_adhkar_list');
+      final savedIndex = prefs.getInt('deeds_selected_index');
+      
+      if (rawList != null) {
+        final List<dynamic> decoded = jsonDecode(rawList);
+        final loadedAdhkar = decoded.map((e) => DhikrEntry.fromJson(e as Map<String, dynamic>)).toList();
+        setState(() {
+          _adhkar = loadedAdhkar;
+          if (savedIndex != null && savedIndex < _adhkar.length) {
+            _selectedIndex = savedIndex;
+          }
+          _displayedCount = _current.count;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -166,6 +212,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _current.count++;
       _displayedCount = _current.count;
     });
+    _saveState();
 
     _spawnSparks(isGold: false);
 
@@ -182,6 +229,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _current.count--;
       _displayedCount = _current.count;
     });
+    _saveState();
     _pulseCtrl.forward(from: 0);
   }
 
@@ -216,16 +264,20 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _current.count = 0;
       _displayedCount = 0;
     });
+    _saveState();
   }
 
   void _resetAll() {
     HapticFeedback.heavyImpact();
     _showConfirm(
       message: "تصفير جميع الأذكار؟",
-      onConfirm: () => setState(() {
-        for (final e in _adhkar) e.count = 0;
-        _displayedCount = 0;
-      }),
+      onConfirm: () {
+        setState(() {
+          for (final e in _adhkar) e.count = 0;
+          _displayedCount = 0;
+        });
+        _saveState();
+      },
     );
   }
 
@@ -234,6 +286,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _selectedIndex = idx;
       _displayedCount = _current.count;
     });
+    _saveState();
     _pageCtrl.forward(from: 0);
   }
 
@@ -243,6 +296,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _selectedIndex = _adhkar.length - 1;
       _displayedCount = 0;
     });
+    _saveState();
   }
 
   void _deleteCustomDhikr(int idx) {
@@ -253,6 +307,7 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       _adhkar.removeAt(idx);
       _displayedCount = _current.count;
     });
+    _saveState();
   }
 
   void _showConfirm({required String message, required VoidCallback onConfirm}) {
@@ -288,7 +343,10 @@ class _HasanateyScreenState extends State<HasanateyScreen>
       isScrollControlled: true,
       builder: (_) => _TargetEditorSheet(
         current: _current,
-        onSave: (t) => setState(() => _current.target = t),
+        onSave: (t) {
+          setState(() => _current.target = t);
+          _saveState();
+        },
       ),
     );
   }

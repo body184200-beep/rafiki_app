@@ -20,7 +20,7 @@ class DayContext {
 }
 
 class PrayerRuleEngine {
-  final PrayerTimes times;
+  PrayerTimes times;
 
   PrayerRuleEngine(this.times);
 
@@ -92,39 +92,41 @@ class PrayerRuleEngine {
 
   /// PRAYER WINDOW (PURE)
   bool isPrayerOpen(PrayerType type, DateTime now) {
-    final start = getStart(type);
+    final start = getStart(type, now);
     final end = getEnd(type, now);
 
     return !now.isBefore(start) && now.isBefore(end);
   }
 
-  DateTime getStart(PrayerType type) {
+  DateTime getStart(PrayerType type, DateTime date) {
+    final dayTimes = PrayerTimes(times.coordinates, DateComponents.from(date), times.calculationParameters);
     switch (type) {
       case PrayerType.fajr:
-        return times.fajr;
+        return dayTimes.fajr;
       case PrayerType.dhuhr:
-        return times.dhuhr;
+        return dayTimes.dhuhr;
       case PrayerType.asr:
-        return times.asr;
+        return dayTimes.asr;
       case PrayerType.maghrib:
-        return times.maghrib;
+        return dayTimes.maghrib;
       case PrayerType.isha:
-        return times.isha;
+        return dayTimes.isha;
     }
   }
 
-  DateTime getEnd(PrayerType type, DateTime now) {
+  DateTime getEnd(PrayerType type, DateTime date) {
+    final dayTimes = PrayerTimes(times.coordinates, DateComponents.from(date), times.calculationParameters);
     switch (type) {
       case PrayerType.fajr:
-        return times.dhuhr;
+        return dayTimes.dhuhr;
       case PrayerType.dhuhr:
-        return times.asr;
+        return dayTimes.asr;
       case PrayerType.asr:
-        return times.maghrib;
+        return dayTimes.maghrib;
       case PrayerType.maghrib:
-        return times.isha;
+        return dayTimes.isha;
       case PrayerType.isha:
-        final today = DateTime(now.year, now.month, now.day);
+        final today = DateTime(date.year, date.month, date.day);
         final tomorrow = today.add(const Duration(days: 1));
         final tomorrowTimes = PrayerTimes(times.coordinates, DateComponents.from(tomorrow), times.calculationParameters);
         return tomorrowTimes.fajr;

@@ -40,8 +40,7 @@ class _TahdeyState extends State<Tahdey> with TickerProviderStateMixin {
   static const Color _surface = Color(0xff0C1820);
   static const Color _gold    = Color(0xffC9A84C);
   static const Color _goldLt  = Color(0xffF5D882);
-  static const Color _jade    = Color(0xff2EB88A);
-  static const Color _jadeLt  = Color(0xff5EFACC);
+
   static const Color _amber   = Color(0xffE8943A);
   static const Color _text    = Color(0xffEEE8D5);
   static const Color _sub     = Color(0xff6E8594);

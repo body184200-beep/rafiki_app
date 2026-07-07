@@ -32,6 +32,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
   //               day this value is folded into totalScore and reset to 0.
   int  totalScore = 0;
   int  dailyScore = 0;
+  // ignore: unused_field
   int  _prevScore = 0; // reference value used by the score-bump animation
   Map<String, Map<String, int>> progress = {};
   DateTime? lastReadDate;
@@ -47,7 +48,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
 
   // ── Palette ────────────────────────────────────────────────────────────────
   static const Color _bg       = Color(0xff030810);
-  static const Color _surface  = Color(0xff08111E);
+
   static const Color _surfaceB = Color(0xff0C1828);
   static const Color _gold     = Color(0xffC9A84C);
   static const Color _goldLt   = Color(0xffF0CC70);
@@ -56,7 +57,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
   static const Color _tealLt   = Color(0xff5EFACC);
   static const Color _tealDim  = Color(0xff0D6E52);
   static const Color _indigo   = Color(0xff6B7FD4);   // new: night-sky accent
-  static const Color _text     = Color(0xffEDE8D8);
+
   static const Color _textMid  = Color(0xffA8B4C0);
   static const Color _sub      = Color(0xff5A6E7E);
   static const Color _border   = Color(0xff0E1E30);
@@ -921,13 +922,13 @@ class _AzkarCardState extends State<_AzkarCard>
 
   static const Color _teal    = Color(0xff2EB88A);
   static const Color _tealLt  = Color(0xff5EFACC);
-  static const Color _tealDim = Color(0xff0D6E52);
+
   static const Color _gold    = Color(0xffC9A84C);
-  static const Color _goldLt  = Color(0xffF0CC70);
+
   static const Color _text    = Color(0xffEDE8D8);
   static const Color _sub     = Color(0xff5A6E7E);
-  static const Color _border  = Color(0xff0E1E30);
-  static const Color _surface = Color(0xff08111E);
+
+
 
   @override
   void initState() {
@@ -1171,7 +1172,7 @@ class _TapButton extends StatelessWidget {
 
   static const Color _teal    = Color(0xff2EB88A);
   static const Color _tealDim = Color(0xff0D6E52);
-  static const Color _tealLt  = Color(0xff5EFACC);
+
 
   @override
   Widget build(BuildContext context) {

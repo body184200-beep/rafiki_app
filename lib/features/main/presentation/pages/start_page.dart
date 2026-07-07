@@ -420,6 +420,9 @@ class _StartState extends State<Start> with TickerProviderStateMixin, WidgetsBin
       // or if we do not have coordinates saved yet
       if (distance > 5000 || _coords.latitude == 31.4165 && _coords.longitude == 31.8133) {
         await PrayerConfig.saveCoordinates(position.latitude, position.longitude);
+        if (sl.isRegistered<PrayerEngine>()) {
+          await sl<PrayerEngine>().reloadCoordinates();
+        }
       }
     }
 

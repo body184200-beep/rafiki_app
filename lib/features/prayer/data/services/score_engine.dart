@@ -36,9 +36,21 @@ class ScoreEngine {
     final txList = await _repository.loadProcessedTransactions();
     _processedTransactions.clear();
     _processedTransactions.addAll(txList);
+
+    // Legacy Migration: If lastResetDate is not today, yesterday's score was not yet aggregated.
+    final lastResetDate = await _repository.loadLastResetDate();
+    final now = DateTime.now();
+    final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     
-    // Check for midnight rollover
-    await checkMidnightReset();
+    if (lastResetDate != null && lastResetDate != todayKey) {
+      totalScore.value += todayScore.value;
+      if (totalScore.value < 0.0) totalScore.value = 0.0;
+      await _repository.saveScoreState(
+        todayScore: todayScore.value,
+        totalScore: totalScore.value,
+        processedTransactions: _processedTransactions.toList(),
+      );
+    }
   }
 
   void clearStateForTesting() {
@@ -55,14 +67,19 @@ class ScoreEngine {
 
     _processedTransactions.add(transactionId);
     todayScore.value += amount;
+    totalScore.value += amount;
+    if (totalScore.value < 0.0) totalScore.value = 0.0;
     
     // Broadcast explicit event
     _eventController.add(ScoreEvent(transactionId, amount));
     AppLogger.info('Score updated: +$amount (Tx: $transactionId). Today: ${todayScore.value}', tag: 'ScoreEngine');
     
-    // Save to disk
-    await _repository.saveTodayScore(todayScore.value);
-    await _repository.saveProcessedTransactions(_processedTransactions.toList());
+    // Save to disk atomically
+    await _repository.saveScoreState(
+      todayScore: todayScore.value,
+      totalScore: totalScore.value,
+      processedTransactions: _processedTransactions.toList(),
+    );
     
     return true;
   }
@@ -84,24 +101,25 @@ class ScoreEngine {
     final yesterday = now.subtract(const Duration(days: 1));
     final dateKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
     
-    // Aggregate to total
-    totalScore.value += todayScore.value;
+    // Clamp check
     if (totalScore.value < 0.0) totalScore.value = 0.0;
     
     // Add to history
     final history = await _repository.loadScoreHistory();
     history.add('$dateKey:${todayScore.value}');
-    await _repository.saveScoreHistory(history);
     
     // Reset today's score and transactions
     todayScore.value = 0.0;
     _processedTransactions.clear();
     
     // Save new states atomically
-    await _repository.saveTotalScore(totalScore.value);
-    await _repository.saveTodayScore(0.0);
-    await _repository.saveProcessedTransactions([]);
-    await _repository.saveLastResetDate(todayKey);
+    await _repository.saveScoreState(
+      todayScore: 0.0,
+      totalScore: totalScore.value,
+      processedTransactions: [],
+      lastResetDate: todayKey,
+      history: history,
+    );
     
     AppLogger.info('Midnight reset completed successfully for date: $dateKey. Total score: ${totalScore.value}', tag: 'ScoreEngine');
   }

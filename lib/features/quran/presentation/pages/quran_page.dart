@@ -3,8 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/features/quran/presentation/pages/quran_details_page.dart';
-import 'package:rafiki_app/features/quran/data/repositories/quran_repository_impl.dart';
+import 'package:rafiki_app/core/di/service_locator.dart';
+import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
 
 class MushafPage extends StatefulWidget {
   const MushafPage({super.key});
@@ -15,7 +17,7 @@ class MushafPage extends StatefulWidget {
 
 class _MushafPageState extends State<MushafPage>
     with SingleTickerProviderStateMixin {
-  final QuranRepository _quranRepository = QuranRepository();
+  final quran.QuranRepository _quranRepository = sl<quran.QuranRepository>();
 
   // ── Palette ───────────────────────────────────────────────────────────
   static const Color _bg         = Color(0xff070B10);
@@ -27,9 +29,7 @@ class _MushafPageState extends State<MushafPage>
   static const Color _borderSoft = Color(0xff141C2E);
   static const Color _accent     = Color(0xff5DD3A8);   // teal
   static const Color _accentDim  = Color(0xff1F9E72);
-  static const Color _accentGlow = Color(0xff5DD3A8);
   static const Color _gold       = Color(0xffD4A853);   // Islamic gold
-  static const Color _goldDim    = Color(0xff8B6A2A);
   static const Color _textPri    = Color(0xffEDF1F8);
   static const Color _textSec    = Color(0xff7A8599);
   static const Color _textDim    = Color(0xff2E3A50);
@@ -83,12 +83,15 @@ class _MushafPageState extends State<MushafPage>
 
     try {
       final list = await _quranRepository.getSurahs();
+      final prefs = await SharedPreferences.getInstance();
+      final lastRead = prefs.getInt('quran_last_read_surah');
 
       if (!mounted) return;
       if (list.isNotEmpty) {
         setState(() {
           _surahs         = list;
           _filteredSurahs = list;
+          _lastReadSurah  = lastRead;
           _isLoading      = false;
         });
         _listAnim.forward();
@@ -127,9 +130,15 @@ class _MushafPageState extends State<MushafPage>
     _applyFilters();
   }
 
-  void _openSurah(Map<String, dynamic> surah) {
+  void _openSurah(Map<String, dynamic> surah) async {
     HapticFeedback.selectionClick();
-    setState(() => _lastReadSurah = surah['number'] as int);
+    final surahNum = surah['number'] as int;
+    setState(() => _lastReadSurah = surahNum);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('quran_last_read_surah', surahNum);
+    } catch (_) {}
+    if (!mounted) return;
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -780,13 +789,10 @@ class _SurahTileState extends State<_SurahTile>
   late final AnimationController _press;
   bool _isHovered = false;
 
-  static const Color _bg         = Color(0xff070B10);
   static const Color _surface    = Color(0xff0F1520);
   static const Color _surfaceAlt = Color(0xff131A28);
-  static const Color _high       = Color(0xff192035);
   static const Color _border     = Color(0xff1C2540);
   static const Color _accent     = Color(0xff5DD3A8);
-  static const Color _accentDim  = Color(0xff1F9E72);
   static const Color _gold       = Color(0xffD4A853);
   static const Color _textPri    = Color(0xffEDF1F8);
   static const Color _textSec    = Color(0xff7A8599);
@@ -1003,7 +1009,6 @@ class _OctaBadge extends StatelessWidget {
   const _OctaBadge({required this.number, required this.isLastRead});
 
   static const Color _accent    = Color(0xff5DD3A8);
-  static const Color _accentDim = Color(0xff1F9E72);
   static const Color _gold      = Color(0xffD4A853);
 
   @override

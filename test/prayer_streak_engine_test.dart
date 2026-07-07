@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adhan/adhan.dart';
@@ -11,6 +12,7 @@ import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
 import 'package:rafiki_app/features/prayer/domain/repositories/prayer_repository.dart';
 import 'package:rafiki_app/features/prayer/data/repositories/prayer_repository_impl.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_rule_engine.dart';
+import 'package:rafiki_app/features/prayer/data/services/bonus_engine.dart';
 
 void main() {
   setUp(() async {
@@ -242,8 +244,6 @@ void main() {
     });
 
     test('Unit test: missed prayer penalties (-2) are applied', () async {
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      final dateKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
 
       final engine = PrayerStreakEngine.instance;
       await engine.initialize();
@@ -258,6 +258,213 @@ void main() {
 
       final txs = await sl<ScoreRepository>().loadProcessedTransactions();
       expect(txs.any((tx) => tx.startsWith('penalty_')), isTrue);
+    });
+
+    test('PrayerStreakEngine retroactively rolls over missed days on initialize', () async {
+      final now = DateTime.now();
+      final twoDaysAgo = now.subtract(const Duration(days: 2));
+      final dateKeyTwoDaysAgo = '${twoDaysAgo.year}-${twoDaysAgo.month.toString().padLeft(2, '0')}-${twoDaysAgo.day.toString().padLeft(2, '0')}';
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('streak_engine_date', dateKeyTwoDaysAgo);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr']); // Fajr completed 2 days ago
+      await prefs.setInt('streak_engine_daily', 1);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.fardhStreaks.value = {
+        'الفجر': 10.0,
+        'الظهر': 10.0,
+        'العصر': 10.0,
+        'المغرب': 10.0,
+        'العشاء': 10.0,
+      };
+
+      await engine.initialize();
+
+      // Fajr was completed 2 days ago (not decremented for 2 days ago, but decremented for yesterday -> 10.0 - 1.0 = 9.0)
+      // Others missed both days (decremented twice -> 10.0 - 2.0 = 8.0)
+      expect(engine.fardhStreaks.value['الفجر'], 9.0);
+      expect(engine.fardhStreaks.value['الظهر'], 8.0);
+      expect(engine.fardhStreaks.value['العصر'], 8.0);
+      expect(engine.fardhStreaks.value['المغرب'], 8.0);
+      expect(engine.fardhStreaks.value['العشاء'], 8.0);
+      
+      final savedDate = prefs.getString('streak_engine_date');
+      expect(savedDate, todayKey);
+    });
+
+    test('ScoreEngine and PrayerStreakEngine rollover coordination test (Race Condition Prevention)', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final dateKeyYesterday = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Simulate yesterday's initial state
+      await prefs.setString('streak_engine_date', dateKeyYesterday);
+      await prefs.setStringList('streak_engine_completed_today', []); // Yesterday all missed
+      await prefs.setInt('streak_engine_daily', 0);
+      
+      await prefs.setString('score_engine_last_reset', dateKeyYesterday);
+      await prefs.setDouble('score_engine_today', 10.0); // Yesterday's base score
+      await prefs.setDouble('score_engine_total', 20.0);
+      await prefs.setStringList('score_engine_transactions', []);
+
+      // Re-initialize engines to simulate app launch
+      await ScoreEngine.instance.initialize();
+      await PrayerStreakEngine.instance.initialize();
+
+      // Check results:
+      // Yesterday's score was 10.0.
+      // Yesterday had 5 missed prayers (all missed), which is -10.0 penalty.
+      // Net yesterday's score: 10.0 - 10.0 = 0.0.
+      // When rolled over correctly:
+      // totalScore should be: 20.0 (prev total) + 0.0 (net yesterday) = 20.0.
+      // todayScore (for today, fresh start) should be: 0.0.
+      expect(ScoreEngine.instance.totalScore.value, 20.0);
+      expect(ScoreEngine.instance.todayScore.value, 0.0);
+      
+      final savedResetDate = prefs.getString('score_engine_last_reset');
+      expect(savedResetDate, todayKey);
+    });
+
+    test('PrayerStreakEngine saves and loads fardh streaks decimals correctly without rounding', () async {
+      final engine = PrayerStreakEngine.instance;
+      
+      // Inject some decimal values
+      engine.fardhStreaks.value = {
+        'الفجر': 1.5,
+        'الظهر': 2.75,
+        'العصر': 0.0,
+        'المغرب': 4.5,
+        'العشاء': 0.5,
+      };
+
+      final repo = sl<StreakRepository>();
+      await repo.saveFardhStreaks(engine.fardhStreaks.value);
+
+      final loaded = await repo.loadFardhStreaks();
+      expect(loaded['الفجر'], 1.5);
+      expect(loaded['الظهر'], 2.75);
+      expect(loaded['العصر'], 0.0);
+      expect(loaded['المغرب'], 4.5);
+      expect(loaded['العشاء'], 0.5);
+    });
+
+    test('ScoreRepository saveScoreState writes all score-related states atomically', () async {
+      final repo = sl<ScoreRepository>();
+      
+      await repo.saveScoreState(
+        todayScore: 5.5,
+        totalScore: 120.0,
+        processedTransactions: ['tx_1', 'tx_2'],
+        lastResetDate: '2026-07-07',
+        history: ['2026-07-06:10.0'],
+      );
+
+      final today = await repo.loadTodayScore();
+      final total = await repo.loadTotalScore();
+      final txs = await repo.loadProcessedTransactions();
+      final lastReset = await repo.loadLastResetDate();
+      final history = await repo.loadScoreHistory();
+
+      expect(today, 5.5);
+      expect(total, 120.0);
+      expect(txs, ['tx_1', 'tx_2']);
+      expect(lastReset, '2026-07-07');
+      expect(history, ['2026-07-06:10.0']);
+    });
+
+    test('ScoreEngine totalScore is updated in real-time when addScore is called', () async {
+      final engine = ScoreEngine.instance;
+      engine.clearStateForTesting();
+      
+      expect(engine.todayScore.value, 0.0);
+      expect(engine.totalScore.value, 0.0);
+
+      // Add a score event
+      await engine.addScore('tx_realtime_1', 15.0);
+
+      // Both todayScore and totalScore should be updated instantly
+      expect(engine.todayScore.value, 15.0);
+      expect(engine.totalScore.value, 15.0);
+
+      // Add another score event
+      await engine.addScore('tx_realtime_2', 10.0);
+      expect(engine.todayScore.value, 25.0);
+      expect(engine.totalScore.value, 25.0);
+    });
+
+    test('BonusEngine checkAndApplyConsistencyBonus only applies consistency bonus once per day', () async {
+      final prefs = await SharedPreferences.getInstance();
+
+      final perfectDay1 = DayRecord(dateKey: '2026-06-23', prayers: {
+        'الفجر': PrayerRecord(state: PrayerState.completedIndividual),
+        'الظهر': PrayerRecord(state: PrayerState.completedIndividual),
+        'العصر': PrayerRecord(state: PrayerState.completedIndividual),
+        'المغرب': PrayerRecord(state: PrayerState.completedIndividual),
+        'العشاء': PrayerRecord(state: PrayerState.completedIndividual),
+      });
+      final perfectDay2 = DayRecord(dateKey: '2026-06-24', prayers: {
+        'الفجر': PrayerRecord(state: PrayerState.completedIndividual),
+        'الظهر': PrayerRecord(state: PrayerState.completedIndividual),
+        'العصر': PrayerRecord(state: PrayerState.completedIndividual),
+        'المغرب': PrayerRecord(state: PrayerState.completedIndividual),
+        'العشاء': PrayerRecord(state: PrayerState.completedIndividual),
+      });
+      final perfectDay3 = DayRecord(dateKey: '2026-06-25', prayers: {
+        'الفجر': PrayerRecord(state: PrayerState.completedIndividual),
+        'الظهر': PrayerRecord(state: PrayerState.completedIndividual),
+        'العصر': PrayerRecord(state: PrayerState.completedIndividual),
+        'المغرب': PrayerRecord(state: PrayerState.completedIndividual),
+        'العشاء': PrayerRecord(state: PrayerState.completedIndividual),
+      });
+
+      final historyJson = jsonEncode([
+        perfectDay1.toJson(),
+        perfectDay2.toJson(),
+        perfectDay3.toJson(),
+      ]);
+      await prefs.setString('pt2_history', historyJson);
+
+      final streakEngine = PrayerStreakEngine.instance;
+      streakEngine.fardhStreaks.value = {
+        'الفجر': 5.0,
+        'الظهر': 5.0,
+        'العصر': 5.0,
+        'المغرب': 5.0,
+        'العشاء': 5.0,
+      };
+
+      final bonusEngine = BonusEngine.instance;
+      
+      // First check
+      await bonusEngine.checkAndApplyConsistencyBonus();
+      expect(streakEngine.fardhStreaks.value['الفجر'], 6.0);
+
+      // Second check (on the same day)
+      await bonusEngine.checkAndApplyConsistencyBonus();
+      expect(streakEngine.fardhStreaks.value['الفجر'], 6.0); // Should remain 6.0, not 7.0!
+    });
+
+    test('PrayerEngine reloadCoordinates updates coordinates and propagates them to PrayerRuleEngine', () async {
+      final prayerEngine = PrayerEngine.instance;
+      final ruleEngine = sl<PrayerRuleEngine>();
+
+      // Mock new coordinates in SharedPreferences via PrayerConfig
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('prayer_lat', 24.4539); // Abu Dhabi
+      await prefs.setDouble('prayer_lng', 54.3773);
+      
+      // Call reloadCoordinates
+      await prayerEngine.reloadCoordinates();
+
+      // Verify that coordinates were updated and times recalculated
+      final updatedCoords = ruleEngine.times.coordinates;
+      expect(updatedCoords.latitude, 24.4539);
+      expect(updatedCoords.longitude, 54.3773);
     });
   });
 }

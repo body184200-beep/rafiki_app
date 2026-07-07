@@ -79,10 +79,7 @@ class _C {
 
   // Backgrounds
   static const Color bg         = Color(0xFF03060E);
-  static const Color bgMid      = Color(0xFF060C18);
   static const Color surface    = Color(0xFF0A1220);
-  static const Color surfaceAlt = Color(0xFF0D1828);
-  static const Color glass      = Color(0xFF111E33);
 
   // Gold
   static const Color gold       = Color(0xFFD4A843);
@@ -123,7 +120,6 @@ class _QuranRadioPageState extends State<QuranRadioPage>
 
   final _radio = RadioController.instance;
   bool _isLoading = false;
-  bool _isPressed = false;
   bool _isPlaying = false; // driven by playerStateStream
 
   // ── Controllers ───────────────────────────────────────────────────────────

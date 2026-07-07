@@ -11,9 +11,7 @@ class _C {
   static const border    = Color(0xFF242836);
   static const gold      = Color(0xFFD4A843);
   static const goldLight = Color(0xFFF0C870);
-  static const goldDim   = Color(0xFF8A6820);
-  static const crimson   = Color(0xFF8B2020);
-  static const crimsonLt = Color(0xFFBF3A3A);
+
   static const sand      = Color(0xFFE8D5A3);
   static const sandDim   = Color(0xFF9A8860);
   static const onCard    = Color(0xFFF5EDD8);

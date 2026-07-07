@@ -5,6 +5,7 @@ import 'package:rafiki_app/core/logging/app_logger.dart';
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'bonus_engine.dart';
 import 'prayer_streak_engine.dart';
+import 'prayer_rule_engine.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 
 enum PrayerEvent {
@@ -35,6 +36,15 @@ class PrayerEngine with WidgetsBindingObserver {
     _updatePrayerTimesIfNeeded();
     _evaluatePrayerWindows();
     _startTicker();
+  }
+
+  Future<void> reloadCoordinates() async {
+    final coords = await PrayerConfig.getCoordinates();
+    _todayTimes = PrayerTimes.today(coords, PrayerConfig.params);
+    if (sl.isRegistered<PrayerRuleEngine>()) {
+      sl<PrayerRuleEngine>().times = _todayTimes!;
+    }
+    AppLogger.info('Reloaded prayer times for new coordinates: ${coords.latitude}, ${coords.longitude}', tag: 'PrayerEngine');
   }
 
   void dispose() {
@@ -86,7 +96,6 @@ class PrayerEngine with WidgetsBindingObserver {
   void _evaluatePrayerWindows() {
     if (_todayTimes == null) return;
     
-    final now = DateTime.now();
     final times = _todayTimes!;
     
     final current = times.currentPrayer();

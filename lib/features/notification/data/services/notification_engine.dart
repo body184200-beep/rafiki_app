@@ -57,7 +57,7 @@ class NotificationEngine {
 
     // 3. Initialize AwesomeNotifications if not already done
     AwesomeNotifications().initialize(
-      null, // default icon
+      'resource://mipmap/ic_launcher',
       [
         NotificationChannel(
           channelKey: AppConstants.notificationChannelAzkar,

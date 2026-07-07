@@ -155,6 +155,29 @@ class ScoreRepositoryImpl implements domain.ScoreRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kLastResetDate, date);
   }
+
+  @override
+  Future<void> saveScoreState({
+    required double todayScore,
+    required double totalScore,
+    required List<String> processedTransactions,
+    String? lastResetDate,
+    List<String>? history,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final futures = <Future>[
+      prefs.setDouble(_kTodayScore, todayScore),
+      prefs.setDouble(_kTotalScore, totalScore),
+      prefs.setStringList(_kTransactions, processedTransactions),
+    ];
+    if (lastResetDate != null) {
+      futures.add(prefs.setString(_kLastResetDate, lastResetDate));
+    }
+    if (history != null) {
+      futures.add(prefs.setStringList(_kHistory, history));
+    }
+    await Future.wait(futures);
+  }
 }
 
 class StreakRepositoryImpl implements domain.StreakRepository {
@@ -174,20 +197,20 @@ class StreakRepositoryImpl implements domain.StreakRepository {
   }
 
   @override
-  Future<Map<String, int>> loadFardhStreaks() async {
+  Future<Map<String, double>> loadFardhStreaks() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kFardhStreaks);
     if (raw != null) {
       try {
         final Map<String, dynamic> decoded = jsonDecode(raw);
-        return decoded.map((k, v) => MapEntry(k, v as int));
+        return decoded.map((k, v) => MapEntry(k, (v as num).toDouble()));
       } catch (_) {}
     }
     return {};
   }
 
   @override
-  Future<void> saveFardhStreaks(Map<String, int> streaks) async {
+  Future<void> saveFardhStreaks(Map<String, double> streaks) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kFardhStreaks, jsonEncode(streaks));
   }

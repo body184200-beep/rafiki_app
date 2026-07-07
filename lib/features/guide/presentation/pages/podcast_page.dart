@@ -34,17 +34,15 @@ class _P {
   static const cardHigh = Color(0xFF1C2337);
 
   static const amber    = Color(0xFFE8A030);
-  static const amberDim = Color(0xFF6E4A12);
+
   static const amberSoft= Color(0xFFF5C878);
 
   static const teal     = Color(0xFF28B8A4);
-  static const tealDim  = Color(0xFF10534A);
+
 
   static const text1    = Color(0xFFF0ECD8);
   static const text2    = Color(0xFFB8B09A);
   static const text3    = Color(0xFF6E6858);
-
-  static const red      = Color(0xFFE05050);
 
   // Per-category accent
   static const List<List<Color>> palettes = [

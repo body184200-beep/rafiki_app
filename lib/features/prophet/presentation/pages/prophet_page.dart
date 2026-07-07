@@ -7,12 +7,8 @@ class _C {
   static const bg         = Color(0xFF07090F);
   static const surface    = Color(0xFF0D1018);
   static const surfaceAlt = Color(0xFF111520);
-  static const border     = Color(0xFF1E2435);
   static const gold       = Color(0xFFD4A843);
   static const goldLight  = Color(0xFFF0C870);
-  static const goldDim    = Color(0xFF7A5E1A);
-  static const emerald    = Color(0xFF1A6B50);
-  static const emeraldLt  = Color(0xFF2DD4A0);
   static const onCard     = Color(0xFFF5EDD8);
   static const muted      = Color(0xFF4A5568);
   static const textBody   = Color(0xFFCBD5E1);
