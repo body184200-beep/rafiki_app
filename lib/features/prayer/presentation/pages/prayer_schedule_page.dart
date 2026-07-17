@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_streak_engine.dart';
 
@@ -8,6 +7,9 @@ import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
 import 'package:rafiki_app/features/prayer/domain/repositories/prayer_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rafiki_app/features/prayer/presentation/widgets/prayer_schedule_widgets.dart';
+import 'package:rafiki_app/features/prayer/presentation/widgets/prayer_schedule_painters.dart';
+
 
 import 'package:rafiki_app/features/prayer/presentation/controllers/prayer_schedule_controller.dart';
 
@@ -23,7 +25,6 @@ class _T {
   static const goldSoft= T.goldSoft;
 
   static const flame   = T.flame;
-  static const flameL  = T.flameL;
 
   static const violet  = T.violet;
   static const violetL = T.violetL;
@@ -93,7 +94,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   String _banner = '';
 
   // Qada-pending prayers that belong to PREVIOUS days (carried over)
-  List<_QadaEntry> _pendingQada = [];
+  List<QadaCarryEntry> _pendingQada = [];
 
   late AnimationController _bgCtrl;
   late AnimationController _headerCtrl;
@@ -223,7 +224,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         final rec = _today.recordFor(p);
         if (rec.state == PrayerState.oadaPending) {
           _pendingQada.add(
-              _QadaEntry(prayerName: p.name, dateKey: _today.dateKey));
+              QadaCarryEntry(prayerName: p.name, dateKey: _today.dateKey));
         }
       }
 
@@ -285,7 +286,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
 
     // Load pending qada entries
     final entries = await sl<PrayerRepository>().loadQadaEntries();
-    _pendingQada = entries.map((e) => _QadaEntry(prayerName: e.prayerName, dateKey: e.dateKey)).toList();
+    _pendingQada = entries.map((e) => QadaCarryEntry(prayerName: e.prayerName, dateKey: e.dateKey)).toList();
 
     // Load or initialise today's record
     _today = await sl<PrayerRepository>().loadTodayRecord(_todayKey());
@@ -396,7 +397,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   }
 
   // ── Action: Complete a carried-over qada from a previous day ─
-  void _completeCarryQada(_QadaEntry entry) async {
+  void _completeCarryQada(QadaCarryEntry entry) async {
     HapticFeedback.mediumImpact();
     
     final score = ScoreConstants.qada;
@@ -460,7 +461,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
                 if (_banner.isNotEmpty)
-                  SliverToBoxAdapter(child: _BannerWidget(text: _banner)),
+                  SliverToBoxAdapter(child: BannerWidget(text: _banner)),
                 SliverToBoxAdapter(child: _buildHeroCard()),
                 const SliverToBoxAdapter(child: SizedBox(height: 14)),
                 SliverToBoxAdapter(child: _buildMiniStats()),
@@ -480,7 +481,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                           (ctx, i) {
                         final pr  = kPrayers[i];
                         final rec = _today.recordFor(pr);
-                        return _PrayerCard(
+                        return PrayerCard(
                           key:          ValueKey(pr.name),
                           prayer:       pr,
                           record:       rec,
@@ -519,7 +520,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         child: AnimatedBuilder(
           animation: _bgCtrl,
           builder: (_, __) => CustomPaint(
-            painter: _BgPainter(_bgCtrl.value),
+            painter: BgPainter(_bgCtrl.value),
           ),
         ),
       );
@@ -552,7 +553,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
               width: 88,
               height: 88,
               child: CustomPaint(
-                painter: _ArcProgressPainter(_progress, _T.jade),
+                painter: ArcProgressPainter(_progress, _T.jade),
                 child: Center(
                   child: Text('${(_progress * 100).toInt()}%',
                       style: const TextStyle(
@@ -613,21 +614,21 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
       children: [
         // Show today's daily streak count (on-time fardh prayers so far)
         Expanded(
-            child: _MiniStatCard(
+            child: MiniStatCard(
                 icon: Icons.local_fire_department_rounded,
                 label: 'السلسلة',
                 value: '$_streak يوم',
                 color: _T.flame)),
         const SizedBox(width: 10),
         Expanded(
-            child: _MiniStatCard(
+            child: MiniStatCard(
                 icon: Icons.mosque_rounded,
                 label: 'الفروض',
                 value: '$_prayedCount / ${kPrayers.length}',
                 color: _T.jade)),
         const SizedBox(width: 10),
         Expanded(
-            child: _MiniStatCard(
+            child: MiniStatCard(
                 icon: Icons.auto_awesome_rounded,
                 label: 'السنن',
                 value: '$_sunnahDone / $kTotalSunnah',
@@ -766,7 +767,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
               children: [
                 // فروض
                 Expanded(
-                  child: _ScoreDetailChip(
+                  child: ScoreDetailChip(
                     label: 'الفروض',
                     value: fardhScore,
                     icon: Icons.mosque_rounded,
@@ -776,7 +777,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                 const SizedBox(width: 8),
                 // سنن
                 Expanded(
-                  child: _ScoreDetailChip(
+                  child: ScoreDetailChip(
                     label: 'السنن',
                     value: sunnahScore,
                     icon: Icons.auto_awesome_rounded,
@@ -919,9 +920,9 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                     spacing: 6,
                     runSpacing: 6,
                     children: hist.isEmpty
-                        ? [const _DayChip(completed: false, isEmpty: true)]
+                        ? [const DayChip(completed: false, isEmpty: true)]
                         : hist
-                        .map((d) => _DayChip(
+                        .map((d) => DayChip(
                         completed: d.totalScore >= kMaxDayScore))
                         .toList(),
                   ),
@@ -959,7 +960,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
             ],
           ),
           const SizedBox(height: 12),
-          ..._pendingQada.map((e) => _QadaCarryCard(
+          ..._pendingQada.map((e) => QadaCarryCard(
             entry:      e,
             onComplete: () => _completeCarryQada(e),
           )),
@@ -969,862 +970,3 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Qada Carry Entry
-// ─────────────────────────────────────────────────────────────
-class _QadaEntry {
-  final String prayerName;
-  final String dateKey;
-  bool completed = false;
-
-  _QadaEntry(
-      {required this.prayerName,
-        required this.dateKey});
-
-}
-
-class _QadaCarryCard extends StatelessWidget {
-  final _QadaEntry entry;
-  final VoidCallback onComplete;
-  const _QadaCarryCard({required this.entry, required this.onComplete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(Icons.schedule_rounded, color: _T.rubyL, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text('${entry.prayerName} (${entry.dateKey})',
-                style: const TextStyle(color: _T.t1, fontSize: 13)),
-          ),
-          GestureDetector(
-            onTap: onComplete,
-            child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _T.ruby.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: _T.ruby.withValues(alpha: 0.4)),
-              ),
-              child: const Text('قضيتها',
-                  style: TextStyle(
-                      color: _T.rubyL,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Day Chip
-// ─────────────────────────────────────────────────────────────
-class _DayChip extends StatelessWidget {
-  final bool completed;
-  final bool isEmpty;
-  const _DayChip({required this.completed, this.isEmpty = false});
-
-  @override
-  Widget build(BuildContext context) {
-    Color bg, border, text;
-    String label;
-    IconData icon;
-    if (isEmpty) {
-      bg = _T.t3.withValues(alpha: 0.1);
-      border = _T.t3.withValues(alpha: 0.25);
-      text = _T.t3;
-      label = 'لا يوجد تاريخ';
-      icon = Icons.calendar_today_rounded;
-    } else if (completed) {
-      bg = _T.jade.withValues(alpha: 0.12);
-      border = _T.jade.withValues(alpha: 0.35);
-      text = _T.jade;
-      label = 'مكتمل';
-      icon = Icons.check_circle_rounded;
-    } else {
-      bg = _T.t3.withValues(alpha: 0.1);
-      border = _T.t3.withValues(alpha: 0.25);
-      text = _T.t3;
-      label = 'غير مكتمل';
-      icon = Icons.remove_circle_outline_rounded;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: text, size: 12),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  color: text,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Banner
-// ─────────────────────────────────────────────────────────────
-class _BannerWidget extends StatelessWidget {
-  final String text;
-  const _BannerWidget({required this.text});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-    child: Container(
-      padding:
-      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: _T.flame.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border:
-        Border.all(color: _T.flame.withValues(alpha: 0.25)),
-      ),
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: _T.flameL, fontSize: 13)),
-    ),
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Prayer Card
-// ─────────────────────────────────────────────────────────────
-class _PrayerCard extends StatefulWidget {
-  final PrayerDef prayer;
-  final PrayerRecord record;
-  final ValueChanged<bool> onComplete;
-  final VoidCallback onQada;
-  final ValueChanged<int> onMarkSunnah;
-  final int index;
-
-  const _PrayerCard({
-    super.key,
-    required this.prayer,
-    required this.record,
-    required this.onComplete,
-    required this.onQada,
-    required this.onMarkSunnah,
-    required this.index,
-  });
-
-  @override
-  State<_PrayerCard> createState() => _PrayerCardState();
-}
-
-class _PrayerCardState extends State<_PrayerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double>   _fade;
-  late Animation<Offset>   _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 500 + widget.index * 80));
-    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    Future.delayed(Duration(milliseconds: widget.index * 70), () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Color get _stateColor {
-    switch (widget.record.state) {
-      case PrayerState.locked:                return _T.t3;
-      case PrayerState.available:             return widget.prayer.accent;
-      case PrayerState.completedIndividual:   return _T.jade;
-      case PrayerState.completedCongregation: return _T.gold;
-      case PrayerState.oadaPending:           return _T.ruby;
-      case PrayerState.oadaCompleted:         return _T.violet;
-    }
-  }
-
-  Color get _stateBg {
-    switch (widget.record.state) {
-      case PrayerState.locked:                return _T.card;
-      case PrayerState.available:             return widget.prayer.tint;
-      case PrayerState.completedIndividual:   return const Color(0xFF0E1E18);
-      case PrayerState.completedCongregation: return const Color(0xFF1A160A);
-      case PrayerState.oadaPending:           return const Color(0xFF1E0E0E);
-      case PrayerState.oadaCompleted:         return const Color(0xFF120E1A);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p     = widget.prayer;
-    final rec   = widget.record;
-    final state = rec.state;
-    final sc    = _stateColor;
-
-    return SlideTransition(
-      position: _slide,
-      child: FadeTransition(
-        opacity: _fade,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              color: _stateBg,
-              border: Border.all(
-                color: sc.withValues(
-                    alpha: state == PrayerState.locked ? 0.12 : 0.4),
-                width: state == PrayerState.locked ? 1 : 1.4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: sc.withValues(
-                      alpha: state == PrayerState.locked ? 0.05 : 0.15),
-                  blurRadius: state == PrayerState.locked ? 8 : 24,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [sc, sc.withValues(alpha: 0.2)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 20, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            _iconBox(p, sc, state),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(p.name,
-                                          style: TextStyle(
-                                              color: state ==
-                                                  PrayerState.locked
-                                                  ? _T.t3
-                                                  : _T.t1,
-                                              fontSize: 18,
-                                              fontWeight:
-                                              FontWeight.w900)),
-                                      const SizedBox(width: 8),
-                                      _stateBadge(state),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      _RakatDots(
-                                          rakats: p.rakats,
-                                          accent: sc,
-                                          done: state.isCompleted),
-                                      const SizedBox(width: 6),
-                                      Text('${p.rakats} ركعات',
-                                          style: const TextStyle(
-                                              color: _T.t3,
-                                              fontSize: 12)),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildActionArea(state, p, sc),
-                        if (p.sunnah.isNotEmpty &&
-                            (state == PrayerState.available ||
-                                state ==
-                                    PrayerState.completedIndividual ||
-                                state ==
-                                    PrayerState
-                                        .completedCongregation)) ...[
-                          const SizedBox(height: 12),
-                          _buildSunnahRow(p, sc, rec),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _iconBox(PrayerDef p, Color sc, PrayerState state) => Container(
-    width: 46,
-    height: 46,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(13),
-      color: sc.withValues(
-          alpha: state == PrayerState.locked ? 0.05 : 0.12),
-      border: Border.all(
-          color: sc.withValues(
-              alpha: state == PrayerState.locked ? 0.15 : 0.3)),
-    ),
-    child: Icon(
-      state == PrayerState.locked
-          ? Icons.lock_outline_rounded
-          : p.icon,
-      color: sc.withValues(
-          alpha: state == PrayerState.locked ? 0.4 : 1),
-      size: 22,
-    ),
-  );
-
-  Widget _stateBadge(PrayerState state) {
-    String label;
-    Color color;
-    IconData icon;
-
-    switch (state) {
-      case PrayerState.locked:
-        label = 'مغلق';
-        color = _T.t3;
-        icon  = Icons.lock_outline_rounded;
-      case PrayerState.available:
-        label = 'متاحة';
-        color = widget.prayer.accent;
-        icon  = Icons.radio_button_unchecked_rounded;
-      case PrayerState.completedIndividual:
-        label = 'فردي';
-        color = _T.jade;
-        icon  = Icons.check_circle_rounded;
-      case PrayerState.completedCongregation:
-        label = 'جماعة';
-        color = _T.gold;
-        icon  = Icons.groups_rounded;
-      case PrayerState.oadaPending:
-        label = 'قضاء';
-        color = _T.ruby;
-        icon  = Icons.warning_amber_rounded;
-      case PrayerState.oadaCompleted:
-        label = 'قُضيت';
-        color = _T.violet;
-        icon  = Icons.check_circle_outline_rounded;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 11),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionArea(PrayerState state, PrayerDef p, Color sc) {
-    switch (state) {
-      case PrayerState.locked:
-        return _lockedMessage();
-      case PrayerState.available:
-        return _availableActions();
-      case PrayerState.completedIndividual:
-        return _completedMessage(
-            'أديتها فردياً', _T.jade, Icons.person_rounded);
-      case PrayerState.completedCongregation:
-        return _completedMessage(
-            'أديتها في الجماعة', _T.gold, Icons.groups_rounded);
-      case PrayerState.oadaPending:
-        return _qadaAction();
-      case PrayerState.oadaCompleted:
-        return _completedMessage(
-            'قُضيت', _T.violet, Icons.check_circle_outline_rounded);
-    }
-  }
-
-  Widget _lockedMessage() => Row(
-    children: [
-      Icon(Icons.access_time_rounded, color: _T.t3, size: 14),
-      const SizedBox(width: 6),
-      const Text('لم يحن وقت الصلاة بعد',
-          style: TextStyle(color: _T.t3, fontSize: 12)),
-    ],
-  );
-
-  Widget _availableActions() => Row(
-    children: [
-      Expanded(
-          child: _ActionBtn(
-            label: 'صليتها جماعة',
-            icon:  Icons.groups_rounded,
-            color: _T.gold,
-            onTap: () => widget.onComplete(true),
-          )),
-      const SizedBox(width: 10),
-      Expanded(
-          child: _ActionBtn(
-            label: 'صليتها فردي',
-            icon:  Icons.person_rounded,
-            color: _T.jade,
-            onTap: () => widget.onComplete(false),
-          )),
-    ],
-  );
-
-  Widget _qadaAction() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: _T.rubyL, size: 14),
-          const SizedBox(width: 6),
-          const Text('فات وقت الصلاة — تبقّى القضاء',
-              style: TextStyle(color: _T.rubyL, fontSize: 12)),
-        ],
-      ),
-      const SizedBox(height: 10),
-      GestureDetector(
-        onTap: widget.onQada,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          decoration: BoxDecoration(
-            color: _T.ruby.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: _T.ruby.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.refresh_rounded,
-                  color: _T.rubyL, size: 16),
-              const SizedBox(width: 8),
-              const Text('قضيتها الآن',
-                  style: TextStyle(
-                      color: _T.rubyL,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ),
-      ),
-    ],
-  );
-
-  Widget _completedMessage(String text, Color color, IconData icon) => Row(
-    children: [
-      Icon(icon, color: color, size: 16),
-      const SizedBox(width: 8),
-      Text(text,
-          style: TextStyle(
-              color: color,
-              fontSize: 13,
-              fontWeight: FontWeight.w600)),
-    ],
-  );
-
-  Widget _buildSunnahRow(PrayerDef p, Color sc, PrayerRecord rec) =>
-      Align(
-        alignment: Alignment.centerRight,
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: List.generate(p.sunnah.length, (i) {
-            final sel = rec.completedSunnah.contains(i);
-            return GestureDetector(
-              onTap: sel ? null : () => widget.onMarkSunnah(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: sel
-                      ? sc.withValues(alpha: 0.18)
-                      : _T.bg.withValues(alpha: 0.5),
-                  border: Border.all(
-                      color: sel ? sc : _T.t3.withValues(alpha: 0.3)),
-                  boxShadow: sel
-                      ? [BoxShadow(
-                      color: sc.withValues(alpha: 0.2),
-                      blurRadius: 8)]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (sel)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: Icon(Icons.check_rounded,
-                            color: sc, size: 13),
-                      ),
-                    Text(p.sunnah[i],
-                        style: TextStyle(
-                          color: sel ? sc : _T.t2,
-                          fontSize: 12.5,
-                          fontWeight:
-                          sel ? FontWeight.w700 : FontWeight.w400,
-                        )),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ),
-      );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Action Button
-// ─────────────────────────────────────────────────────────────
-class _ActionBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionBtn({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-        boxShadow: [
-          BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Rakat Dots
-// ─────────────────────────────────────────────────────────────
-class _RakatDots extends StatelessWidget {
-  final int rakats;
-  final Color accent;
-  final bool done;
-  const _RakatDots(
-      {required this.rakats, required this.accent, required this.done});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: List.generate(
-      rakats,
-          (i) => Container(
-        width: 7,
-        height: 7,
-        margin: const EdgeInsets.only(left: 3),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: done
-              ? accent
-              : accent.withValues(alpha: 0.3 + i * 0.1),
-          boxShadow: done
-              ? [BoxShadow(
-              color: accent.withValues(alpha: 0.4),
-              blurRadius: 4)]
-              : [],
-        ),
-      ),
-    ),
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Mini Stat Card
-// ─────────────────────────────────────────────────────────────
-class _MiniStatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MiniStatCard(
-      {required this.icon,
-        required this.label,
-        required this.value,
-        required this.color});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding:
-    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      color: _T.card,
-      border: Border.all(color: color.withValues(alpha: 0.2)),
-      boxShadow: [
-        BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4))
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 8),
-        Text(value,
-            style: TextStyle(
-                color: color,
-                fontSize: 15,
-                fontWeight: FontWeight.w800)),
-        const SizedBox(height: 2),
-        Text(label,
-            style:
-            const TextStyle(color: _T.t3, fontSize: 11)),
-      ],
-    ),
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Score Detail Chip  (used inside Live Score Card)
-// ─────────────────────────────────────────────────────────────
-class _ScoreDetailChip extends StatelessWidget {
-  final String label;
-  final double value;
-  final IconData icon;
-  final Color color;
-
-  const _ScoreDetailChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value > 0
-                    ? '+${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)}'
-                    : '٠',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(label,
-                  style:
-                  const TextStyle(color: _T.t3, fontSize: 10)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Arc Progress Painter
-// ─────────────────────────────────────────────────────────────
-class _ArcProgressPainter extends CustomPainter {
-  final double progress;
-  final Color  color;
-  const _ArcProgressPainter(this.progress, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2 - 6;
-
-    canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = color.withValues(alpha: 0.1)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6);
-
-    if (progress > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -pi / 2, 2 * pi * progress, false,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -pi / 2, 2 * pi * progress, false,
-        Paint()
-          ..color = color.withValues(alpha: 0.25)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 12
-          ..strokeCap = StrokeCap.round
-          ..maskFilter =
-          const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-    }
-    if (progress > 0.02) {
-      final angle = -pi / 2 + 2 * pi * progress;
-      canvas.drawCircle(
-        Offset(center.dx + radius * cos(angle),
-            center.dy + radius * sin(angle)),
-        5,
-        Paint()..color = color,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ArcProgressPainter old) =>
-      old.progress != progress;
-}
-
-// ─────────────────────────────────────────────────────────────
-//  Background Painter
-// ─────────────────────────────────────────────────────────────
-class _BgPainter extends CustomPainter {
-  final double t;
-  const _BgPainter(this.t);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF080D12),
-            Color(0xFF0C1520),
-            Color(0xFF080D12)
-          ],
-        ).createShader(
-            Rect.fromLTWH(0, 0, size.width, size.height)),
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.85,
-          size.height * 0.08 + sin(t * 2 * pi) * 25),
-      200,
-      Paint()
-        ..color = const Color(0xFF2EC4A0).withValues(alpha: 0.05)
-        ..maskFilter =
-        const MaskFilter.blur(BlurStyle.normal, 100),
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.1,
-          size.height * 0.85 + cos(t * 2 * pi) * 20),
-      180,
-      Paint()
-        ..color = const Color(0xFFD4A030).withValues(alpha: 0.04)
-        ..maskFilter =
-        const MaskFilter.blur(BlurStyle.normal, 100),
-    );
-    final dot =
-    Paint()..color = Colors.white.withValues(alpha: 0.02);
-    const s = 36.0;
-    for (double x = 0; x < size.width; x += s) {
-      for (double y = 0; y < size.height; y += s) {
-        canvas.drawCircle(Offset(x, y), 1, dot);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_BgPainter old) => old.t != t;
-}

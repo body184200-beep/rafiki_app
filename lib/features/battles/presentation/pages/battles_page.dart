@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:rafiki_app/features/battles/data/models/battle_model.dart';
+import 'package:rafiki_app/features/battles/data/datasources/battles_list_data.dart';
 
 import 'package:rafiki_app/features/battles/presentation/pages/battle_details_page.dart';
 
@@ -12,7 +14,6 @@ class _C {
   static const gold      = Color(0xFFD4A843);
   static const goldLight = Color(0xFFF0C870);
 
-  static const sand      = Color(0xFFE8D5A3);
   static const sandDim   = Color(0xFF9A8860);
   static const onCard    = Color(0xFFF5EDD8);
   static const muted     = Color(0xFF5A6070);
@@ -20,69 +21,17 @@ class _C {
 
 // ─── BATTLE DATA ─────────────────────────────────────────────────────────────
 
-class _Battle {
-  final String name;
-  final String year;   // Hijri year
-  final String emoji;
-  final Color accent;
-
-  const _Battle({
-    required this.name,
-    required this.year,
-    required this.emoji,
-    required this.accent,
-  });
-}
-
-const List<_Battle> _battles = [
-  _Battle(name: "غزوة الأبواء",           year: "٢ هـ",  emoji: "🏜",  accent: Color(0xFF8B6914)),
-  _Battle(name: "غزوة بواط",              year: "٢ هـ",  emoji: "🏞",  accent: Color(0xFF5D4037)),
-  _Battle(name: "غزوة العشيرة",           year: "٢ هـ",  emoji: "🌴",  accent: Color(0xFF33691E)),
-  _Battle(name: "غزوة سفوان (بدر الأولى)",  year: "٢ هـ",  emoji: "🐫",  accent: Color(0xFF795548)),
-  _Battle(name: "غزوة بدر الكبرى",        year: "٢ هـ",  emoji: "⚔️",  accent: Color(0xFF8B2020)),
-  _Battle(name: "غزوة بني سليم (الكدر)",   year: "٢ هـ",  emoji: "💧",  accent: Color(0xFF00796B)),
-  _Battle(name: "غزوة بني قينقاع",        year: "٢ هـ",  emoji: "🏰",  accent: Color(0xFF1A5276)),
-  _Battle(name: "غزوة السويق",            year: "٢ هـ",  emoji: "🌾",  accent: Color(0xFFE65100)),
-  _Battle(name: "غزوة ذي أمر (غطفان)",    year: "٣ هـ",  emoji: "🗡",  accent: Color(0xFFBF360C)),
-  _Battle(name: "غزوة بحران",             year: "٣ هـ",  emoji: "⛏",  accent: Color(0xFF3E2723)),
-  _Battle(name: "غزوة أحد",               year: "٣ هـ",  emoji: "🗡",  accent: Color(0xFF6E2F1A)),
-  _Battle(name: "غزوة حمراء الأسد",       year: "٣ هـ",  emoji: "🦁",  accent: Color(0xFF7D3C12)),
-  _Battle(name: "غزوة بني النضير",        year: "٤ هـ",  emoji: "🌴",  accent: Color(0xFF1E6B3E)),
-  _Battle(name: "غزوة ذات الرقاع",        year: "٤ هـ",  emoji: "🧳",  accent: Color(0xFF5D4037)),
-  _Battle(name: "غزوة بدر الآخرة (بدر الموعد)", year: "٤ هـ", emoji: "🏹", accent: Color(0xFF1B5E20)),
-  _Battle(name: "غزوة دومة الجندل",        year: "٥ هـ",  emoji: "🏰",  accent: Color(0xFF4A148C)),
-  _Battle(name: "غزوة الخندق",            year: "٥ هـ",  emoji: "⛏",  accent: Color(0xFF4A235A)),
-  _Battle(name: "غزوة بني قريظة",         year: "٥ هـ",  emoji: "🏰",  accent: Color(0xFF1A3A5C)),
-  _Battle(name: "غزوة بني المصطلق",       year: "٥ هـ",  emoji: "🏕",  accent: Color(0xFF33691E)),
-  _Battle(name: "صلح الحديبية",           year: "٦ هـ",  emoji: "🕊",  accent: Color(0xFF1A5276)),
-  _Battle(name: "غزوة بني لحيان",         year: "٦ هـ",  emoji: "🛡",  accent: Color(0xFF0D47A1)),
-  _Battle(name: "غزوة خيبر",              year: "٧ هـ",  emoji: "🏰",  accent: Color(0xFF6B2D2D)),
-  _Battle(name: "غزوة مؤتة",              year: "٨ هـ",  emoji: "🛡",  accent: Color(0xFF2C3E50)),
-  _Battle(name: "فتح مكة",                year: "٨ هـ",  emoji: "🕌",  accent: Color(0xFF7D6608)),
-  _Battle(name: "غزوة حنين",              year: "٨ هـ",  emoji: "🏹",  accent: Color(0xFF6E2F1A)),
-  _Battle(name: "غزوة الطائف",            year: "٨ هـ",  emoji: "🏹",  accent: Color(0xFF4E342E)),
-  _Battle(name: "غزوة تبوك",              year: "٩ هـ",  emoji: "🐪",  accent: Color(0xFF7B3F00)),
-];
-
-const List<_Battle> _sarayaList = [
-  _Battle(name: "سرية سيف البحر", year: "١ هـ", emoji: "⛵", accent: Color(0xFF00897B)),
-  _Battle(name: "سرية نخلة", year: "٢ هـ", emoji: "🌴", accent: Color(0xFF7CB342)),
-  _Battle(name: "سرية بئر معونة", year: "٤ هـ", emoji: "💧", accent: Color(0xFFE53935)),
-  _Battle(name: "سرية الرجيع", year: "٤ هـ", emoji: "🛡", accent: Color(0xFFD81B60)),
-  _Battle(name: "سرية ذات السلاسل", year: "٨ هـ", emoji: "⛓", accent: Color(0xFF5E35B1)),
-  _Battle(name: "سرية أسامة بن زيد", year: "١١ هـ", emoji: "🚩", accent: Color(0xFF3949AB)),
-];
 
 // ─── MAIN WIDGET ──────────────────────────────────────────────────────────────
 
-class Sh2 extends StatefulWidget {
-  const Sh2({super.key});
+class BattlesPage extends StatefulWidget {
+  const BattlesPage({super.key});
 
   @override
-  State<Sh2> createState() => _Sh2State();
+  State<BattlesPage> createState() => BattlesPageState();
 }
 
-class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
+class BattlesPageState extends State<BattlesPage> with TickerProviderStateMixin {
   late final AnimationController _entryCtrl;
   int _selectedTab = 0; // 0 = غزوات الرسول ﷺ, 1 = السرايا والبعوث
 
@@ -103,7 +52,7 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final activeList = _selectedTab == 0 ? _battles : _sarayaList;
+    final activeList = _selectedTab == 0 ? battlesList : sarayaList;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -216,57 +165,33 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _dividerLine(align: CrossAxisAlignment.end),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Column(
-                  children: [
-                    const Text(
-                      "⚔",
-                      style: TextStyle(
-                        color: _C.gold,
-                        fontSize: 28,
-                        shadows: [Shadow(color: Color(0x88D4A843), blurRadius: 20)],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _dividerLine(align: CrossAxisAlignment.start),
-            ],
-          ),
-          const SizedBox(height: 10),
           const Text(
             "المعارك والبعوث النبوية",
-            textDirection: TextDirection.rtl,
             style: TextStyle(
-              color: _C.sand,
-              fontSize: 24,
+              color: _C.goldLight,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
               shadows: [Shadow(color: Color(0x33D4A843), blurRadius: 15)],
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           const Text(
             "الجهاد النبوي لحفظ كيان الدولة والدعوة",
             textDirection: TextDirection.rtl,
-            style: TextStyle(color: _C.muted, fontSize: 13),
+            style: TextStyle(color: _C.muted, fontSize: 12.5),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Container(
             height: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  _C.gold.withOpacity(0.28),
+                  _C.gold.withOpacity(0.25),
                   Colors.transparent,
                 ],
               ),
@@ -277,26 +202,7 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
     );
   }
 
-  Widget _dividerLine({required CrossAxisAlignment align}) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: align,
-        children: [
-          Container(
-            height: 1,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: align == CrossAxisAlignment.end
-                    ? [Colors.transparent, _C.gold.withOpacity(0.55)]
-                    : [_C.gold.withOpacity(0.55), Colors.transparent],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildSubheader(int count) {
     final label = _selectedTab == 0 ? "غزوة" : "سرية";
@@ -341,7 +247,7 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
 
   // ── GRID ──────────────────────────────────────────────────────────────────
 
-  Widget _buildGrid(List<_Battle> list) {
+  Widget _buildGrid(List<Battle> list) {
     return GridView.builder(
       key: ValueKey("$_selectedTab"),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -350,24 +256,18 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
         crossAxisCount: 2,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
-        childAspectRatio: 0.90,
+        childAspectRatio: 0.85,
       ),
       itemBuilder: (context, index) {
         final delay = Duration(milliseconds: 60 * index);
-        return _BattleCard(
+        return BattleCard(
           battle: list[index],
           index: index,
           entryController: _entryCtrl,
           entryDelay: delay,
           onTap: () => Navigator.push(
             context,
-            PageRouteBuilder(
-              pageBuilder: (_, anim, __) => FadeTransition(
-                opacity: anim,
-                child: BattleDetails.fromName(list[index].name),
-              ),
-              transitionDuration: const Duration(milliseconds: 320),
-            ),
+            slideRoute(BattleDetails.fromName(list[index].name)),
           ),
         );
       },
@@ -377,14 +277,15 @@ class _Sh2State extends State<Sh2> with TickerProviderStateMixin {
 
 // ─── BATTLE CARD ─────────────────────────────────────────────────────────────
 
-class _BattleCard extends StatefulWidget {
-  final _Battle battle;
+class BattleCard extends StatefulWidget {
+  final Battle battle;
   final int index;
   final AnimationController entryController;
   final Duration entryDelay;
   final VoidCallback onTap;
 
-  const _BattleCard({
+  const BattleCard({
+    super.key,
     required this.battle,
     required this.index,
     required this.entryController,
@@ -393,10 +294,10 @@ class _BattleCard extends StatefulWidget {
   });
 
   @override
-  State<_BattleCard> createState() => _BattleCardState();
+  State<BattleCard> createState() => BattleCardState();
 }
 
-class _BattleCardState extends State<_BattleCard> with SingleTickerProviderStateMixin {
+class BattleCardState extends State<BattleCard> with SingleTickerProviderStateMixin {
   late final AnimationController _pressCtrl;
   late final Animation<double> _entryFade;
   late final Animation<double> _entrySlide;
@@ -642,4 +543,18 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
     return oldDelegate.height != height || oldDelegate.child != child;
   }
+}
+
+Route slideRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOutCubic;
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      return SlideTransition(position: animation.drive(tween), child: child);
+    },
+    transitionDuration: const Duration(milliseconds: 320),
+  );
 }

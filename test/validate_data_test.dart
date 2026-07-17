@@ -1,18 +1,18 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rafiki_app/features/battles/presentation/pages/battle_details_page.dart';
-import 'package:rafiki_app/features/companions/presentation/pages/companion_details_page.dart';
+import 'package:rafiki_app/features/battles/data/datasources/battles_data.dart' as battles_details;
+import 'package:rafiki_app/features/companions/data/datasources/sahaba_details_data.dart' as sahaba_details;
 
 void main() {
   test('Detailed validation of companions, battles, and expeditions', () {
     print('=== DETAILED DATA VALIDATION ===');
 
     // 1. Load lists from files
-    final shabahScreenFile = File('lib/features/companions/presentation/pages/companions_page.dart');
+    final shabahScreenFile = File('lib/features/companions/data/datasources/sahaba_list_data.dart');
     final shabahContent = shabahScreenFile.readAsStringSync();
 
-    final ghazwatScreenFile = File('lib/features/battles/presentation/pages/battles_page.dart');
+    final ghazwatScreenFile = File('lib/features/battles/data/datasources/battles_list_data.dart');
     final ghazwatContent = ghazwatScreenFile.readAsStringSync();
 
     // Regex to match names in _sahabaList / _tabiList
@@ -26,9 +26,9 @@ void main() {
     print('Companions/Tabi\'in listed in UI screen: ${sahabiNames.length}');
     print('Battles/Saraya listed in UI screen: ${battleNames.length}');
 
-    final sahabaData = SahabiDetails.sahabaData;
-    final battlesData = BattleDetails.battlesData;
-    final sarayaData = BattleDetails.sarayaData;
+    final sahabaData = sahaba_details.sahabaData;
+    final battlesData = battles_details.battlesData;
+    final sarayaData = battles_details.sarayaData;
 
     final sahabaRequiredFields = [
       'description',

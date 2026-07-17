@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-import 'guide_page.dart';
 
 // ─────────────────────────────────────────────
 //  Color Palette
@@ -39,14 +38,14 @@ class SonaItem {
 // ─────────────────────────────────────────────
 //  Main Widget
 // ─────────────────────────────────────────────
-class Sona extends StatefulWidget {
-  const Sona({super.key});
+class SunnahPage extends StatefulWidget {
+  const SunnahPage({super.key});
 
   @override
-  State<Sona> createState() => _SonaState();
+  State<SunnahPage> createState() => _SunnahPageState();
 }
 
-class _SonaState extends State<Sona> with TickerProviderStateMixin {
+class _SunnahPageState extends State<SunnahPage> with TickerProviderStateMixin {
   late AnimationController _headerCtrl;
   late Animation<double> _headerFade;
   late Animation<Offset> _headerSlide;
@@ -225,12 +224,7 @@ class _SonaState extends State<Sona> with TickerProviderStateMixin {
           ),
           child: IconButton(
             onPressed: () {
-              Navigator.pop(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const Qu(),
-                ),
-              );
+              Navigator.pop(context);
             },
             icon: const Icon(
               Icons.arrow_back_ios,

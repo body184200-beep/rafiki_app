@@ -87,12 +87,12 @@ class _StartState extends State<Start> with TickerProviderStateMixin, WidgetsBin
   late Animation<double> _navBarAnimation;
 
   // ── Pages ──────────────────────────────────────────────────────────────
-  static const List<Widget> _pages = [
-    HomeGrid(),
-    Sh2(),
-    Rasolna(),
-    Qu(),
-    Hasanatey(),
+  static final List<Widget> _pages = [
+    CompanionsPage(),
+    BattlesPage(),
+    ProphetPage(),
+    GuidePage(),
+    DeedsPage(),
   ];
 
   // ── Nav items ─────────────────────────────────────────────────────────

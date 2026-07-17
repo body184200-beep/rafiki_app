@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/adeia_page.dart';
 import 'package:rafiki_app/features/hadith/presentation/pages/hadith_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/podcast_page.dart';
-import 'package:rafiki_app/features/guide/presentation/pages/community_page.dart';
+import 'package:rafiki_app/features/guide/presentation/pages/reciters_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/sunnah_page.dart';
 
 
@@ -13,14 +13,14 @@ import 'package:rafiki_app/features/guide/presentation/pages/sunnah_page.dart';
 //  Qu  –  Islamic Educational Hub
 // ─────────────────────────────────────────────────────────────────────────────
 
-class Qu extends StatefulWidget {
-  const Qu({super.key});
+class GuidePage extends StatefulWidget {
+  const GuidePage({super.key});
 
   @override
-  State<Qu> createState() => _QuState();
+  State<GuidePage> createState() => _GuidePageState();
 }
 
-class _QuState extends State<Qu> with TickerProviderStateMixin, WidgetsBindingObserver {
+class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, WidgetsBindingObserver {
   // ── Controllers ──────────────────────────────────────────────────────────────
   late final AnimationController _bgCtrl;
   late final AnimationController _entryCtrl;
@@ -102,7 +102,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin, WidgetsBindingOb
         accentA: const Color(0xff0D5C61),
         accentB: const Color(0xff12C4A0),
         arabicLabel: "تفسير",
-        destination: () => const TafsirPage(),
+        destination: () => RecitersPage(),
       ),
       _CardData(
         title: "بودكاست الصلاة",
@@ -129,7 +129,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin, WidgetsBindingOb
         accentA: const Color(0xff5C0A30),
         accentB: const Color(0xffE8417A),
         arabicLabel: "سنة",
-        destination: () => const Sona(),
+        destination: () => SunnahPage(),
       ),
       _CardData(
         title: "الأدعية والأذكار",
@@ -138,7 +138,7 @@ class _QuState extends State<Qu> with TickerProviderStateMixin, WidgetsBindingOb
         accentA: const Color(0xff1A5C30),
         accentB: const Color(0xff2ECC71),
         arabicLabel: "دعاء",
-        destination: () => const Adeia(),
+        destination: () => AdeiaPage(),
       ),
     ];
   }

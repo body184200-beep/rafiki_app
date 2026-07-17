@@ -13,9 +13,7 @@ void main() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   widgetsBinding.deferFirstFrame();
 
-  // ── Pre-load locale preference BEFORE runApp to prevent startup flash ──
-  // This ensures the app renders in the correct language on the very first
-  // frame, avoiding a jarring AR→EN (or EN→AR) switch during splash.
+
   final prefs = await SharedPreferences.getInstance();
   final localeProvider = LocaleProvider()..initFromPrefs(prefs);
 

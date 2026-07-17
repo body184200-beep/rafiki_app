@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:rafiki_app/features/companions/data/models/sahabi_model.dart';
+import 'package:rafiki_app/features/companions/data/datasources/sahaba_list_data.dart';
 
 import 'package:rafiki_app/features/companions/presentation/pages/companion_details_page.dart';
 
@@ -16,92 +18,17 @@ class _C {
 
 // ─── SAHABA DATA ──────────────────────────────────────────────────────────────
 
-class _Sahabi {
-  final String name;
-  final String title;
-  final String initial;
-  final Color accent;
-  final List<String> categories;
-
-  const _Sahabi({
-    required this.name,
-    required this.title,
-    required this.initial,
-    required this.accent,
-    required this.categories,
-  });
-}
-
-const List<_Sahabi> _sahabaList = [
-  _Sahabi(name: "أبو بكر الصديق",      title: "الصدّيق",         initial: "أ", accent: Color(0xFFD4A843), categories: ["الخلفاء الراشدون", "العشرة المبشرون", "المهاجرون", "أهل بدر", "أهل الرضوان", "رواة الحديث", "القادة والفرسان"]),
-  _Sahabi(name: "عمر بن الخطاب",       title: "الفاروق",         initial: "ع", accent: Color(0xFF8B2020), categories: ["الخلفاء الراشدون", "العشرة المبشرون", "المهاجرون", "أهل بدر", "أهل الرضوان", "رواة الحديث", "القادة والفرسان"]),
-  _Sahabi(name: "عثمان بن عفان",       title: "ذو النورين",      initial: "ع", accent: Color(0xFF1A6B50), categories: ["الخلفاء الراشدون", "العشرة المبشرون", "آل البيت", "المهاجرون", "أهل بدر", "أهل الرضوان", "رواة الحديث", "القادة والفرسان"]),
-  _Sahabi(name: "علي بن أبي طالب",     title: "باب مدينة العلم", initial: "ع", accent: Color(0xFF4A6BD4), categories: ["الخلفاء الراشدون", "العشرة المبشرون", "آل البيت", "المهاجرون", "أهل بدر", "أهل الرضوان", "رواة الحديث", "القادة والفرسان"]),
-  _Sahabi(name: "خالد بن الوليد",      title: "سيف الله المسلول",initial: "خ", accent: Color(0xFFB85C20), categories: ["المهاجرون", "القادة والفرسان"]),
-  _Sahabi(name: "عمرو بن العاص",       title: "فاتح مصر",        initial: "ع", accent: Color(0xFF6B3FA0), categories: ["المهاجرون", "القادة والفرسان"]),
-  _Sahabi(name: "عبدالرحمن بن عوف",    title: "من العشرة المبشرين", initial: "ع", accent: Color(0xFF2D8A6B), categories: ["العشرة المبشرون", "المهاجرون", "أهل بدر"]),
-  _Sahabi(name: "سعد بن أبي وقاص",    title: "أسد الإسلام",     initial: "س", accent: Color(0xFF8B6020), categories: ["العشرة المبشرون", "المهاجرون", "أهل بدر", "القادة والفرسان"]),
-  _Sahabi(name: "معاذ بن جبل",         title: "أعلم الحلال والحرام", initial: "م", accent: Color(0xFF1A5C8B), categories: ["الأنصار", "أهل بدر", "رواة الحديث"]),
-  _Sahabi(name: "مصعب بن عمير",        title: "أول سفير في الإسلام",  initial: "م", accent: Color(0xFF6B2D5E), categories: ["المهاجرون", "أهل بدر", "الشهداء"]),
-  _Sahabi(name: "بلال بن رباح",        title: "مؤذّن الرسول ﷺ", initial: "ب", accent: Color(0xFF8B4020), categories: ["المهاجرون", "أهل بدر"]),
-  _Sahabi(name: "حذيفة بن اليمان",     title: "صاحب السر",       initial: "ح", accent: Color(0xFF2D5C8B), categories: ["الأنصار", "رواة الحديث", "القادة والفرسان"]),
-  _Sahabi(name: "طلحة بن عبيد الله",    title: "الشهيد الحي",     initial: "ط", accent: Color(0xFFE2A732), categories: ["العشرة المبشرون", "المهاجرون", "الشهداء"]),
-  _Sahabi(name: "الزبير بن العوام",     title: "حواري الرسول ﷺ",  initial: "ز", accent: Color(0xFF9E2A2B), categories: ["العشرة المبشرون", "المهاجرون", "أهل بدر", "القادة والفرسان"]),
-  _Sahabi(name: "أبو عبيدة بن الجراح",  title: "أمين الأمة",      initial: "أ", accent: Color(0xFF355E3B), categories: ["العشرة المبشرون", "المهاجرون", "أهل بدر", "القادة والفرسان"]),
-  _Sahabi(name: "سلمان الفارسي",      title: "الباحث عن الحقيقة",  initial: "س", accent: Color(0xFF3F51B5), categories: ["المهاجرون", "رواة الحديث"]),
-  _Sahabi(name: "أبو هريرة",          title: "حافظ الأمة",      initial: "أ", accent: Color(0xFF8D6E63), categories: ["المهاجرون", "رواة الحديث"]),
-  _Sahabi(name: "عبد الله بن مسعود",   title: "فقيه الأمة",       initial: "ع", accent: Color(0xFF7E57C2), categories: ["المهاجرون", "أهل بدر", "رواة الحديث"]),
-  _Sahabi(name: "سعيد بن زيد", title: "مستجاب الدعوة", initial: "س", accent: Color(0xFF5D4037), categories: ["العشرة المبشرون", "المهاجرون", "القادة والفرسان"]),
-  _Sahabi(name: "خديجة بنت خويلد", title: "أم المؤمنين", initial: "خ", accent: Color(0xFFC2185B), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "عائشة بنت أبي بكر", title: "الفقيهة المحدثة", initial: "ع", accent: Color(0xFF7B1FA2), categories: ["آل البيت", "رواة الحديث", "الصحابيات"]),
-  _Sahabi(name: "حفصة بنت عمر", title: "حارسة المصحف", initial: "ح", accent: Color(0xFF303F9F), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "أم سلمة", title: "المستشارة الحكيمة", initial: "أ", accent: Color(0xFF00796B), categories: ["آل البيت", "رواة الحديث", "الصحابيات"]),
-  _Sahabi(name: "أنس بن مالك", title: "خادم رسول الله ﷺ", initial: "أ", accent: Color(0xFF388E3C), categories: ["الأنصار", "أهل الرضوان", "رواة الحديث"]),
-  _Sahabi(name: "عبد الله بن عمر", title: "المتتبع للأثر", initial: "ع", accent: Color(0xFFFBC02D), categories: ["المهاجرون", "أهل الرضوان", "رواة الحديث"]),
-  _Sahabi(name: "عبد الله بن عباس", title: "ترجمان القرآن", initial: "ع", accent: Color(0xFFE64A19), categories: ["آل البيت", "المهاجرون", "رواة الحديث"]),
-  _Sahabi(name: "أبو أيوب الأنصاري", title: "مضيف الرسول ﷺ", initial: "أ", accent: Color(0xFF512DA8), categories: ["الأنصار", "أهل بدر", "القادة والفرسان"]),
-  _Sahabi(name: "فاطمة الزهراء", title: "بضعة الرسول ﷺ", initial: "ف", accent: Color(0xFFD81B60), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "أسماء بنت أبي بكر", title: "ذات النطاقين", initial: "أ", accent: Color(0xFF0288D1), categories: ["المهاجرون", "الصحابيات"]),
-  _Sahabi(name: "نسيبة بنت كعب", title: "المجاهدة الفدائية", initial: "ن", accent: Color(0xFF689F38), categories: ["الأنصار", "أهل الرضوان", "الصحابيات"]),
-  _Sahabi(name: "حمزة بن عبد المطلب", title: "سيد الشهداء", initial: "ح", accent: Color(0xFFD32F2F), categories: ["آل البيت", "المهاجرون", "أهل بدر", "الشهداء"]),
-  _Sahabi(name: "جعفر بن أبي طالب", title: "جعفر الطيار", initial: "ج", accent: Color(0xFF1976D2), categories: ["آل البيت", "المهاجرون", "الشهداء", "القادة والفرسان"]),
-  
-  // Wives of the Prophet ﷺ (أمهات المؤمنين المتبقيات)
-  _Sahabi(name: "سودة بنت زمعة", title: "أم المؤمنين", initial: "س", accent: Color(0xFFEC407A), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "زينب بنت خزيمة", title: "أم المساكين", initial: "ز", accent: Color(0xFFAB47BC), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "زينب بنت جحش", title: "أم المؤمنين", initial: "ز", accent: Color(0xFF7E57C2), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "جويرية بنت الحارث", title: "العابدة الذاكرة", initial: "ج", accent: Color(0xFF5C6BC0), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "أم حبيبة", title: "المهاجرة الصابرة", initial: "أ", accent: Color(0xFF26A69A), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "صفية بنت حيي", title: "سليلة الأنبياء", initial: "ص", accent: Color(0xFF9CCC65), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "ميمونة بنت الحارث", title: "آخر زوجاته", initial: "م", accent: Color(0xFFD4E157), categories: ["آل البيت", "الصحابيات"]),
-
-  // Children of the Prophet ﷺ (أبناء وبنات الرسول ﷺ)
-  _Sahabi(name: "القاسم بن محمد", title: "صاحب الكنية", initial: "ق", accent: Color(0xFFFFA726), categories: ["آل البيت"]),
-  _Sahabi(name: "عبد الله بن محمد", title: "الطيب الطاهر", initial: "ع", accent: Color(0xFFFF7043), categories: ["آل البيت"]),
-  _Sahabi(name: "إبراهيم بن محمد", title: "الابن الأصغر", initial: "إ", accent: Color(0xFF8D6E63), categories: ["آل البيت"]),
-  _Sahabi(name: "زينب بنت محمد", title: "الابنة الكبرى", initial: "ز", accent: Color(0xFF26C6DA), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "رقية بنت محمد", title: "ذات الهجرتين", initial: "ر", accent: Color(0xFF29B6F6), categories: ["آل البيت", "الصحابيات"]),
-  _Sahabi(name: "أم كلثوم بنت محمد", title: "زوجة ذي النورين", initial: "أ", accent: Color(0xFF66BB6A), categories: ["آل البيت", "الصحابيات"]),
-];
-
-const List<_Sahabi> _tabiList = [
-  _Sahabi(name: "أويس القرني", title: "خير التابعين", initial: "أ", accent: Color(0xFF1E88E5), categories: ["الكل"]),
-  _Sahabi(name: "سعيد بن المسيب", title: "عالم أهل المدينة", initial: "س", accent: Color(0xFF43A047), categories: ["الكل"]),
-  _Sahabi(name: "الحسن البصري", title: "واعظ الأمة", initial: "ح", accent: Color(0xFF8E24AA), categories: ["الكل"]),
-  _Sahabi(name: "علي بن الحسين (زين العابدين)", title: "السجاد", initial: "ع", accent: Color(0xFFD81B60), categories: ["الكل", "آل البيت"]),
-  _Sahabi(name: "عمر بن عبد العزيز", title: "الخليفة العادل", initial: "ع", accent: Color(0xFFF4511E), categories: ["الكل"]),
-];
 
 // ─── MAIN WIDGET ──────────────────────────────────────────────────────────────
 
-class HomeGrid extends StatefulWidget {
-  const HomeGrid({super.key});
+class CompanionsPage extends StatefulWidget {
+  const CompanionsPage({super.key});
 
   @override
-  State<HomeGrid> createState() => _HomeGridState();
+  State<CompanionsPage> createState() => _CompanionsPageState();
 }
 
-class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin {
+class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProviderStateMixin {
   late final AnimationController _entryCtrl;
   int _selectedTab = 0; // 0 = الصحابة الكرام, 1 = كبار التابعين
   String _selectedCategory = "الكل";
@@ -138,7 +65,7 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    final activeList = _selectedTab == 0 ? _sahabaList : _tabiList;
+    final activeList = _selectedTab == 0 ? sahabaList : tabiList;
     final filteredList = _selectedCategory == "الكل"
         ? activeList
         : activeList.where((s) => s.categories.contains(_selectedCategory)).toList();
@@ -308,50 +235,32 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
         child: Column(
           children: [
-            Row(
-              children: [
-                _GoldLine(leftToRight: false),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Text(
-                    "✦",
-                    style: TextStyle(
-                      color: _C.gold,
-                      fontSize: 16,
-                      shadows: [Shadow(color: _C.gold.withOpacity(0.6), blurRadius: 14)],
-                    ),
-                  ),
-                ),
-                _GoldLine(leftToRight: true),
-              ],
-            ),
-            const SizedBox(height: 8),
             const Text(
               "الموسوعة الإسلامية",
               style: TextStyle(
                 color: _C.goldLight,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                shadows: [Shadow(color: Color(0x55D4A843), blurRadius: 18)],
+                letterSpacing: 0.5,
+                shadows: [Shadow(color: Color(0x33D4A843), blurRadius: 15)],
               ),
             ),
             const SizedBox(height: 4),
             Text(
               "سير الأعلام والشخصيات الإسلامية",
-              style: TextStyle(color: _C.muted, fontSize: 13),
+              style: TextStyle(color: _C.muted, fontSize: 12.5),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Container(
               height: 1,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    _C.gold.withOpacity(0.35),
+                    _C.gold.withOpacity(0.25),
                     Colors.transparent,
                   ],
                 ),
@@ -365,7 +274,7 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
 
   // ── GRID ──────────────────────────────────────────────────────────────────
 
-  Widget _buildGrid(List<_Sahabi> list) {
+  Widget _buildGrid(List<Sahabi> list) {
     if (list.isEmpty) {
       return const Center(
         child: Text(
@@ -382,22 +291,16 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
         crossAxisCount: 2,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.80,
       ),
       itemBuilder: (context, index) {
-        return _SahabiCard(
+        return SahabiCard(
           sahabi: list[index],
           index: index,
           entryController: _entryCtrl,
           onTap: () => Navigator.push(
             context,
-            PageRouteBuilder(
-              pageBuilder: (_, anim, __) => FadeTransition(
-                opacity: anim,
-                child: SahabiDetails.fromName(list[index].name),
-              ),
-              transitionDuration: const Duration(milliseconds: 320),
-            ),
+            slideRoute(SahabiDetails.fromName(list[index].name)),
           ),
         );
       },
@@ -407,13 +310,14 @@ class _HomeGridState extends State<HomeGrid> with SingleTickerProviderStateMixin
 
 // ─── SAHABI CARD ─────────────────────────────────────────────────────────────
 
-class _SahabiCard extends StatefulWidget {
-  final _Sahabi sahabi;
+class SahabiCard extends StatefulWidget {
+  final Sahabi sahabi;
   final int index;
   final AnimationController entryController;
   final VoidCallback onTap;
 
-  const _SahabiCard({
+  const SahabiCard({
+    super.key,
     required this.sahabi,
     required this.index,
     required this.entryController,
@@ -421,10 +325,10 @@ class _SahabiCard extends StatefulWidget {
   });
 
   @override
-  State<_SahabiCard> createState() => _SahabiCardState();
+  State<SahabiCard> createState() => SahabiCardState();
 }
 
-class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderStateMixin {
+class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMixin {
   late final AnimationController _pressCtrl;
   late final Animation<double> _entryFade;
   late final Animation<double> _entrySlide;
@@ -617,26 +521,7 @@ class _SahabiCardState extends State<_SahabiCard> with SingleTickerProviderState
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-class _GoldLine extends StatelessWidget {
-  final bool leftToRight;
-  const _GoldLine({required this.leftToRight});
 
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 1,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: leftToRight
-                ? [_C.gold.withOpacity(0.4), Colors.transparent]
-                : [Colors.transparent, _C.gold.withOpacity(0.4)],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ─── BACKGROUND ───────────────────────────────────────────────────────────────
 
@@ -718,4 +603,18 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
     return oldDelegate.height != height || oldDelegate.child != child;
   }
+}
+
+Route slideRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOutCubic;
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      return SlideTransition(position: animation.drive(tween), child: child);
+    },
+    transitionDuration: const Duration(milliseconds: 320),
+  );
 }
