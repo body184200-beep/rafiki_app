@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/hadith.dart';
+import 'package:rafiki_app/core/logging/app_logger.dart';
 
 class HadithLocalDataSource {
   List<HadithModel>? _localHadiths;
@@ -15,9 +15,7 @@ class HadithLocalDataSource {
       final hadithsList = decoded['data']['hadiths'] as List;
       _localHadiths = hadithsList.map<HadithModel>((e) => HadithModel.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading assets/hadith.json: $e');
-      }
+      AppLogger.warning('Failed to load assets/hadith.json', tag: 'HadithLocal', error: e);
       _localHadiths = [];
     }
   }
@@ -32,9 +30,7 @@ class HadithLocalDataSource {
         final decoded = jsonDecode(cachedJson) as List;
         return decoded.map((e) => HadithModel.fromJson(e as Map<String, dynamic>)).toList();
       } catch (e) {
-        if (kDebugMode) {
-          print('Error parsing cached hadiths: $e');
-        }
+        AppLogger.warning('Failed to parse cached hadiths', tag: 'HadithLocal', error: e);
       }
     }
     return null;

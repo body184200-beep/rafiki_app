@@ -196,7 +196,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                     decoration: BoxDecoration(
                       color: _T.errorBg,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: _T.errorAcc.withOpacity(0.3)),
+                      border: Border.all(color: _T.errorAcc.withValues(alpha: 0.3)),
                     ),
                     child: Builder(
                       builder: (ctx) {

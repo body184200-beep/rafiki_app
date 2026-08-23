@@ -3,42 +3,25 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/features/deeds/data/models/dhikr_entry.dart';
 import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_widgets.dart';
 import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_sheets.dart';
 import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_painters.dart';
 
 
-void main() => runApp(const DeedsPage());
-
 class DeedsPage extends StatelessWidget {
   const DeedsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final hasParent = Localizations.of<AppLocalizations>(context, AppLocalizations) != null;
-    if (hasParent) {
-      return Theme(
-        data: ThemeData(
-          brightness: Brightness.dark,
-          fontFamily: 'serif',
-          scaffoldBackgroundColor: _C.bg,
-          colorScheme: const ColorScheme.dark(primary: _C.jade),
-        ),
-        child: const DeedsScreen(),
-      );
-    }
-
-    return MaterialApp(
-      title: 'حسناتي',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
+    return Theme(
+      data: ThemeData(
         brightness: Brightness.dark,
         fontFamily: 'serif',
         scaffoldBackgroundColor: _C.bg,
         colorScheme: const ColorScheme.dark(primary: _C.jade),
       ),
-      home: const DeedsScreen(),
+      child: const DeedsScreen(),
     );
   }
 }
@@ -430,7 +413,7 @@ class _DeedsPageState extends State<DeedsScreen>
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  _C.gold.withOpacity(0.25),
+                  _C.gold.withValues(alpha: 0.25),
                   Colors.transparent,
                 ],
               ),

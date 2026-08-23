@@ -1,5 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:rafiki_app/core/widgets/category_chips.dart';
+import 'package:rafiki_app/core/widgets/glass_panel.dart';
+import 'package:rafiki_app/core/widgets/pinned_header.dart';
+import 'package:rafiki_app/core/widgets/segmented_tabs.dart';
 import 'package:rafiki_app/features/companions/data/models/sahabi_model.dart';
 import 'package:rafiki_app/features/companions/data/datasources/sahaba_list_data.dart';
 
@@ -88,8 +92,9 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
                   ),
                   SliverPersistentHeader(
                     pinned: true,
-                    delegate: _SliverHeaderDelegate(
-                      height: 66.0,
+                    delegate: PinnedHeader(
+                      height: 66,
+                      background: _C.bg,
                       child: _buildSegmentedControl(),
                     ),
                   ),
@@ -110,114 +115,31 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
   // ── SEGMENTED CONTROL ──────────────────────────────────────────────────────
 
   Widget _buildSegmentedControl() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: _C.gold.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Future.microtask(() {
-                if (mounted) setState(() { _selectedTab = 0; _selectedCategory = "الكل"; });
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? _C.gold : Colors.transparent,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    "الصحابة الكرام",
-                    style: TextStyle(
-                      color: _selectedTab == 0 ? _C.bg : _C.goldLight,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Future.microtask(() {
-                if (mounted) setState(() { _selectedTab = 1; _selectedCategory = "الكل"; });
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? _C.gold : Colors.transparent,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    "كبار التابعين",
-                    style: TextStyle(
-                      color: _selectedTab == 1 ? _C.bg : _C.goldLight,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SegmentedTabs(
+      labels: const ['الصحابة الكرام', 'كبار التابعين'],
+      index: _selectedTab,
+      onChanged: (i) {
+        setState(() {
+          _selectedTab = i;
+          _selectedCategory = 'الكل';
+        });
+      },
     );
   }
 
   // ── CATEGORIES ─────────────────────────────────────────────────────────────
 
   Widget _buildCategoryRow() {
-    return Container(
-      height: 44,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final cat = _categories[index];
-          final isSelected = _selectedCategory == cat;
-          return Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: ChoiceChip(
-              label: Text(
-                cat,
-                style: TextStyle(
-                  color: isSelected ? _C.bg : _C.goldLight,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12.5,
-                ),
-              ),
-              selected: isSelected,
-              selectedColor: _C.gold,
-              backgroundColor: _C.surface,
-              checkmarkColor: _C.bg,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: _C.gold.withOpacity(isSelected ? 1.0 : 0.2)),
-              ),
-              onSelected: (selected) {
-                if (selected) {
-                  Future.microtask(() {
-                    if (mounted) {
-                      setState(() {
-                        _selectedCategory = cat;
-                      });
-                    }
-                  });
-                }
-              },
-            ),
-          );
-        },
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: CategoryChips(
+        items: _categories,
+        selected: _selectedCategory,
+        onSelected: (cat) => setState(() => _selectedCategory = cat),
+        selectedColor: _C.gold,
+        backgroundColor: _C.surface,
+        unselectedLabel: _C.goldLight,
+        selectedLabel: _C.bg,
       ),
     );
   }
@@ -260,7 +182,7 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    _C.gold.withOpacity(0.25),
+                    _C.gold.withValues(alpha: 0.25),
                     Colors.transparent,
                   ],
                 ),
@@ -298,9 +220,9 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
           sahabi: list[index],
           index: index,
           entryController: _entryCtrl,
-          onTap: () => Navigator.push(
+          onTap: () => pushPage(
             context,
-            slideRoute(SahabiDetails.fromName(list[index].name)),
+            SahabiDetails.fromName(list[index].name),
           ),
         );
       },
@@ -389,15 +311,15 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             color: _C.surface,
-            border: Border.all(color: s.accent.withOpacity(0.28), width: 1.2),
+            border: Border.all(color: s.accent.withValues(alpha: 0.28), width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: s.accent.withOpacity(0.14),
+                color: s.accent.withValues(alpha: 0.14),
                 blurRadius: 18,
                 offset: const Offset(0, 5),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -415,7 +337,7 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                     height: 90,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: s.accent.withOpacity(0.12),
+                      color: s.accent.withValues(alpha: 0.12),
                     ),
                   ),
                 ),
@@ -427,7 +349,7 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          s.accent.withOpacity(0.9),
+                          s.accent.withValues(alpha: 0.9),
                           Colors.transparent,
                         ],
                       ),
@@ -444,11 +366,11 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                         height: 58,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: s.accent.withOpacity(0.12),
-                          border: Border.all(color: s.accent.withOpacity(0.45), width: 1.5),
+                          color: s.accent.withValues(alpha: 0.12),
+                          border: Border.all(color: s.accent.withValues(alpha: 0.45), width: 1.5),
                           boxShadow: [
                             BoxShadow(
-                              color: s.accent.withOpacity(0.25),
+                              color: s.accent.withValues(alpha: 0.25),
                               blurRadius: 12,
                               spreadRadius: 1,
                             ),
@@ -488,7 +410,7 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: s.accent.withOpacity(0.9),
+                          color: s.accent.withValues(alpha: 0.9),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
@@ -565,56 +487,17 @@ class _BgPainter extends CustomPainter {
         ..shader = RadialGradient(
           center: const Alignment(0.75, -0.75),
           radius: 0.55,
-          colors: [const Color(0xFFD4A843).withOpacity(0.055), Colors.transparent],
+          colors: [const Color(0xFFD4A843).withValues(alpha: 0.055), Colors.transparent],
         ).createShader(Rect.fromLTWH(0, 0, sz.width, sz.height)),
     );
 
     final p = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      p.color = Colors.white.withOpacity(s.o);
+      p.color = Colors.white.withValues(alpha: s.o);
       canvas.drawCircle(Offset(s.x * sz.width, s.y * sz.height), s.rad, p);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter _) => false;
-}
-
-class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  final double height;
-
-  _SliverHeaderDelegate({required this.child, required this.height});
-
-  @override
-  double get minExtent => height;
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: const Color(0xFF07090F),
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
-    return oldDelegate.height != height || oldDelegate.child != child;
-  }
-}
-
-Route slideRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => page,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(1.0, 0.0);
-      const end = Offset.zero;
-      const curve = Curves.easeInOutCubic;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-      return SlideTransition(position: animation.drive(tween), child: child);
-    },
-    transitionDuration: const Duration(milliseconds: 320),
-  );
 }

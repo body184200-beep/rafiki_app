@@ -205,12 +205,12 @@ class DetailPage extends StatelessWidget {
           color: _kCard,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isFav ? _kGold.withOpacity(0.4) : const Color(0xFF1E2D45),
+            color: isFav ? _kGold.withValues(alpha: 0.4) : const Color(0xFF1E2D45),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20, offset: const Offset(0, 6),
             ),
           ],
@@ -315,16 +315,16 @@ class DetailPage extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _kBg.withOpacity(0.4),
+                          color: _kBg.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF1E2D45).withOpacity(0.5)),
+                          border: Border.all(color: const Color(0xFF1E2D45).withValues(alpha: 0.5)),
                         ),
                         child: Text(
                           transText,
                           textDirection: hasRichEnglish ? TextDirection.ltr : TextDirection.rtl,
                           textAlign: hasRichEnglish ? TextAlign.left : TextAlign.center,
                           style: TextStyle(
-                            color: _kMuted.withOpacity(0.9),
+                            color: _kMuted.withValues(alpha: 0.9),
                             fontSize: 13,
                             height: 1.55,
                             fontStyle: hasRichEnglish ? FontStyle.italic : FontStyle.normal,
@@ -386,9 +386,9 @@ class DetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.45), width: 0.8),
+        border: Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
       ),
       child: Text(
         label,

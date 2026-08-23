@@ -109,7 +109,7 @@ class _ProphetPageState extends State<ProphetPage> with TickerProviderStateMixin
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    _C.gold.withOpacity(0.25),
+                    _C.gold.withValues(alpha: 0.25),
                     Colors.transparent,
                   ],
                 ),

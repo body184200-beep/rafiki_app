@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:rafiki_app/core/logging/app_logger.dart';
 import '../../domain/entities/hadith.dart';
 import '../../domain/repositories/hadith_repository.dart';
 import '../datasources/hadith_local_data_source.dart';
@@ -36,9 +36,7 @@ class HadithRepositoryImpl implements HadithRepository {
       _cachedBooks = remoteBooks;
       return remoteBooks;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error calling API /books: $e. Falling back to local book list.');
-      }
+      AppLogger.warning('API /books failed, using local book list', tag: 'HadithRepo', error: e);
     }
 
     return _fallbackBooks;
@@ -86,9 +84,7 @@ class HadithRepositoryImpl implements HadithRepository {
 
       return enrichedList;
     } catch (e) {
-      if (kDebugMode) {
-        print('Network error fetching hadiths from API: $e. Falling back to local.');
-      }
+      AppLogger.warning('Network error fetching hadiths, using local fallback', tag: 'HadithRepo', error: e);
     }
 
     // Fallback: Parse from local assets/hadith.json file
@@ -106,9 +102,7 @@ class HadithRepositoryImpl implements HadithRepository {
         return filtered.sublist(startIndex, endIndex);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Final fallback error: $e');
-      }
+      AppLogger.warning('Final hadith fallback failed', tag: 'HadithRepo', error: e);
     }
     return [];
   }
@@ -120,9 +114,7 @@ class HadithRepositoryImpl implements HadithRepository {
       final raw = await _remoteDataSource.getHadithByNumber(bookId, number);
       return _enrichHadith(raw, bookId);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting single hadith: $e. Fetching from local fallback.');
-      }
+      AppLogger.warning('Single hadith fetch failed, using local fallback', tag: 'HadithRepo', error: e);
       final localList = _localDataSource.cachedLocalHadiths;
       if (localList != null) {
         final matched = localList.firstWhere(

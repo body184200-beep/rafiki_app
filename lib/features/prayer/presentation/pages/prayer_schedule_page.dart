@@ -41,36 +41,6 @@ String _dateKey(DateTime d) => dateKey(d);
 String _todayKey() => todayKey();
 
 // ─────────────────────────────────────────────────────────────
-//  Entry Point
-// ─────────────────────────────────────────────────────────────
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
-  runApp(const PrayerTrackerApp());
-}
-
-class PrayerTrackerApp extends StatelessWidget {
-  const PrayerTrackerApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'تقدمك اليومي',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.dark(surface: _T.bg),
-        scaffoldBackgroundColor: _T.bg,
-        fontFamily: 'Cairo',
-      ),
-      home: const PrayerSchedulePage(),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
 //  Main Page
 // ─────────────────────────────────────────────────────────────
 class PrayerSchedulePage extends StatefulWidget {

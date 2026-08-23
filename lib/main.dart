@@ -6,6 +6,8 @@ import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/core/logging/app_logger.dart';
 
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
+import 'package:rafiki_app/core/theme/app_theme.dart';
+import 'package:rafiki_app/core/widgets/app_error_view.dart';
 import 'package:provider/provider.dart';
 import 'package:rafiki_app/core/locale_provider.dart';
 
@@ -26,6 +28,9 @@ void main() async {
     ),
   );
 
+  ErrorWidget.builder = (details) =>
+      AppErrorView(message: details.exceptionAsString());
+
   widgetsBinding.allowFirstFrame();
 }
 
@@ -37,7 +42,10 @@ class MyApp extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
+      title: 'رفيقي',
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       // If user has a saved preference use it; otherwise fall back to device locale.
       // Passing null lets Flutter pick from supportedLocales automatically.
       locale: localeProvider.locale,

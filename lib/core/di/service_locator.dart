@@ -30,6 +30,11 @@ import 'package:rafiki_app/features/prayer/data/repositories/prayer_repository_i
 import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
 import 'package:rafiki_app/features/quran/data/repositories/quran_repository_impl.dart';
 import 'package:rafiki_app/features/gamification/data/repositories/discovery_repository_impl.dart';
+import 'package:rafiki_app/features/hadith/data/datasources/hadith_local_data_source.dart';
+import 'package:rafiki_app/features/hadith/data/datasources/hadith_remote_data_source.dart';
+import 'package:rafiki_app/features/hadith/data/repositories/hadith_repository_impl.dart';
+import 'package:rafiki_app/features/hadith/domain/repositories/hadith_repository.dart';
+import 'package:rafiki_app/core/services/location_service.dart';
 import 'package:adhan/adhan.dart';
 
 /// Global service locator instance.
@@ -67,6 +72,19 @@ class ServiceLocator {
     sl.registerLazySingleton<ScoreRepository>(() => ScoreRepositoryImpl());
     sl.registerLazySingleton<StreakRepository>(() => StreakRepositoryImpl());
     sl.registerLazySingleton<quran.QuranRepository>(() => QuranRepository());
+    sl.registerLazySingleton<HadithRemoteDataSource>(
+      () => HadithRemoteDataSource(),
+    );
+    sl.registerLazySingleton<HadithLocalDataSource>(
+      () => HadithLocalDataSource(),
+    );
+    sl.registerLazySingleton<HadithRepository>(
+      () => HadithRepositoryImpl(
+        sl<HadithRemoteDataSource>(),
+        sl<HadithLocalDataSource>(),
+      ),
+    );
+    sl.registerLazySingleton<LocationService>(() => LocationService());
     
     // Register PrayerRuleEngine with current coordinates
     final coords = await PrayerConfig.getCoordinates();

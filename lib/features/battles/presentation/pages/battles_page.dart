@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:rafiki_app/core/widgets/glass_panel.dart';
+import 'package:rafiki_app/core/widgets/pinned_header.dart';
+import 'package:rafiki_app/core/widgets/segmented_tabs.dart';
 import 'package:rafiki_app/features/battles/data/models/battle_model.dart';
 import 'package:rafiki_app/features/battles/data/datasources/battles_list_data.dart';
 
@@ -72,8 +75,9 @@ class BattlesPageState extends State<BattlesPage> with TickerProviderStateMixin 
                   ),
                   SliverPersistentHeader(
                     pinned: true,
-                    delegate: _SliverHeaderDelegate(
-                      height: 66.0,
+                    delegate: PinnedHeader(
+                      height: 66,
+                      background: _C.bg,
                       child: _buildSegmentedControl(),
                     ),
                   ),
@@ -99,65 +103,10 @@ class BattlesPageState extends State<BattlesPage> with TickerProviderStateMixin 
   // ── SEGMENTED CONTROL ──────────────────────────────────────────────────────
 
   Widget _buildSegmentedControl() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: _C.surface,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: _C.gold.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Future.microtask(() {
-                if (mounted) setState(() { _selectedTab = 0; });
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 0 ? _C.gold : Colors.transparent,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    "غزوات الرسول ﷺ",
-                    style: TextStyle(
-                      color: _selectedTab == 0 ? Colors.black : _C.goldLight,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Future.microtask(() {
-                if (mounted) setState(() { _selectedTab = 1; });
-              }),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: _selectedTab == 1 ? _C.gold : Colors.transparent,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    "السرايا والبعوث",
-                    style: TextStyle(
-                      color: _selectedTab == 1 ? Colors.black : _C.goldLight,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SegmentedTabs(
+      labels: const ['غزوات الرسول ﷺ', 'السرايا والبعوث'],
+      index: _selectedTab,
+      onChanged: (i) => setState(() => _selectedTab = i),
     );
   }
 
@@ -191,7 +140,7 @@ class BattlesPageState extends State<BattlesPage> with TickerProviderStateMixin 
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  _C.gold.withOpacity(0.25),
+                  _C.gold.withValues(alpha: 0.25),
                   Colors.transparent,
                 ],
               ),
@@ -265,9 +214,9 @@ class BattlesPageState extends State<BattlesPage> with TickerProviderStateMixin 
           index: index,
           entryController: _entryCtrl,
           entryDelay: delay,
-          onTap: () => Navigator.push(
+          onTap: () => pushPage(
             context,
-            slideRoute(BattleDetails.fromName(list[index].name)),
+            BattleDetails.fromName(list[index].name),
           ),
         );
       },
@@ -358,12 +307,12 @@ class BattleCardState extends State<BattleCard> with SingleTickerProviderStateMi
           border: Border.all(color: _C.border, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: b.accent.withOpacity(0.06),
+              color: b.accent.withValues(alpha: 0.06),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -381,7 +330,7 @@ class BattleCardState extends State<BattleCard> with SingleTickerProviderStateMi
                   height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: b.accent.withOpacity(0.08),
+                    color: b.accent.withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -389,7 +338,7 @@ class BattleCardState extends State<BattleCard> with SingleTickerProviderStateMi
                 bottom: 0, left: 0, right: 0,
                 child: Container(
                   height: 3,
-                  color: b.accent.withOpacity(0.85),
+                  color: b.accent.withValues(alpha: 0.85),
                 ),
               ),
               Padding(
@@ -407,9 +356,9 @@ class BattleCardState extends State<BattleCard> with SingleTickerProviderStateMi
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: b.accent.withOpacity(0.12),
+                            color: b.accent.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: b.accent.withOpacity(0.35), width: 0.8),
+                            border: Border.all(color: b.accent.withValues(alpha: 0.35), width: 0.8),
                           ),
                           child: Text(
                             b.year,
@@ -505,56 +454,17 @@ class _BgPainter extends CustomPainter {
         ..shader = RadialGradient(
           center: const Alignment(-0.8, -0.8),
           radius: 0.65,
-          colors: [const Color(0xFFD4A843).withOpacity(0.04), Colors.transparent],
+          colors: [const Color(0xFFD4A843).withValues(alpha: 0.04), Colors.transparent],
         ).createShader(Rect.fromLTWH(0, 0, sz.width, sz.height)),
     );
 
     final p = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      p.color = Colors.white.withOpacity(s.o);
+      p.color = Colors.white.withValues(alpha: s.o);
       canvas.drawCircle(Offset(s.x * sz.width, s.y * sz.height), s.rad, p);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter _) => false;
-}
-
-class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  final double height;
-
-  _SliverHeaderDelegate({required this.child, required this.height});
-
-  @override
-  double get minExtent => height;
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: const Color(0xFF0A0B0F),
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
-    return oldDelegate.height != height || oldDelegate.child != child;
-  }
-}
-
-Route slideRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => page,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(1.0, 0.0);
-      const end = Offset.zero;
-      const curve = Curves.easeInOutCubic;
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-      return SlideTransition(position: animation.drive(tween), child: child);
-    },
-    transitionDuration: const Duration(milliseconds: 320),
-  );
 }

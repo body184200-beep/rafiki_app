@@ -2,29 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
-//  Entry
-// ─────────────────────────────────────────────────────────────
-void main() => runApp(const PrayerGuideApp());
-
-class PrayerGuideApp extends StatelessWidget {
-  const PrayerGuideApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: _P.bg,
-        splashFactory: NoSplash.splashFactory,
-      ),
-      home: const PrayerPodcastPage(),
-      builder: (context, child) =>
-          Directionality(textDirection: TextDirection.rtl, child: child!),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
 //  Design Tokens
 // ─────────────────────────────────────────────────────────────
 class _P {

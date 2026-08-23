@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rafiki_app/core/widgets/glass_panel.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/adeia_page.dart';
 import 'package:rafiki_app/features/hadith/presentation/pages/hadith_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/podcast_page.dart';
@@ -166,18 +167,6 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
     }
   }
 
-  Route _slide(Widget page) => PageRouteBuilder(
-    pageBuilder: (_, __, ___) => page,
-    transitionsBuilder: (_, anim, __, child) => SlideTransition(
-      position: Tween(
-        begin: const Offset(1, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-      child: child,
-    ),
-    transitionDuration: const Duration(milliseconds: 400),
-  );
-
   // ── Build ─────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -316,9 +305,9 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                               child: _ContentCard(
                                 data: card,
                                 index: i,
-                                onTap: () => Navigator.push(
+                                onTap: () => pushPage(
                                   context,
-                                  _slide(card.destination()),
+                                  card.destination(),
                                 ),
                               ),
                             ),

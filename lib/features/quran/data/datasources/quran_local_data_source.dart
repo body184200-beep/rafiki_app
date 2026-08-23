@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:rafiki_app/core/logging/app_logger.dart';
 
 class QuranLocalDataSource {
   static List<Map<String, dynamic>>? _cachedSurahs;
@@ -16,9 +17,7 @@ class QuranLocalDataSource {
       _cachedSurahs = parsed;
       return parsed;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading Quran data: $e');
-      }
+      AppLogger.warning('Failed to load Quran data', tag: 'QuranLocal', error: e);
       return [];
     }
   }

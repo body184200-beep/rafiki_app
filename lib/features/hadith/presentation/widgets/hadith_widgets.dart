@@ -34,12 +34,12 @@ class HadithCard extends StatelessWidget {
           color: _kCard,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isFav ? _kGold.withOpacity(0.35) : Colors.transparent,
+            color: isFav ? _kGold.withValues(alpha: 0.35) : Colors.transparent,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -52,7 +52,7 @@ class HadithCard extends StatelessWidget {
             Container(
               width: 48,
               decoration: BoxDecoration(
-                color: _kTeal.withOpacity(0.15),
+                color: _kTeal.withValues(alpha: 0.15),
                 borderRadius: const BorderRadius.only(
                   topLeft:    Radius.circular(18),
                   bottomLeft: Radius.circular(18),
@@ -87,7 +87,7 @@ class HadithCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _kTeal.withOpacity(0.12),
+                            color: _kTeal.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -257,7 +257,7 @@ class _ShimmerCardState extends State<ShimmerCard>
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         height: 90,
         decoration: BoxDecoration(
-          color: _kCard.withOpacity(_anim.value + 0.3),
+          color: _kCard.withValues(alpha: _anim.value + 0.3),
           borderRadius: BorderRadius.circular(18),
         ),
       ),
