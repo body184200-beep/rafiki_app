@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -44,6 +45,7 @@ class _MushafPageState extends State<MushafPage>
   String _searchQuery = '';
   int    _filterIndex = 0;
   int?   _lastReadSurah;
+  Map<String, dynamic>? _savedBookmark;
 
   // ── Controllers ───────────────────────────────────────────────────────
   final TextEditingController _searchCtrl   = TextEditingController();
@@ -86,12 +88,30 @@ class _MushafPageState extends State<MushafPage>
       final prefs = await SharedPreferences.getInstance();
       final lastRead = prefs.getInt('quran_last_read_surah');
 
+      // Load global bookmark
+      Map<String, dynamic>? bookmark;
+      try {
+        final raw = prefs.getString('mushaf_global_bookmark');
+        if (raw != null) {
+          final parsed = jsonDecode(raw) as Map<String, dynamic>;
+          // Validate required fields exist and are reasonable
+          if (parsed['surahNumber'] is int &&
+              parsed['surahName'] is String &&
+              parsed['pageIndex'] is int) {
+            bookmark = parsed;
+          }
+        }
+      } catch (_) {
+        // Ignore corrupt bookmark data — treat as no bookmark
+      }
+
       if (!mounted) return;
       if (list.isNotEmpty) {
         setState(() {
           _surahs         = list;
           _filteredSurahs = list;
           _lastReadSurah  = lastRead;
+          _savedBookmark  = bookmark;
           _isLoading      = false;
         });
         _listAnim.forward();
@@ -130,7 +150,7 @@ class _MushafPageState extends State<MushafPage>
     _applyFilters();
   }
 
-  void _openSurah(Map<String, dynamic> surah) async {
+  void _openSurah(Map<String, dynamic> surah, {int? initialPage}) async {
     HapticFeedback.selectionClick();
     final surahNum = surah['number'] as int;
     setState(() => _lastReadSurah = surahNum);
@@ -149,6 +169,7 @@ class _MushafPageState extends State<MushafPage>
           ayat: List<String>.from(
             (surah['ayahs'] as List).map((a) => a['text']),
           ),
+          initialPage: initialPage,
         ),
         transitionsBuilder: (_, anim, __, child) {
           return FadeTransition(
@@ -163,7 +184,29 @@ class _MushafPageState extends State<MushafPage>
           );
         },
       ),
-    );
+    ).then((_) => _refreshBookmark());
+  }
+
+  /// Reloads the global bookmark from SharedPreferences after returning from the reader.
+  Future<void> _refreshBookmark() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('mushaf_global_bookmark');
+      Map<String, dynamic>? bookmark;
+      if (raw != null) {
+        final parsed = jsonDecode(raw) as Map<String, dynamic>;
+        if (parsed['surahNumber'] is int &&
+            parsed['surahName'] is String &&
+            parsed['pageIndex'] is int) {
+          bookmark = parsed;
+        }
+      }
+      if (mounted) {
+        setState(() => _savedBookmark = bookmark);
+      }
+    } catch (_) {
+      // Non-critical — silently handle
+    }
   }
 
   // ── Glass helper ──────────────────────────────────────────────────────
@@ -324,6 +367,156 @@ class _MushafPageState extends State<MushafPage>
                 fontSize: 11, fontWeight: FontWeight.w500,
               )),
         ],
+      ),
+    );
+  }
+
+  // ── Bookmark Card / Continue Reading ──────────────────────────────────
+
+  Widget _bookmarkCard() {
+    if (_isLoading || _hasError) return const SizedBox.shrink();
+
+    if (_savedBookmark != null) {
+      final surahNum = _savedBookmark!['surahNumber'] as int?;
+      final surahName = _savedBookmark!['surahName'] as String? ?? '';
+      final pageIndex = _savedBookmark!['pageIndex'] as int? ?? 0;
+      final ayahNum = _savedBookmark!['ayahNumber'] as int? ?? 1;
+
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: GestureDetector(
+          onTap: () {
+            if (surahNum != null && _surahs.isNotEmpty) {
+              final surah = _surahs.firstWhere(
+                (s) => s['number'] == surahNum,
+                orElse: () => _surahs.first,
+              );
+              _openSurah(surah, initialPage: pageIndex);
+            }
+          },
+          child: _glass(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            radius: 16,
+            borderColor: _gold.withValues(alpha: 0.35),
+            child: Row(
+              children: [
+                // Bookmark icon badge
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: _gold.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _gold.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.bookmark_rounded,
+                    color: _gold,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Surah & Ayah details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'متابعة القراءة',
+                            style: TextStyle(
+                              color: _gold.withValues(alpha: 0.9),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _accent.withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: Text(
+                              'صفحة ${pageIndex + 1}',
+                              style: const TextStyle(
+                                color: _accent,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'سورة $surahName • الآية $ayahNum',
+                        style: const TextStyle(
+                          color: _textPri,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Arrow action
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _surfaceAlt,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _border),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_rounded,
+                    color: _gold,
+                    size: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Empty state when no bookmark exists
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: _glass(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        radius: 14,
+        borderColor: _borderSoft,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bookmark_border_rounded,
+              color: _textDim.withValues(alpha: 0.8),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'لم تحفظ أي موضع بعد 📖',
+              style: TextStyle(
+                color: _textSec,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -645,7 +838,12 @@ class _MushafPageState extends State<MushafPage>
                   const SizedBox(height: 8),
                   _headerHero(),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  // ── Bookmark Card (Continue Reading / Empty) ───────
+                  _bookmarkCard(),
+
+                  const SizedBox(height: 14),
 
                   // ── Search ─────────────────────────────────────────
                   Padding(

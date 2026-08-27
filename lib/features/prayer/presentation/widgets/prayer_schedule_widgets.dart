@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rafiki_app/core/theme/app_colors.dart';
 import 'package:rafiki_app/features/prayer/presentation/controllers/prayer_schedule_controller.dart';
 import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
 
+// ─────────────────────────────────────────────────────────────
+//  Qada Carry Over Models & Widgets
+// ─────────────────────────────────────────────────────────────
 class QadaCarryEntry {
   final String prayerName;
   final String dateKey;
@@ -16,6 +20,7 @@ class QadaCarryEntry {
 class QadaCarryCard extends StatelessWidget {
   final QadaCarryEntry entry;
   final VoidCallback onComplete;
+
   const QadaCarryCard({
     super.key,
     required this.entry,
@@ -24,32 +29,76 @@ class QadaCarryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: T.ruby.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: T.ruby.withValues(alpha: 0.3)),
+      ),
       child: Row(
         children: [
-          Icon(Icons.schedule_rounded, color: T.rubyL, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text('${entry.prayerName} (${entry.dateKey})',
-                style: const TextStyle(color: T.t1, fontSize: 13)),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: T.ruby.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.history_rounded, color: T.rubyL, size: 16),
           ),
-          GestureDetector(
-            onTap: onComplete,
-            child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: T.ruby.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: T.ruby.withValues(alpha: 0.4)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  entry.prayerName,
+                  style: const TextStyle(
+                    color: T.t1,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  'فائتة من يوم ${entry.dateKey}',
+                  style: const TextStyle(
+                    color: T.rubyL,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onComplete,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: T.ruby.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: T.ruby.withValues(alpha: 0.5)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_rounded, color: T.rubyL, size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      'قضيتها',
+                      style: TextStyle(
+                        color: T.rubyL,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('قضيتها',
-                  style: TextStyle(
-                      color: T.rubyL,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -58,259 +107,215 @@ class QadaCarryCard extends StatelessWidget {
   }
 }
 
-class DayChip extends StatelessWidget {
-  final bool completed;
-  final bool isEmpty;
-  const DayChip({
-    super.key,
-    required this.completed,
-    this.isEmpty = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Color bg, border, text;
-    String label;
-    IconData icon;
-    if (isEmpty) {
-      bg = T.t3.withValues(alpha: 0.1);
-      border = T.t3.withValues(alpha: 0.25);
-      text = T.t3;
-      label = 'لا يوجد تاريخ';
-      icon = Icons.calendar_today_rounded;
-    } else if (completed) {
-      bg = T.jade.withValues(alpha: 0.12);
-      border = T.jade.withValues(alpha: 0.35);
-      text = T.jade;
-      label = 'مكتمل';
-      icon = Icons.check_circle_rounded;
-    } else {
-      bg = T.t3.withValues(alpha: 0.1);
-      border = T.t3.withValues(alpha: 0.25);
-      text = T.t3;
-      label = 'غير مكتمل';
-      icon = Icons.remove_circle_outline_rounded;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: text, size: 12),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  color: text,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-}
-
+// ─────────────────────────────────────────────────────────────
+//  Banner Widget
+// ─────────────────────────────────────────────────────────────
 class BannerWidget extends StatelessWidget {
   final String text;
   const BannerWidget({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-    child: Container(
-      padding:
-      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: T.flame.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border:
-        Border.all(color: T.flame.withValues(alpha: 0.25)),
-      ),
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: T.flameL, fontSize: 13)),
-    ),
-  );
-}
-
-class ActionBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const ActionBtn({
-    super.key,
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-        boxShadow: [
-          BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
-}
-
-class RakatDots extends StatelessWidget {
-  final int rakats;
-  final Color accent;
-  final bool done;
-  const RakatDots({
-    super.key,
-    required this.rakats,
-    required this.accent,
-    required this.done,
-  });
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: List.generate(
-      rakats,
-          (i) => Container(
-        width: 7,
-        height: 7,
-        margin: const EdgeInsets.only(left: 3),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: done
-              ? accent
-              : accent.withValues(alpha: 0.3 + i * 0.1),
-          boxShadow: done
-              ? [BoxShadow(
-              color: accent.withValues(alpha: 0.4),
-              blurRadius: 4)]
-              : [],
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: AppColors.accent, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    color: AppColors.accent,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    ),
-  );
+      );
 }
 
-class MiniStatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
+// ─────────────────────────────────────────────────────────────
+//  1. Hero Prayer Score Section (Unlimited Scale)
+// ─────────────────────────────────────────────────────────────
+class PrayerScoreHero extends StatelessWidget {
+  final double totalScore;
+  final double todayGain;
+  final int streak;
 
-  const MiniStatCard({
+  const PrayerScoreHero({
     super.key,
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
+    required this.totalScore,
+    required this.todayGain,
+    required this.streak,
   });
 
-  @override
-  Widget build(BuildContext context) => Container(
-    padding:
-    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      color: T.card,
-      border: Border.all(color: color.withValues(alpha: 0.2)),
-      boxShadow: [
-        BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4))
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 8),
-        Text(value,
-            style: TextStyle(
-                color: color,
-                fontSize: 15,
-                fontWeight: FontWeight.w800)),
-        const SizedBox(height: 2),
-        Text(label,
-            style:
-            const TextStyle(color: T.t3, fontSize: 11)),
-      ],
-    ),
-  );
-}
+  static String formatScore(num score) {
+    final int val = score.toInt();
+    final s = val.toString();
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return s.replaceAllMapped(reg, (Match m) => '${m[1]},');
+  }
 
-class ScoreDetailChip extends StatelessWidget {
-  final String label;
-  final double value;
-  final IconData icon;
-  final Color color;
-
-  const ScoreDetailChip({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
+  static String streakGrammar(int count) {
+    if (count == 1) return 'يوم متتالي';
+    if (count == 2) return 'يومان متتاليان';
+    if (count >= 3 && count <= 10) return 'أيام متتالية';
+    return 'يوم متتالي';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Mosque Emblem
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.accent.withValues(alpha: 0.1),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.mosque_rounded,
+                color: AppColors.accent,
+                size: 26,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Huge Unlimited Score Number with Smooth Tween Animation
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: totalScore),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) {
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  formatScore(value),
+                  style: const TextStyle(
+                    color: T.t1,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                    height: 1.1,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 4),
+
+          // Score Label
+          const Text(
+            'مجموع نقاط الصلاة',
+            style: TextStyle(
+              color: T.t2,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Sub-row: Today's Gain & Streak Pills
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
             children: [
-              Text(
-                value > 0
-                    ? '+${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)}'
-                    : '٠',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
+              // Daily Gain Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: todayGain > 0
+                      ? AppColors.accent.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: todayGain > 0
+                        ? AppColors.accent.withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      todayGain > 0
+                          ? Icons.arrow_upward_rounded
+                          : Icons.add_rounded,
+                      color: todayGain > 0 ? AppColors.accent : T.t3,
+                      size: 13,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      todayGain > 0
+                          ? '+${formatScore(todayGain)} اليوم'
+                          : '٠ اليوم',
+                      style: TextStyle(
+                        color: todayGain > 0 ? AppColors.accent : T.t2,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(label,
-                  style:
-                  const TextStyle(color: T.t3, fontSize: 10)),
+
+              // Streak Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: T.flame.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: T.flame.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🔥', style: TextStyle(fontSize: 13)),
+                    const SizedBox(width: 5),
+                    Text(
+                      '$streak ${streakGrammar(streak)}',
+                      style: const TextStyle(
+                        color: T.flameL,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -319,252 +324,395 @@ class ScoreDetailChip extends StatelessWidget {
   }
 }
 
-class PrayerCard extends StatefulWidget {
-  final PrayerDef prayer;
-  final PrayerRecord record;
-  final ValueChanged<bool> onComplete;
-  final VoidCallback onQada;
-  final ValueChanged<int> onMarkSunnah;
-  final int index;
+// ─────────────────────────────────────────────────────────────
+//  2. Today's Prayers Section (Unified Compact Container)
+// ─────────────────────────────────────────────────────────────
+class TodayPrayersCard extends StatelessWidget {
+  final DayRecord today;
+  final void Function(PrayerDef p, bool isCongregation) onComplete;
+  final void Function(PrayerDef p) onQada;
+  final void Function(PrayerDef p, int sunnahIndex) onMarkSunnah;
 
-  const PrayerCard({
+  const TodayPrayersCard({
     super.key,
-    required this.prayer,
-    required this.record,
+    required this.today,
     required this.onComplete,
     required this.onQada,
     required this.onMarkSunnah,
-    required this.index,
   });
 
   @override
-  State<PrayerCard> createState() => _PrayerCardState();
-}
-
-class _PrayerCardState extends State<PrayerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double>   _fade;
-  late Animation<Offset>   _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 500 + widget.index * 80));
-    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    Future.delayed(Duration(milliseconds: widget.index * 70), () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Color get _stateColor {
-    switch (widget.record.state) {
-      case PrayerState.locked:                return T.t3;
-      case PrayerState.available:             return widget.prayer.accent;
-      case PrayerState.completedIndividual:   return T.jade;
-      case PrayerState.completedCongregation: return T.gold;
-      case PrayerState.oadaPending:           return T.ruby;
-      case PrayerState.oadaCompleted:         return T.violet;
-    }
-  }
-
-  Color get _stateBg {
-    switch (widget.record.state) {
-      case PrayerState.locked:                return T.card;
-      case PrayerState.available:             return widget.prayer.tint;
-      case PrayerState.completedIndividual:   return const Color(0xFF0E1E18);
-      case PrayerState.completedCongregation: return const Color(0xFF1A160A);
-      case PrayerState.oadaPending:           return const Color(0xFF1E0E0E);
-      case PrayerState.oadaCompleted:         return const Color(0xFF120E1A);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final p     = widget.prayer;
-    final rec   = widget.record;
-    final state = rec.state;
-    final sc    = _stateColor;
+    final completedCount = kPrayers.where((p) {
+      final s = today.recordFor(p).state;
+      return s == PrayerState.completedIndividual ||
+          s == PrayerState.completedCongregation ||
+          s == PrayerState.oadaCompleted;
+    }).length;
 
-    return SlideTransition(
-      position: _slide,
-      child: FadeTransition(
-        opacity: _fade,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Title & Counter
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.schedule_rounded,
+                      color: AppColors.accent,
+                      size: 18,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'صلوات اليوم',
+                      style: TextStyle(
+                        color: T.t1,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: completedCount == kPrayers.length
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: completedCount == kPrayers.length
+                          ? AppColors.accent.withValues(alpha: 0.4)
+                          : Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Text(
+                    '$completedCount من ${kPrayers.length} مكتملة',
+                    style: TextStyle(
+                      color: completedCount == kPrayers.length
+                          ? AppColors.accent
+                          : T.t2,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Unified Container for 5 Prayers
+          Container(
             decoration: BoxDecoration(
+              color: T.card,
               borderRadius: BorderRadius.circular(22),
-              color: _stateBg,
               border: Border.all(
-                color: sc.withValues(
-                    alpha: state == PrayerState.locked ? 0.12 : 0.4),
-                width: state == PrayerState.locked ? 1 : 1.4,
+                color: Colors.white.withValues(alpha: 0.08),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: sc.withValues(
-                      alpha: state == PrayerState.locked ? 0.05 : 0.15),
-                  blurRadius: state == PrayerState.locked ? 8 : 24,
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(22),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [sc, sc.withValues(alpha: 0.2)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
+              child: Column(
+                children: List.generate(kPrayers.length, (index) {
+                  final prayer = kPrayers[index];
+                  final record = today.recordFor(prayer);
+                  final isLast = index == kPrayers.length - 1;
+
+                  return Column(
+                    children: [
+                      CompactPrayerRow(
+                        prayer: prayer,
+                        record: record,
+                        onComplete: (isCongregation) =>
+                            onComplete(prayer, isCongregation),
+                        onQada: () => onQada(prayer),
+                        onMarkSunnah: (i) => onMarkSunnah(prayer, i),
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 20, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            _iconBox(p, sc, state),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(p.name,
-                                          style: TextStyle(
-                                              color: state ==
-                                                  PrayerState.locked
-                                                  ? T.t3
-                                                  : T.t1,
-                                              fontSize: 18,
-                                              fontWeight:
-                                              FontWeight.w900)),
-                                      const SizedBox(width: 8),
-                                      _stateBadge(state),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      RakatDots(
-                                          rakats: p.rakats,
-                                          accent: sc,
-                                          done: state.isCompleted),
-                                      const SizedBox(width: 6),
-                                      Text('${p.rakats} ركعات',
-                                          style: const TextStyle(
-                                              color: T.t3,
-                                              fontSize: 12)),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                      if (!isLast)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: Colors.white.withValues(alpha: 0.05),
                         ),
-                        const SizedBox(height: 12),
-                        _buildActionArea(state, p, sc),
-                        if (p.sunnah.isNotEmpty &&
-                            (state == PrayerState.available ||
-                                state ==
-                                    PrayerState.completedIndividual ||
-                                state ==
-                                    PrayerState
-                                        .completedCongregation)) ...[
-                          const SizedBox(height: 12),
-                          _buildSunnahRow(p, sc, rec),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                }),
               ),
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  3. Compact Prayer Row Widget
+// ─────────────────────────────────────────────────────────────
+class CompactPrayerRow extends StatelessWidget {
+  final PrayerDef prayer;
+  final PrayerRecord record;
+  final ValueChanged<bool> onComplete;
+  final VoidCallback onQada;
+  final ValueChanged<int> onMarkSunnah;
+
+  const CompactPrayerRow({
+    super.key,
+    required this.prayer,
+    required this.record,
+    required this.onComplete,
+    required this.onQada,
+    required this.onMarkSunnah,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = record.state;
+    final isAvailable = state == PrayerState.available;
+    final isCompleted = state == PrayerState.completedIndividual ||
+        state == PrayerState.completedCongregation ||
+        state == PrayerState.oadaCompleted;
+    final isQada = state == PrayerState.oadaPending;
+
+    return Container(
+      color: isAvailable
+          ? prayer.tint.withValues(alpha: 0.25)
+          : isCompleted
+              ? const Color(0xFF0D1714).withValues(alpha: 0.4)
+              : isQada
+                  ? T.ruby.withValues(alpha: 0.06)
+                  : Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Main Row: Icon + Name/Rakats + State/Actions
+          Row(
+            children: [
+              // Icon Box
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isAvailable
+                      ? prayer.accent.withValues(alpha: 0.15)
+                      : isCompleted
+                          ? AppColors.accent.withValues(alpha: 0.12)
+                          : isQada
+                              ? T.ruby.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isAvailable
+                        ? prayer.accent.withValues(alpha: 0.35)
+                        : isCompleted
+                            ? AppColors.accent.withValues(alpha: 0.25)
+                            : isQada
+                                ? T.ruby.withValues(alpha: 0.25)
+                                : Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+                child: Icon(
+                  state == PrayerState.locked
+                      ? Icons.lock_outline_rounded
+                      : prayer.icon,
+                  color: isAvailable
+                      ? prayer.accent
+                      : isCompleted
+                          ? AppColors.accent
+                          : isQada
+                              ? T.rubyL
+                              : T.t3,
+                  size: 18,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Name & Rakats
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      prayer.name,
+                      style: TextStyle(
+                        color: state == PrayerState.locked ? T.t2 : T.t1,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${prayer.rakats} ركعات',
+                      style: const TextStyle(
+                        color: T.t3,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Status Badge or Action Buttons
+              _buildTrailingStatus(context, state),
+            ],
+          ),
+
+          // Inline Quick Actions when Available
+          if (isAvailable) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionBtn(
+                    label: 'صليتها جماعة',
+                    icon: Icons.groups_rounded,
+                    color: AppColors.gold,
+                    onTap: () => onComplete(true),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionBtn(
+                    label: 'صليتها فردي',
+                    icon: Icons.person_rounded,
+                    color: AppColors.accent,
+                    onTap: () => onComplete(false),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Inline Qada Action when Missed
+          if (isQada) ...[
+            const SizedBox(height: 10),
+            _buildActionBtn(
+              label: 'قضيتها الآن',
+              icon: Icons.refresh_rounded,
+              color: T.rubyL,
+              onTap: onQada,
+            ),
+          ],
+
+          // Sunnah Chips if available / completed
+          if (prayer.sunnah.isNotEmpty && (isAvailable || isCompleted)) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: List.generate(prayer.sunnah.length, (i) {
+                final sel = record.completedSunnah.contains(i);
+                return GestureDetector(
+                  onTap: sel ? null : () => onMarkSunnah(i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: sel
+                          ? AppColors.gold.withValues(alpha: 0.18)
+                          : Colors.black.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: sel
+                            ? AppColors.gold.withValues(alpha: 0.6)
+                            : Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (sel)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4),
+                            child: Icon(Icons.check_rounded,
+                                color: AppColors.gold, size: 11),
+                          ),
+                        Text(
+                          prayer.sunnah[i],
+                          style: TextStyle(
+                            color: sel ? AppColors.gold : T.t2,
+                            fontSize: 11,
+                            fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _iconBox(PrayerDef p, Color sc, PrayerState state) => Container(
-    width: 46,
-    height: 46,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(13),
-      color: sc.withValues(
-          alpha: state == PrayerState.locked ? 0.05 : 0.12),
-      border: Border.all(
-          color: sc.withValues(
-              alpha: state == PrayerState.locked ? 0.15 : 0.3)),
-    ),
-    child: Icon(
-      state == PrayerState.locked
-          ? Icons.lock_outline_rounded
-          : p.icon,
-      color: sc.withValues(
-          alpha: state == PrayerState.locked ? 0.4 : 1),
-      size: 22,
-    ),
-  );
-
-  Widget _stateBadge(PrayerState state) {
-    String label;
-    Color color;
-    IconData icon;
-
+  Widget _buildTrailingStatus(BuildContext context, PrayerState state) {
     switch (state) {
-      case PrayerState.locked:
-        label = 'مغلق';
-        color = T.t3;
-        icon  = Icons.lock_outline_rounded;
-      case PrayerState.available:
-        label = 'متاحة';
-        color = widget.prayer.accent;
-        icon  = Icons.radio_button_unchecked_rounded;
       case PrayerState.completedIndividual:
-        label = 'فردي';
-        color = T.jade;
-        icon  = Icons.check_circle_rounded;
+        return _statusBadge(
+          label: '✓ أديتها فردي',
+          color: AppColors.accent,
+          icon: Icons.check_circle_rounded,
+        );
       case PrayerState.completedCongregation:
-        label = 'جماعة';
-        color = T.gold;
-        icon  = Icons.groups_rounded;
-      case PrayerState.oadaPending:
-        label = 'قضاء';
-        color = T.ruby;
-        icon  = Icons.warning_amber_rounded;
+        return _statusBadge(
+          label: '✓ أديتها جماعة',
+          color: AppColors.gold,
+          icon: Icons.groups_rounded,
+        );
       case PrayerState.oadaCompleted:
-        label = 'قُضيت';
-        color = T.violet;
-        icon  = Icons.check_circle_outline_rounded;
+        return _statusBadge(
+          label: '✓ قُضيت',
+          color: T.violet,
+          icon: Icons.check_circle_outline_rounded,
+        );
+      case PrayerState.available:
+        return _statusBadge(
+          label: 'متاحة الآن',
+          color: prayer.accent,
+          icon: Icons.radio_button_checked_rounded,
+        );
+      case PrayerState.oadaPending:
+        return _statusBadge(
+          label: 'فائتة',
+          color: T.ruby,
+          icon: Icons.warning_amber_rounded,
+        );
+      case PrayerState.locked:
+        return const Text(
+          'لم يحن وقتها',
+          style: TextStyle(
+            color: T.t3,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
+          ),
+        );
     }
+  }
 
+  Widget _statusBadge({
+    required String label,
+    required Color color,
+    required IconData icon,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -575,167 +723,93 @@ class _PrayerCardState extends State<PrayerCard>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 11),
+          Icon(icon, color: color, size: 12),
           const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActionArea(PrayerState state, PrayerDef p, Color sc) {
-    switch (state) {
-      case PrayerState.locked:
-        return _lockedMessage();
-      case PrayerState.available:
-        return _availableActions();
-      case PrayerState.completedIndividual:
-        return _completedMessage(
-            'أديتها فردياً', T.jade, Icons.person_rounded);
-      case PrayerState.completedCongregation:
-        return _completedMessage(
-            'أديتها في الجماعة', T.gold, Icons.groups_rounded);
-      case PrayerState.oadaPending:
-        return _qadaAction();
-      case PrayerState.oadaCompleted:
-        return _completedMessage(
-            'قُضيت', T.violet, Icons.check_circle_outline_rounded);
-    }
-  }
-
-  Widget _lockedMessage() => Row(
-    children: [
-      Icon(Icons.access_time_rounded, color: T.t3, size: 14),
-      const SizedBox(width: 6),
-      const Text('لم يحن وقت الصلاة بعد',
-          style: TextStyle(color: T.t3, fontSize: 12)),
-    ],
-  );
-
-  Widget _availableActions() => Row(
-    children: [
-      Expanded(
-          child: ActionBtn(
-            label: 'صليتها جماعة',
-            icon:  Icons.groups_rounded,
-            color: T.gold,
-            onTap: () => widget.onComplete(true),
-          )),
-      const SizedBox(width: 10),
-      Expanded(
-          child: ActionBtn(
-            label: 'صليتها فردي',
-            icon:  Icons.person_rounded,
-            color: T.jade,
-            onTap: () => widget.onComplete(false),
-          )),
-    ],
-  );
-
-  Widget _qadaAction() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: T.rubyL, size: 14),
-          const SizedBox(width: 6),
-          const Text('فات وقت الصلاة — تبقّى القضاء',
-              style: TextStyle(color: T.rubyL, fontSize: 12)),
-        ],
-      ),
-      const SizedBox(height: 10),
-      GestureDetector(
-        onTap: widget.onQada,
+  Widget _buildActionBtn({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           decoration: BoxDecoration(
-            color: T.ruby.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: T.ruby.withValues(alpha: 0.4)),
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.refresh_rounded,
-                  color: T.rubyL, size: 16),
-              const SizedBox(width: 8),
-              const Text('قضيتها الآن',
-                  style: TextStyle(
-                      color: T.rubyL,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700)),
+              Icon(icon, color: color, size: 15),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ],
           ),
         ),
       ),
-    ],
-  );
+    );
+  }
+}
 
-  Widget _completedMessage(String text, Color color, IconData icon) => Row(
-    children: [
-      Icon(icon, color: color, size: 16),
-      const SizedBox(width: 8),
-      Text(text,
-          style: TextStyle(
-              color: color,
+// ─────────────────────────────────────────────────────────────
+//  4. Minimal Motivation Footer
+// ─────────────────────────────────────────────────────────────
+class MinimalMotivationFooter extends StatelessWidget {
+  const MinimalMotivationFooter({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const Text(
+            'استمر... كل صلاة بتفرق 🤍',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: T.t2,
               fontSize: 13,
-              fontWeight: FontWeight.w600)),
-    ],
-  );
-
-  Widget _buildSunnahRow(PrayerDef p, Color sc, PrayerRecord rec) =>
-      Align(
-        alignment: Alignment.centerRight,
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: List.generate(p.sunnah.length, (i) {
-            final sel = rec.completedSunnah.contains(i);
-            return GestureDetector(
-              onTap: sel ? null : () => widget.onMarkSunnah(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: sel
-                      ? sc.withValues(alpha: 0.18)
-                      : T.bg.withValues(alpha: 0.5),
-                  border: Border.all(
-                      color: sel ? sc : T.t3.withValues(alpha: 0.3)),
-                  boxShadow: sel
-                      ? [BoxShadow(
-                      color: sc.withValues(alpha: 0.2),
-                      blurRadius: 8)]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (sel)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: Icon(Icons.check_rounded,
-                            color: sc, size: 13),
-                      ),
-                    Text(p.sunnah[i],
-                        style: TextStyle(
-                          color: sel ? sc : T.t2,
-                          fontSize: 12.5,
-                          fontWeight:
-                          sel ? FontWeight.w700 : FontWeight.w400,
-                        )),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ),
-      );
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '«وَأَقِمِ الصَّلَاةَ لِذِكْرِي» — سورة طه: ١٤',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.gold.withValues(alpha: 0.8),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -95,11 +95,18 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
   Future<void> _initForegroundTask() async {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'prayer_channel',
+        id: 1000,
+        channelId: 'prayer_countdown_channel',
         channelName: 'Prayer Notification',
         channelDescription: 'عداد الصلاة القادمة',
-        channelImportance: NotificationChannelImportance.HIGH,
-        priority: NotificationPriority.HIGH,
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+        onlyAlertOnce: true,
+        playSound: false,
+        enableVibration: false,
+        showWhen: false,
+        showBadge: false,
+        visibility: NotificationVisibility.VISIBILITY_PUBLIC,
       ),
       iosNotificationOptions: const IOSNotificationOptions(),
       foregroundTaskOptions: ForegroundTaskOptions(
@@ -117,6 +124,7 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
     final isRunning = await FlutterForegroundTask.isRunningService;
     if (!isRunning) {
       await FlutterForegroundTask.startService(
+        serviceId: 1000,
         notificationTitle: loc.next_prayer_title,
         notificationText: loc.next_prayer_calculating,
         callback: startCallback,

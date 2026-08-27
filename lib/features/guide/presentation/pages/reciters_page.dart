@@ -179,7 +179,7 @@ class _RecitersPageState extends State<RecitersPage> with TickerProviderStateMix
   Widget _header() {
     final total = kCategories.values.expand((l) => l).length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
+      padding: const EdgeInsets.fromLTRB(16, 44, 16, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter, end: Alignment.bottomCenter,
@@ -188,6 +188,27 @@ class _RecitersPageState extends State<RecitersPage> with TickerProviderStateMix
       ),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _kSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _kGold.withAlpha(76), width: 0.8),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: _kGoldLight,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           AnimatedBuilder(
             animation: _shimmerCtrl,
             builder: (_, __) => Container(

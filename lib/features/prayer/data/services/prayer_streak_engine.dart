@@ -194,8 +194,27 @@ class PrayerStreakEngine {
     final times = PrayerTimes(coords, DateComponents.from(yesterday), params);
     final ruleEngine = PrayerRuleEngine(times);
 
+    // Load yesterday's DayRecord to ensure state is preserved across app restarts
+    DayRecord? yesterdayRecord;
+    try {
+      yesterdayRecord = await sl<PrayerRepository>().loadTodayRecord(dateKey);
+    } catch (_) {}
+
+    // Check if a prayer was completed either in memory/preferences or in DayRecord
+    bool isCompleted(Prayer p) {
+      if (_completedToday.contains(p)) return true;
+      if (yesterdayRecord != null) {
+        final rec = yesterdayRecord.recordFor(_getPrayerArabicName(p));
+        if (rec.state == PrayerState.completedIndividual ||
+            rec.state == PrayerState.completedCongregation) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     for (final p in allFardh) {
-      if (!_completedToday.contains(p)) {
+      if (!isCompleted(p)) {
         // Penalty for missed prayer score from PrayerRuleEngine
         final dummyContext = DayContext(
           allFardhCongregation: false,
@@ -208,6 +227,47 @@ class PrayerStreakEngine {
         await ScoreEngine.instance.addScore('penalty_${p.name}_$dateKey', scorePenalty);
       }
     }
+
+    // ── Streak break check ───────────────────────────────────────────────
+    // Count missed prayers using both _completedToday and DayRecord
+    int missedCount = 0;
+    for (final p in allFardh) {
+      if (!isCompleted(p)) {
+        missedCount++;
+      }
+    }
+
+    if (missedCount > 3) {
+      // STREAK BREAK: More than 3 missed prayers in that day -> FULL streak/total score reset
+      AppLogger.info(
+        'Streak break! $missedCount missed prayers on $dateKey (>3). '
+        'Resetting total score and global streak.',
+        tag: 'StreakEngine',
+      );
+
+      await ScoreEngine.instance.resetTotalScore();
+      globalStreak.value = 0;
+
+      // Update Fardh-specific streaks
+      for (final p in allFardh) {
+        final prayerName = _getPrayerArabicName(p);
+        if (!isCompleted(p)) {
+          currentMap[prayerName] = ((currentMap[prayerName] ?? 0.0) - 1.0).clamp(0.0, double.infinity);
+        }
+      }
+
+      fardhStreaks.value = currentMap;
+      _completedToday.clear();
+      dailyStreak.value = 0;
+      final nextDay = yesterday.add(const Duration(days: 1));
+      await _saveState(overrideToday: nextDay);
+
+      // Tell score engine to check/perform rollover for the new day
+      await ScoreEngine.instance.checkMidnightReset();
+      return; // Skip all bonus calculations
+    }
+
+    // ── Day had ≤3 missed prayers — proceed with bonus evaluation ─────
 
     // Load yesterday's DayRecord to evaluate congregation and sunnah bonuses
     try {
@@ -298,12 +358,16 @@ class PrayerStreakEngine {
         AppLogger.info('Daily Sunnah Bonus (+50 score) applied for date: $dateKey', tag: 'StreakEngine');
       }
 
-      // Calculate streak change via Streak calculation rule
-      final int netStreakChange = ruleEngine.calculateStreak(dayContext);
-      globalStreak.value = (globalStreak.value + netStreakChange).clamp(0, 999999);
+      // Calculate streak change via Streak calculation rule (applied once per dateKey)
+      final prefs = await SharedPreferences.getInstance();
+      final streakTxId = 'streak_daily_change_$dateKey';
+      if (!prefs.containsKey(streakTxId)) {
+        await prefs.setBool(streakTxId, true);
+        final int netStreakChange = ruleEngine.calculateStreak(dayContext);
+        globalStreak.value = (globalStreak.value + netStreakChange).clamp(0, 999999);
+      }
 
       if (isPerfect3DayStreak) {
-        final prefs = await SharedPreferences.getInstance();
         final txId = 'streak_consistency_bonus_$dateKey';
         if (!prefs.containsKey(txId)) {
           await prefs.setBool(txId, true);

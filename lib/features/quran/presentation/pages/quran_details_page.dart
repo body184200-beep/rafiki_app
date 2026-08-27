@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
@@ -181,12 +182,14 @@ class SurahDetailPage extends StatefulWidget {
   final String surahName;
   final List<String> ayat;
   final int surahNumber;
+  final int? initialPage;
 
   const SurahDetailPage({
     super.key,
     required this.surahName,
     required this.ayat,
     this.surahNumber = 0,
+    this.initialPage,
   });
 
   @override
@@ -228,10 +231,15 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   bool _showPanel = false;
   int _themeIndex = 0;
   Timer? _saveDebouncer;
+  int? _globalBookmarkPageIndex;
+  int? _globalBookmarkSurahNum;
 
   // ── Derived ───────────────────────────────────────────────────────────────
   _AyahTheme get _t => _kThemes[_themeIndex];
   bool get _isDark => _t.brightness == Brightness.dark;
+  bool get _isCurrentPageGlobalBookmark =>
+      _globalBookmarkSurahNum == widget.surahNumber &&
+      _globalBookmarkPageIndex == _currentPage;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   @override
@@ -333,6 +341,20 @@ class _SurahDetailPageState extends State<SurahDetailPage>
     final bmList = prefs.getStringList('bookmarks_$key');
     final themeIndex = prefs.getInt('theme_$key') ?? 0;
 
+    // Load global bookmark state
+    int? globalBmSurahNum;
+    int? globalBmPageIndex;
+    try {
+      final globalBmRaw = prefs.getString('mushaf_global_bookmark');
+      if (globalBmRaw != null) {
+        final bm = jsonDecode(globalBmRaw) as Map<String, dynamic>;
+        globalBmSurahNum = bm['surahNumber'] as int?;
+        globalBmPageIndex = bm['pageIndex'] as int?;
+      }
+    } catch (_) {
+      // Ignore corrupt bookmark data
+    }
+
     if (!mounted) return;
 
     setState(() {
@@ -340,12 +362,21 @@ class _SurahDetailPageState extends State<SurahDetailPage>
       if (bmList != null) {
         _bookmarks = bmList.map(int.parse).toSet();
       }
+      _globalBookmarkSurahNum = globalBmSurahNum;
+      _globalBookmarkPageIndex = globalBmPageIndex;
     });
 
     _entranceCtrl.forward();
 
-    final startPage =
-    (savedPg != null && savedPg < _pages.length) ? savedPg : 0;
+    // Priority: initialPage (from bookmark card) > per-surah saved page > 0
+    final int startPage;
+    if (widget.initialPage != null && widget.initialPage! < _pages.length) {
+      startPage = widget.initialPage!;
+    } else if (savedPg != null && savedPg < _pages.length) {
+      startPage = savedPg;
+    } else {
+      startPage = 0;
+    }
 
     await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
@@ -388,12 +419,36 @@ class _SurahDetailPageState extends State<SurahDetailPage>
 
   void _toggleBookmark() {
     HapticFeedback.lightImpact();
+
+    // Save global bookmark (always sets, not toggles)
     setState(() {
-      _bookmarks.contains(_currentPage)
-          ? _bookmarks.remove(_currentPage)
-          : _bookmarks.add(_currentPage);
+      _globalBookmarkSurahNum = widget.surahNumber;
+      _globalBookmarkPageIndex = _currentPage;
+      // Also maintain per-surah bookmarks for backward compatibility
+      _bookmarks.add(_currentPage);
     });
+
+    _saveGlobalBookmark();
     _scheduleSave();
+  }
+
+  /// Persists the global bookmark to SharedPreferences as JSON.
+  Future<void> _saveGlobalBookmark() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final offset = (!_isTawbah && !_isFatihah) ? 1 : 0;
+      // Calculate the first ayah number on this page for display purposes
+      final firstAyah = (_currentPage * _ayatPerPage + 1 - offset).clamp(1, widget.ayat.length);
+      final bookmark = {
+        'surahNumber': widget.surahNumber,
+        'surahName': widget.surahName,
+        'pageIndex': _currentPage,
+        'ayahNumber': firstAyah,
+      };
+      await prefs.setString('mushaf_global_bookmark', jsonEncode(bookmark));
+    } catch (_) {
+      // Non-critical — silently handle storage errors
+    }
   }
 
   void _changeFontSize(double d) {
@@ -822,7 +877,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
 
   // ── AppBar ────────────────────────────────────────────────────────────────
   Widget _appBarActions() {
-    final isBookmarked = _bookmarks.contains(_currentPage);
+    final isBookmarked = _isCurrentPageGlobalBookmark;
     return Padding(
       padding: const EdgeInsets.only(left: 10),
       child: Row(
@@ -844,7 +899,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
             ),
             onTap: _toggleBookmark,
             active: isBookmarked,
-            tooltip: 'إشارة مرجعية',
+            tooltip: isBookmarked ? 'تم حفظ الموضع' : 'حفظ الموضع',
           ),
           const SizedBox(width: 7),
           _iconBtn(
@@ -971,7 +1026,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (_bookmarks.contains(_currentPage))
+                        if (_isCurrentPageGlobalBookmark)
                           Padding(
                             padding: const EdgeInsets.only(left: 6),
                             child: Icon(Icons.bookmark_rounded,
@@ -1042,7 +1097,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                       letterSpacing: 0.5,
                     ),
                   ),
-                  if (_bookmarks.isNotEmpty)
+                  if (_isCurrentPageGlobalBookmark)
                     AnimatedSize(
                       duration: const Duration(milliseconds: 220),
                       child: Row(
@@ -1052,7 +1107,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                               color: _t.accent, size: 9),
                           const SizedBox(width: 4),
                           Text(
-                            '${_bookmarks.length} إشارة',
+                            'تم حفظ الموضع',
                             style: TextStyle(
                                 color: _t.accent,
                                 fontSize: 10,

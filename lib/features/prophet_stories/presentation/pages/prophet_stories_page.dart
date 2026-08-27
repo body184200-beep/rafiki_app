@@ -738,7 +738,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: kGold.withValues(alpha: 0.15), width: 1),
@@ -746,25 +746,54 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
       ),
       child: Column(
         children: [
-          // ornament
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(width: 50, height: 1,
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [Colors.transparent, kGoldDim]),
-                  )),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Text('✦', style: TextStyle(color: kGoldDim, fontSize: 14)),
+                    color: kGold.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kGold.withValues(alpha: 0.25), width: 0.8),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: kGoldLight,
+                    size: 16,
+                  ),
+                ),
               ),
-              Container(width: 50, height: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [kGoldDim, Colors.transparent]),
-                  )),
+              // ornament
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 1,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.transparent, kGoldDim]),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('✦', style: TextStyle(color: kGoldDim, fontSize: 14)),
+                  ),
+                  Container(
+                    width: 40,
+                    height: 1,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(colors: [kGoldDim, Colors.transparent]),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 36),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           const Text(
             'قِصَصُ الأَنْبِيَاء',
             style: TextStyle(

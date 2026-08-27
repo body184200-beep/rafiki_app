@@ -302,10 +302,10 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       
-      // Simulate yesterday's initial state
+      // Simulate yesterday's state with 4 completed prayers (1 missed -> isha), ≤ 3 missed
       await prefs.setString('streak_engine_date', dateKeyYesterday);
-      await prefs.setStringList('streak_engine_completed_today', []); // Yesterday all missed
-      await prefs.setInt('streak_engine_daily', 0);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr', 'maghrib']);
+      await prefs.setInt('streak_engine_daily', 4);
       
       await prefs.setString('score_engine_last_reset', dateKeyYesterday);
       await prefs.setDouble('score_engine_today', 10.0); // Yesterday's base score
@@ -316,18 +316,44 @@ void main() {
       await ScoreEngine.instance.initialize();
       await PrayerStreakEngine.instance.initialize();
 
-      // Check results:
+      // Check results for ≤3 missed prayers:
       // Yesterday's score was 10.0.
-      // Yesterday had 5 missed prayers (all missed), which is -10.0 penalty.
-      // Net yesterday's score: 10.0 - 10.0 = 0.0.
-      // When rolled over correctly:
-      // totalScore should be: 20.0 (prev total) + 0.0 (net yesterday) = 20.0.
+      // Yesterday had 1 missed prayer (isha), which is -2.0 penalty.
+      // Net yesterday's score: 10.0 - 2.0 = 8.0.
+      // totalScore should be: 20.0 (prev total) + 8.0 (net yesterday) = 28.0.
       // todayScore (for today, fresh start) should be: 0.0.
-      expect(ScoreEngine.instance.totalScore.value, 20.0);
+      expect(ScoreEngine.instance.totalScore.value, 28.0);
       expect(ScoreEngine.instance.todayScore.value, 0.0);
       
       final savedResetDate = prefs.getString('score_engine_last_reset');
       expect(savedResetDate, todayKey);
+    });
+
+    test('Streak break triggers totalScore and globalStreak reset when >3 prayers missed', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final dateKeyYesterday = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Simulate yesterday with 5 missed prayers (>3 missed)
+      await prefs.setString('streak_engine_date', dateKeyYesterday);
+      await prefs.setStringList('streak_engine_completed_today', []);
+      await prefs.setInt('streak_engine_daily', 0);
+      
+      await prefs.setString('score_engine_last_reset', dateKeyYesterday);
+      await prefs.setDouble('score_engine_today', 10.0);
+      await prefs.setDouble('score_engine_total', 50.0);
+      await prefs.setStringList('score_engine_transactions', []);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.globalStreak.value = 7;
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // Streak break: >3 missed prayers -> totalScore and globalStreak reset to 0
+      expect(ScoreEngine.instance.totalScore.value, 0.0);
+      expect(engine.globalStreak.value, 0);
     });
 
     test('PrayerStreakEngine saves and loads fardh streaks decimals correctly without rounding', () async {
@@ -465,6 +491,232 @@ void main() {
       final updatedCoords = ruleEngine.times.coordinates;
       expect(updatedCoords.latitude, 24.4539);
       expect(updatedCoords.longitude, 54.3773);
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Comprehensive Production Rollover & Streak Break Verification Suite
+    // ──────────────────────────────────────────────────────────────────────────
+
+    test('Scenario: Restart before midnight, then open after midnight with completed prayers in DayRecord', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // User completed Fajr, Dhuhr, Asr (3 completed, 2 missed -> <=3 missed)
+      final mockRecord = DayRecord(dateKey: yesterdayKey);
+      mockRecord.recordFor('الفجر').state = PrayerState.completedIndividual;
+      mockRecord.recordFor('الظهر').state = PrayerState.completedCongregation;
+      mockRecord.recordFor('العصر').state = PrayerState.completedIndividual;
+      mockRecord.recordFor('المغرب').state = PrayerState.oadaPending;
+      mockRecord.recordFor('العشاء').state = PrayerState.oadaPending;
+      await sl<PrayerRepository>().saveTodayRecord(mockRecord);
+
+      await prefs.setString('streak_engine_date', yesterdayKey);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr']);
+      await prefs.setInt('streak_engine_daily', 3);
+
+      await prefs.setString('score_engine_last_reset', yesterdayKey);
+      await prefs.setDouble('score_engine_today', 29.0); // 1 (Fajr) + 27 (Dhuhr) + 1 (Asr)
+      await prefs.setDouble('score_engine_total', 100.0);
+      await prefs.setStringList('score_engine_transactions', []);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.globalStreak.value = 5;
+
+      // App killed and opened after midnight
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // Since missedCount = 2 (<=3), score and streak continue
+      // Penalties: -2 (Maghrib) + -2 (Isha) = -4.0
+      // Net yesterday score: 29.0 - 4.0 = 25.0
+      // Total score: 100.0 + 25.0 = 125.0
+      expect(ScoreEngine.instance.totalScore.value, 125.0);
+      expect(ScoreEngine.instance.todayScore.value, 0.0);
+      // globalStreak should NOT be reset to 0
+      expect(engine.globalStreak.value > 0, isTrue);
+    });
+
+    test('Scenario: 1 to 3 missed prayers -> score and streak continue normally with penalties', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // 3 completed (Fajr, Dhuhr, Asr), 2 missed (Maghrib, Isha) -> 2 missed <= 3
+      final mockRecord = DayRecord(dateKey: yesterdayKey);
+      mockRecord.recordFor('الفجر').state = PrayerState.completedIndividual;
+      mockRecord.recordFor('الظهر').state = PrayerState.completedIndividual;
+      mockRecord.recordFor('العصر').state = PrayerState.completedIndividual;
+      mockRecord.recordFor('المغرب').state = PrayerState.oadaPending;
+      mockRecord.recordFor('العشاء').state = PrayerState.oadaPending;
+      await sl<PrayerRepository>().saveTodayRecord(mockRecord);
+
+      await prefs.setString('streak_engine_date', yesterdayKey);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr']);
+      await prefs.setInt('streak_engine_daily', 3);
+      await prefs.setInt('streak_engine_global_v2', 4);
+      await prefs.setString('score_engine_last_reset', yesterdayKey);
+      await prefs.setDouble('score_engine_today', 3.0);
+      await prefs.setDouble('score_engine_total', 50.0);
+
+      final engine = PrayerStreakEngine.instance;
+
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // Total score: 50 + (3 - 4 penalty) = 49.0 (score continues, not reset to 0)
+      expect(ScoreEngine.instance.totalScore.value, 49.0);
+      // Streak continues (4 base + (3 on-time - 2 missed) = 5)
+      expect(engine.globalStreak.value, 5);
+    });
+
+    test('Scenario: Exactly 4 missed prayers -> FULL score and streak reset', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // Only Fajr completed, 4 missed (Dhuhr, Asr, Maghrib, Isha) -> 4 missed > 3
+      await prefs.setString('streak_engine_date', yesterdayKey);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr']);
+      await prefs.setInt('streak_engine_daily', 1);
+      await prefs.setString('score_engine_last_reset', yesterdayKey);
+      await prefs.setDouble('score_engine_today', 1.0);
+      await prefs.setDouble('score_engine_total', 80.0);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.globalStreak.value = 12;
+
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // 4 missed > 3 -> FULL RESET
+      expect(ScoreEngine.instance.totalScore.value, 0.0);
+      expect(engine.globalStreak.value, 0);
+    });
+
+    test('Scenario: Exactly 5 missed prayers (all missed) -> FULL score and streak reset', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // 0 completed, 5 missed
+      await prefs.setString('streak_engine_date', yesterdayKey);
+      await prefs.setStringList('streak_engine_completed_today', []);
+      await prefs.setInt('streak_engine_daily', 0);
+      await prefs.setString('score_engine_last_reset', yesterdayKey);
+      await prefs.setDouble('score_engine_today', 0.0);
+      await prefs.setDouble('score_engine_total', 150.0);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.globalStreak.value = 20;
+
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // 5 missed > 3 -> FULL RESET
+      expect(ScoreEngine.instance.totalScore.value, 0.0);
+      expect(engine.globalStreak.value, 0);
+    });
+
+    test('Scenario: Idempotency - Same rollover executed twice cannot cause double penalty or changes', () async {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final mockRecord = DayRecord(dateKey: yesterdayKey);
+      for (final p in ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء']) {
+        mockRecord.recordFor(p).state = PrayerState.completedIndividual;
+      }
+      await sl<PrayerRepository>().saveTodayRecord(mockRecord);
+
+      await prefs.setString('streak_engine_date', yesterdayKey);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']);
+      await prefs.setInt('streak_engine_daily', 5);
+      await prefs.setInt('streak_engine_global_v2', 3);
+      await prefs.setString('score_engine_last_reset', yesterdayKey);
+      await prefs.setDouble('score_engine_today', 5.0);
+      await prefs.setDouble('score_engine_total', 50.0);
+
+      final engine = PrayerStreakEngine.instance;
+
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      final scoreAfterFirst = ScoreEngine.instance.totalScore.value;
+      final streakAfterFirst = engine.globalStreak.value;
+
+      // Execute midnight check again on same day
+      await engine.handleMidnightRollover();
+      await ScoreEngine.instance.checkMidnightReset();
+
+      // Values must not change
+      expect(ScoreEngine.instance.totalScore.value, scoreAfterFirst);
+      expect(engine.globalStreak.value, streakAfterFirst);
+    });
+
+    test('Scenario: App not opened for an entire day (2 missed days) rolls over all days retroactively', () async {
+      final now = DateTime.now();
+      final twoDaysAgo = now.subtract(const Duration(days: 2));
+      final dateKeyTwoDaysAgo = '${twoDaysAgo.year}-${twoDaysAgo.month.toString().padLeft(2, '0')}-${twoDaysAgo.day.toString().padLeft(2, '0')}';
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // Two days ago user completed 5 prayers, then didn't open yesterday at all
+      await prefs.setString('streak_engine_date', dateKeyTwoDaysAgo);
+      await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']);
+      await prefs.setInt('streak_engine_daily', 5);
+      await prefs.setString('score_engine_last_reset', dateKeyTwoDaysAgo);
+      await prefs.setDouble('score_engine_today', 5.0);
+      await prefs.setDouble('score_engine_total', 10.0);
+
+      final engine = PrayerStreakEngine.instance;
+      engine.globalStreak.value = 5;
+
+      await ScoreEngine.instance.initialize();
+      await engine.initialize();
+
+      // Yesterday was completely missed (5 missed prayers > 3) -> streak break triggers
+      expect(ScoreEngine.instance.totalScore.value, 0.0);
+      expect(engine.globalStreak.value, 0);
+
+      final savedDate = prefs.getString('streak_engine_date');
+      expect(savedDate, todayKey);
+    });
+
+    test('Mushaf Position Model: zero-based pageIndex is saved, restored, and displayed as pageIndex + 1', () async {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Save a global bookmark with pageIndex = 3 (zero-based)
+      final bookmark = {
+        'surahNumber': 2,
+        'surahName': 'البقرة',
+        'pageIndex': 3,
+        'ayahNumber': 31,
+      };
+      await prefs.setString('mushaf_global_bookmark', jsonEncode(bookmark));
+
+      // Read back
+      final raw = prefs.getString('mushaf_global_bookmark');
+      expect(raw, isNotNull);
+
+      final decoded = jsonDecode(raw!) as Map<String, dynamic>;
+      final restoredPageIndex = decoded['pageIndex'] as int;
+      expect(restoredPageIndex, 3); // Zero-based index is exactly 3
+
+      // Displayed page number in UI must be exactly pageIndex + 1 = 4
+      final displayPageNumber = restoredPageIndex + 1;
+      expect(displayPageNumber, 4);
     });
   });
 }

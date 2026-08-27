@@ -59,6 +59,24 @@ class ScoreEngine {
     _processedTransactions.clear();
   }
 
+  /// Resets the total score and today's score to zero.
+  /// Called when the streak breaks (more than 3 missed prayers in a day).
+  Future<void> resetTotalScore() async {
+    todayScore.value = 0.0;
+    totalScore.value = 0.0;
+
+    await _repository.saveScoreState(
+      todayScore: 0.0,
+      totalScore: 0.0,
+      processedTransactions: _processedTransactions.toList(),
+    );
+
+    AppLogger.info(
+      'Total score reset to 0 due to streak break (>3 missed prayers)',
+      tag: 'ScoreEngine',
+    );
+  }
+
   Future<bool> addScore(String transactionId, double amount) async {
     if (_processedTransactions.contains(transactionId)) {
       AppLogger.warning('Transaction $transactionId already processed. Skipping.', tag: 'ScoreEngine');

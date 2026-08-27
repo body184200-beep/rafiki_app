@@ -374,28 +374,55 @@ class _QuranRadioPageState extends State<QuranRadioPage>
               bottom: false,
               child: SizedBox(
                 height: 60,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
-                    const SizedBox(width: 12),
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [_C.goldLight, _C.onBg],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'إذاعة القرآن الكريم',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18,
-                          letterSpacing: 0.5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: _C.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _C.border, width: 0.8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: _C.goldLight,
+                            size: 16,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
-                  ],
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
+                            const SizedBox(width: 10),
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [_C.goldLight, _C.onBg],
+                              ).createShader(bounds),
+                              child: const Text(
+                                'إذاعة القرآن الكريم',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 36),
+                    ],
+                  ),
                 ),
               ),
             ),

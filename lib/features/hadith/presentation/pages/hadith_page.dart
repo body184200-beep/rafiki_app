@@ -157,6 +157,11 @@ class _HadithScreenState extends State<HadithScreen> {
             pinned: true,
             backgroundColor: _kBg,
             expandedHeight: 110,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _kGold, size: 20),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'رجوع',
+            ),
             flexibleSpace: const FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
@@ -238,7 +243,11 @@ class _HadithScreenState extends State<HadithScreen> {
       backgroundColor: _kBg,
       appBar: AppBar(
         backgroundColor: _kBg,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _kGold, size: 20),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'رجوع',
+        ),
         title: Text(
           list.isEmpty ? 'المفضلة' : 'المفضلة  (${list.length})',
           style: const TextStyle(
