@@ -101,10 +101,10 @@ class PrayerTaskHandler extends TaskHandler {
       final prayerTimeStr = TimeFormat.format12h(nextPrayerTime);
       final countdownStr = TimeFormat.hhmmss(safeDiff);
 
-      // Live update foreground notification
+      // Live update foreground notification (WeMuslim style: 2 clean lines, bold title, time + countdown)
       FlutterForegroundTask.updateService(
-        notificationTitle: '🕌 الصلاة القادمة: $prayerName',
-        notificationText: '🕐 $prayerTimeStr   ⏳ متبقي: $countdownStr',
+        notificationTitle: 'الصلاة القادمة: $prayerName',
+        notificationText: '$prayerTimeStr   -$countdownStr',
       );
     } catch (_) {}
   }

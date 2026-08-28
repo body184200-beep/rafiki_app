@@ -25,6 +25,20 @@ class BonusEngine {
     return await ScoreEngine.instance.addScore(txId, score);
   }
 
+  /// Completes Duha prayer (+3.6 score) idempotently without modifying Fardh streak.
+  Future<bool> completeDuha({String? dateKey}) async {
+    final now = DateTime.now();
+    final effectiveDateKey = dateKey ?? '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final txId = 'duha_$effectiveDateKey';
+
+    const double duhaScore = 3.6;
+    final added = await ScoreEngine.instance.addScore(txId, duhaScore);
+    if (added) {
+      AppLogger.info('Duha prayer (+3.6 score) completed for date: $effectiveDateKey under Tx: $txId', tag: 'BonusEngine');
+    }
+    return added;
+  }
+
   /// Rule 1: Consistency Bonus (3 days of completing all Fardh prayers)
   /// If consistent, boosts the streaks in PrayerStreakEngine only.
   Future<void> checkAndApplyConsistencyBonus() async {

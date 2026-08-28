@@ -130,27 +130,30 @@ class PrayerEngine with WidgetsBindingObserver {
     if (_todayTimes == null) return Prayer.none;
     final times = _todayTimes!;
     
-    if (now.isAfter(times.fajr) && now.isBefore(times.sunrise)) {
+    if (!now.isBefore(times.fajr) && now.isBefore(times.sunrise)) {
       return Prayer.fajr;
-    } else if (now.isAfter(times.dhuhr) && now.isBefore(times.asr)) {
+    } else if (!now.isBefore(times.dhuhr) && now.isBefore(times.asr)) {
       return Prayer.dhuhr;
-    } else if (now.isAfter(times.asr) && now.isBefore(times.maghrib)) {
+    } else if (!now.isBefore(times.asr) && now.isBefore(times.maghrib)) {
       return Prayer.asr;
-    } else if (now.isAfter(times.maghrib) && now.isBefore(times.isha)) {
+    } else if (!now.isBefore(times.maghrib) && now.isBefore(times.isha)) {
       return Prayer.maghrib;
     } else {
-      if (now.isAfter(times.isha)) {
+      final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+      final tomorrowTimes = PrayerTimes(times.coordinates, DateComponents.from(tomorrow), times.calculationParameters);
+      if (!now.isBefore(times.isha) && now.isBefore(tomorrowTimes.fajr)) {
         return Prayer.isha;
-      }
-      if (now.isBefore(times.fajr)) {
-        return Prayer.none;
       }
     }
     return Prayer.none;
   }
 
-  Future<bool> addPrayerEvent(Prayer prayer, CustomPrayerEventType type, {double score = 0.0, int? sunnahIndex}) async {
-    AppLogger.info('addPrayerEvent: prayer=$prayer, type=$type, score=$score, sunnahIndex=$sunnahIndex', tag: 'PrayerEngine');
+  Future<bool> completeDuha({String? dateKey}) async {
+    return await sl<BonusEngine>().completeDuha(dateKey: dateKey);
+  }
+
+  Future<bool> addPrayerEvent(Prayer prayer, CustomPrayerEventType type, {double score = 0.0, int? sunnahIndex, String? dateKey}) async {
+    AppLogger.info('addPrayerEvent: prayer=$prayer, type=$type, score=$score, sunnahIndex=$sunnahIndex, dateKey=$dateKey', tag: 'PrayerEngine');
 
     bool success = false;
     if (type == CustomPrayerEventType.sunnah) {
@@ -158,18 +161,18 @@ class PrayerEngine with WidgetsBindingObserver {
         success = await sl<BonusEngine>().completeSunnah(prayer, sunnahIndex, score);
       }
     } else if (type == CustomPrayerEventType.onTime) {
-      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: false);
+      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: false, dateKey: dateKey);
       if (success) {
         await sl<BonusEngine>().checkAndApplyConsistencyBonus();
       }
     } else if (type == CustomPrayerEventType.jamaah) {
-      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: false);
+      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: false, dateKey: dateKey);
       if (success) {
         await sl<BonusEngine>().checkAndApplyCongregationBonus();
         await sl<BonusEngine>().checkAndApplyConsistencyBonus();
       }
     } else if (type == CustomPrayerEventType.qada) {
-      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: true);
+      success = await sl<PrayerStreakEngine>().completePrayer(prayer, score, isQada: true, dateKey: dateKey);
       if (success) {
         await sl<BonusEngine>().checkAndApplyCongregationBonus();
         await sl<BonusEngine>().checkAndApplyConsistencyBonus();

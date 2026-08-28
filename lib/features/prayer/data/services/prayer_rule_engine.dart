@@ -118,7 +118,7 @@ class PrayerRuleEngine {
     final dayTimes = PrayerTimes(times.coordinates, DateComponents.from(date), times.calculationParameters);
     switch (type) {
       case PrayerType.fajr:
-        return dayTimes.dhuhr;
+        return dayTimes.sunrise;
       case PrayerType.dhuhr:
         return dayTimes.asr;
       case PrayerType.asr:

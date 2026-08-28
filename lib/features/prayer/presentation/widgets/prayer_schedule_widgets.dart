@@ -332,6 +332,7 @@ class TodayPrayersCard extends StatelessWidget {
   final void Function(PrayerDef p, bool isCongregation) onComplete;
   final void Function(PrayerDef p) onQada;
   final void Function(PrayerDef p, int sunnahIndex) onMarkSunnah;
+  final VoidCallback onCompleteDuha;
 
   const TodayPrayersCard({
     super.key,
@@ -339,6 +340,7 @@ class TodayPrayersCard extends StatelessWidget {
     required this.onComplete,
     required this.onQada,
     required this.onMarkSunnah,
+    required this.onCompleteDuha,
   });
 
   @override
@@ -454,6 +456,12 @@ class TodayPrayersCard extends StatelessWidget {
                 }),
               ),
             ),
+          ),
+
+          // Duha Prayer Card
+          DuhaPrayerCard(
+            record: today.recordFor('الضحى'),
+            onComplete: onCompleteDuha,
           ),
         ],
       ),
@@ -605,15 +613,15 @@ class CompactPrayerRow extends StatelessWidget {
           if (isQada) ...[
             const SizedBox(height: 10),
             _buildActionBtn(
-              label: 'قضيتها الآن',
+              label: 'قضيها',
               icon: Icons.refresh_rounded,
               color: T.rubyL,
               onTap: onQada,
             ),
           ],
 
-          // Sunnah Chips if available / completed
-          if (prayer.sunnah.isNotEmpty && (isAvailable || isCompleted)) ...[
+          // Sunnah Chips (independent of Fardh locking)
+          if (prayer.sunnah.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
@@ -692,7 +700,7 @@ class CompactPrayerRow extends StatelessWidget {
         );
       case PrayerState.oadaPending:
         return _statusBadge(
-          label: 'فائتة',
+          label: 'فات وقتها',
           color: T.ruby,
           icon: Icons.warning_amber_rounded,
         );
@@ -778,7 +786,236 @@ class CompactPrayerRow extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  4. Minimal Motivation Footer
+//  4. Duha Prayer Card Widget
+// ─────────────────────────────────────────────────────────────
+class DuhaPrayerCard extends StatelessWidget {
+  final PrayerRecord record;
+  final VoidCallback onComplete;
+
+  const DuhaPrayerCard({
+    super.key,
+    required this.record,
+    required this.onComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = record.state;
+    final isAvailable = state == PrayerState.available;
+    final isCompleted = state == PrayerState.completedIndividual ||
+        state == PrayerState.completedCongregation ||
+        state == PrayerState.oadaCompleted;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: T.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isAvailable
+              ? AppColors.gold.withValues(alpha: 0.4)
+              : isCompleted
+                  ? AppColors.accent.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.08),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          color: isAvailable
+              ? AppColors.gold.withValues(alpha: 0.06)
+              : isCompleted
+                  ? const Color(0xFF0D1714).withValues(alpha: 0.4)
+                  : Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  // Icon Box
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: isAvailable
+                          ? AppColors.gold.withValues(alpha: 0.15)
+                          : isCompleted
+                              ? AppColors.accent.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isAvailable
+                            ? AppColors.gold.withValues(alpha: 0.35)
+                            : isCompleted
+                                ? AppColors.accent.withValues(alpha: 0.25)
+                                : Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.wb_sunny_rounded,
+                      color: isAvailable
+                          ? AppColors.gold
+                          : isCompleted
+                              ? AppColors.accent
+                              : T.t3,
+                      size: 18,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Name & Subtitle
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'صلاة الضحى',
+                              style: TextStyle(
+                                color: T.t1,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              '(سنة مؤكدة)',
+                              style: TextStyle(
+                                color: AppColors.gold,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'تفتح قبل الظهر بـ ٣ ساعات',
+                          style: TextStyle(
+                            color: T.t3,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Trailing status
+                  if (isCompleted)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 12),
+                          SizedBox(width: 4),
+                          Text(
+                            'تمت ✓ (+3.6)',
+                            style: TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (isAvailable)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.radio_button_checked_rounded, color: AppColors.gold, size: 12),
+                          SizedBox(width: 4),
+                          Text(
+                            'متاحة الآن',
+                            style: TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const Text(
+                      'لم يحن وقتها',
+                      style: TextStyle(
+                        color: T.t3,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+
+              // Inline Action when Available
+              if (isAvailable) ...[
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onComplete,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle_outline_rounded, color: AppColors.gold, size: 15),
+                          SizedBox(width: 6),
+                          Text(
+                            'صليت الضحى (+3.6)',
+                            style: TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  5. Minimal Motivation Footer
 // ─────────────────────────────────────────────────────────────
 class MinimalMotivationFooter extends StatelessWidget {
   const MinimalMotivationFooter({super.key});

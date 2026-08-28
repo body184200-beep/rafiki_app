@@ -130,6 +130,19 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
       }
     }
 
+    // Evaluate Duha state
+    final duhaRec = _today.recordFor('الضحى');
+    if (!duhaRec.state.isFinal) {
+      final nextDuha = PrayerTimeService.computeDuhaState(
+        now: now,
+        current: duhaRec.state,
+      );
+      if (nextDuha != duhaRec.state) {
+        duhaRec.state = nextDuha;
+        changed = true;
+      }
+    }
+
     if (changed && mounted) {
       setState(() {});
       _saveData();
@@ -200,6 +213,11 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         current: PrayerState.locked,
       );
     }
+    final duhaRec = _today.recordFor('الضحى');
+    duhaRec.state = PrayerTimeService.computeDuhaState(
+      now: now,
+      current: duhaRec.state,
+    );
   }
 
   // ── Persistence ──────────────────────────────────────────────
@@ -248,6 +266,17 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
       }
     }
 
+    final duhaRec = _today.recordFor('الضحى');
+    if (!duhaRec.state.isFinal) {
+      final nextDuha = PrayerTimeService.computeDuhaState(
+        now: now,
+        current: duhaRec.state,
+      );
+      if (nextDuha != duhaRec.state) {
+        duhaRec.state = nextDuha;
+      }
+    }
+
     if (mounted) setState(() {});
     await _saveData();
   }
@@ -271,6 +300,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
           ? CustomPrayerEventType.jamaah
           : CustomPrayerEventType.onTime,
       score: scoreToAward,
+      dateKey: _today.dateKey,
     );
 
     if (success) {
@@ -302,7 +332,8 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
     final success = await sl<PrayerEngine>().addPrayerEvent(
       p.adhanPrayer,
       CustomPrayerEventType.qada,
-      score: ScoreConstants.individual,
+      score: ScoreConstants.qada,
+      dateKey: _today.dateKey,
     );
 
     if (success) {
@@ -310,6 +341,25 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         setState(() {
           rec.state = PrayerState.oadaCompleted;
           rec.scoreAwarded = ScoreConstants.qada;
+        });
+      }
+      await _saveData();
+    }
+  }
+
+  // ── Action: Complete Duha prayer ────────────────────────────
+  void _completeDuha() async {
+    final rec = _today.recordFor('الضحى');
+    if (rec.state != PrayerState.available) return;
+
+    HapticFeedback.mediumImpact();
+
+    final success = await sl<PrayerEngine>().completeDuha(dateKey: _today.dateKey);
+    if (success) {
+      if (mounted) {
+        setState(() {
+          rec.state = PrayerState.completedIndividual;
+          rec.scoreAwarded = ScoreConstants.duha;
         });
       }
       await _saveData();
@@ -350,6 +400,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
       adhanPrayer,
       CustomPrayerEventType.qada,
       score: score,
+      dateKey: entry.dateKey,
     );
 
     if (success) {
@@ -359,7 +410,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         });
       }
       _pendingQada.removeWhere((e) => e.completed);
-      _saveData();
+      await _saveData();
     }
   }
 
@@ -452,6 +503,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                           _completePrayer(prayer, congregation: isCong),
                       onQada: (prayer) => _completeQada(prayer),
                       onMarkSunnah: (prayer, idx) => _markSunnah(prayer, idx),
+                      onCompleteDuha: _completeDuha,
                     ),
                   ),
 

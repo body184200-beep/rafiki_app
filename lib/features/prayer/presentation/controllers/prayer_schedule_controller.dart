@@ -63,6 +63,7 @@ class ScoreConstants {
   static const double qada         = 0.5;
   static const double missed       = -2.0;
   static const double sunnah       = 0.75;
+  static const double duha         = 3.6;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -114,7 +115,7 @@ class PrayerDef {
     final times = sl<PrayerEngine>().todayTimes;
     if (times == null) {
       switch (adhanPrayer) {
-        case Prayer.fajr: return DateTime(day.year, day.month, day.day, 12, 0);
+        case Prayer.fajr: return DateTime(day.year, day.month, day.day, 6, 30);
         case Prayer.dhuhr: return DateTime(day.year, day.month, day.day, 15, 30);
         case Prayer.asr: return DateTime(day.year, day.month, day.day, 18, 0);
         case Prayer.maghrib: return DateTime(day.year, day.month, day.day, 19, 30);
@@ -125,7 +126,7 @@ class PrayerDef {
       }
     }
     switch (adhanPrayer) {
-      case Prayer.fajr: return times.dhuhr;
+      case Prayer.fajr: return times.sunrise;
       case Prayer.dhuhr: return times.asr;
       case Prayer.asr: return times.maghrib;
       case Prayer.maghrib: return times.isha;
@@ -168,7 +169,7 @@ String todayKey() => dateKey(DateTime.now());
 // ─────────────────────────────────────────────────────────────
 class PrayerTimeService {
   /// Returns the index (in kPrayers) of the prayer whose window is currently
-  /// active at [now], or -1 if none is active yet (e.g., before Fajr).
+  /// active at [now], or -1 if none is active yet (e.g., before Fajr or in Duha gap).
   ///
   /// KEY RULE: Only ONE prayer can be "available" at any given moment.
   /// When prayer N+1 starts, prayer N is locked from interaction and moves
@@ -182,7 +183,7 @@ class PrayerTimeService {
     if (ruleEngine.isPrayerOpen(PrayerType.asr, now)) return 2;
     if (ruleEngine.isPrayerOpen(PrayerType.maghrib, now)) return 3;
     if (ruleEngine.isPrayerOpen(PrayerType.isha, now)) return 4;
-    return -1; // before Fajr or after Isha-end (next day)
+    return -1; // before Fajr, between Sunrise and Dhuhr, or after Isha-end
   }
 
   /// Compute the correct [PrayerState] for prayer at [index] given [now].
@@ -211,11 +212,39 @@ class PrayerTimeService {
     final end    = prayer.end(today);
 
     if (now.isBefore(start)) return PrayerState.locked;
-    if (now.isAfter(end) || (active != -1 && active > prayerIndex)) {
+    if (now.isAfter(end) || now.isAtSameMomentAs(end) || (active != -1 && active > prayerIndex)) {
       return PrayerState.oadaPending;
     }
 
     return current;
+  }
+
+  /// Duha window: opens 3 hours before Dhuhr, closes when Dhuhr starts.
+  static DateTime duhaStart(DateTime day) {
+    final times = sl<PrayerEngine>().todayTimes;
+    final dhuhr = times?.dhuhr ?? DateTime(day.year, day.month, day.day, 12, 0);
+    return dhuhr.subtract(const Duration(hours: 3));
+  }
+
+  static DateTime duhaEnd(DateTime day) {
+    final times = sl<PrayerEngine>().todayTimes;
+    return times?.dhuhr ?? DateTime(day.year, day.month, day.day, 12, 0);
+  }
+
+  static bool isDuhaOpen(DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    final start = duhaStart(today);
+    final end = duhaEnd(today);
+    return !now.isBefore(start) && now.isBefore(end);
+  }
+
+  static PrayerState computeDuhaState({
+    required DateTime now,
+    required PrayerState current,
+  }) {
+    if (current.isCompleted) return current;
+    if (isDuhaOpen(now)) return PrayerState.available;
+    return PrayerState.locked;
   }
 
   /// Score for a completed fardh state — unchanged from original.

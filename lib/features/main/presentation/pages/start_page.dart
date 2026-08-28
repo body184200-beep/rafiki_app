@@ -10,6 +10,7 @@ import 'package:rafiki_app/features/companions/presentation/pages/companions_pag
 import 'package:rafiki_app/features/deeds/presentation/pages/deeds_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/guide_page.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_task_handler.dart';
+import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
 import 'package:rafiki_app/features/prophet/presentation/pages/prophet_page.dart';
 
 import '../controllers/home_controller.dart';
@@ -20,6 +21,7 @@ import '../widgets/home_top_bar.dart';
 
 @pragma('vm:entry-point')
 void startCallback() {
+  WidgetsFlutterBinding.ensureInitialized();
   FlutterForegroundTask.setTaskHandler(PrayerTaskHandler());
 }
 
@@ -67,11 +69,21 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
     _home.addListener(_onHomeChanged);
     _home.attach();
     _initForegroundTask();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       _home.bindLocalizations(AppLocalizations.of(context)!);
       _home.startCountdown();
-      _startPrayerNotification();
+
+      // 1. Unified sequential permission request (AwesomeNotifications -> FlutterForegroundTask -> ExactAlarms -> Schedules -> MIUI Guide)
+      await NotificationEngine.instance.requestAllNotificationPermissions(context: context);
+
+      // 2. Start foreground service for live countdown
+      if (mounted) {
+        await _startPrayerNotification();
+      }
+
+      // 3. 🧪 DEBUG: fire test notification to verify delivery pipeline
+      await NotificationEngine.instance.debugFireTestNotification();
     });
   }
 
@@ -120,13 +132,15 @@ class _StartState extends State<Start> with TickerProviderStateMixin {
 
   Future<void> _startPrayerNotification() async {
     final loc = AppLocalizations.of(context)!;
-    await FlutterForegroundTask.requestNotificationPermission();
     final isRunning = await FlutterForegroundTask.isRunningService;
     if (!isRunning) {
       await FlutterForegroundTask.startService(
         serviceId: 1000,
-        notificationTitle: loc.next_prayer_title,
+        notificationTitle: loc.tooltip_next_prayer,
         notificationText: loc.next_prayer_calculating,
+        notificationIcon: const NotificationIcon(
+          metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
+        ),
         callback: startCallback,
       );
     }

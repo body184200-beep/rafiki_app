@@ -129,13 +129,26 @@ class PrayerStreakEngine {
     }
   }
 
-  Future<bool> completePrayer(Prayer prayer, double score, {bool isQada = false}) async {
+  Future<bool> completePrayer(Prayer prayer, double score, {bool isQada = false, String? dateKey}) async {
     if (prayer == Prayer.none || prayer == Prayer.sunrise) return false;
     
-    // Prevent duplicate completions (only for today's fardh, not Qada)
+    // Prevent duplicate completions (for today's fardh)
     if (!isQada && _completedToday.contains(prayer)) {
       AppLogger.warning('Prayer ${prayer.name} already completed today. Skipping.', tag: 'StreakEngine');
       return false; 
+    }
+
+    final now = DateTime.now();
+    final effectiveDateKey = dateKey ?? '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final txId = isQada 
+        ? 'qada_${prayer.name}_$effectiveDateKey'
+        : 'fardh_${prayer.name}_$effectiveDateKey';
+
+    // Grant Score through ScoreEngine (idempotent check)
+    final scoreAdded = await ScoreEngine.instance.addScore(txId, score);
+    if (!scoreAdded) {
+      AppLogger.warning('Transaction $txId was already recorded. Skipping duplicate credit.', tag: 'StreakEngine');
+      return false;
     }
 
     if (!isQada) {
@@ -155,15 +168,6 @@ class PrayerStreakEngine {
     }
     
     fardhStreaks.value = currentMap;
-    
-    final now = DateTime.now();
-    final dateKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final txId = isQada 
-        ? 'qada_${prayer.name}_${now.millisecondsSinceEpoch}'
-        : 'fardh_${prayer.name}_$dateKey';
-
-    // Grant Score through ScoreEngine
-    await ScoreEngine.instance.addScore(txId, score);
 
     // Save State
     await _saveState();

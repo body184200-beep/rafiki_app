@@ -49,6 +49,9 @@
             android:value="2" />
 
         <!-- Foreground Service for flutter_foreground_task -->
+        <meta-data
+            android:name="com.pravera.flutter_foreground_task.notification_icon"
+            android:resource="@mipmap/ic_launcher" />
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="specialUse"
