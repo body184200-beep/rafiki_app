@@ -170,16 +170,69 @@ class NotificationEngine {
     }
   }
 
+  bool _isResuming = false;
+  DateTime? _lastResumeCheck;
+
+  /// Checked whenever app enters foreground / resumes.
+  /// Detects if permissions were granted in settings or changed, logs it, and schedules prayer times.
+  /// Guarded with re-entry lock and 5-second debounce.
+  Future<bool> checkAndHandleAppResume({BuildContext? context}) async {
+    final now = DateTime.now();
+
+    // Guard 1: Prevent concurrent re-entry
+    if (_isResuming) {
+      debugPrint('🔔 [NotifEngine] ⏭ Skipping checkAndHandleAppResume — already running');
+      return false;
+    }
+
+    // Guard 2: Debounce rapid consecutive calls (<5 seconds)
+    if (_lastResumeCheck != null && now.difference(_lastResumeCheck!).inSeconds < 5) {
+      debugPrint('🔔 [NotifEngine] ⏭ Skipping checkAndHandleAppResume — throttled (<5s since last run)');
+      return false;
+    }
+
+    _isResuming = true;
+    _lastResumeCheck = now;
+
+    try {
+      final isGlobalAllowed = await AwesomeNotifications().isNotificationAllowed();
+      final globalPerms = await AwesomeNotifications().checkPermissionList();
+      final prayerPerms = await AwesomeNotifications().checkPermissionList(
+        channelKey: AppConstants.notificationChannelPrayer,
+      );
+
+      debugPrint('🔔 [NotifEngine] 📊 Resumed status:');
+      debugPrint('   • isNotificationAllowed: $isGlobalAllowed');
+      debugPrint('   • Global permissions: $globalPerms');
+      debugPrint('   • Prayer channel permissions: $prayerPerms');
+
+      if (isGlobalAllowed) {
+        debugPrint('🔔 [NotifEngine] ✅ Permissions are ACTIVE — syncing schedules & prayer notifications...');
+        await syncSchedules();
+        await schedulePrayerNotifications();
+        return true;
+      } else {
+        debugPrint('🔔 [NotifEngine] ⚠️ Notifications are currently NOT allowed.');
+        return false;
+      }
+    } catch (e, st) {
+      debugPrint('🔔 [NotifEngine] ❌ Error in checkAndHandleAppResume: $e\n$st');
+      return false;
+    } finally {
+      _isResuming = false;
+    }
+  }
+
   static const String _kMiuiGuideShownKey = 'miui_battery_guide_shown_v1';
 
-  /// Unified sequential permission request to avoid Android permission cancellation race conditions.
+  /// Unified sequential permission request triggered by direct user gesture (button click).
   /// 1. AwesomeNotifications permissions (Alert, Sound, Badge, Vibration, PreciseAlarms, CriticalAlert)
   /// 2. FlutterForegroundTask permission
   /// 3. Precise Alarms check (Android 12+)
   /// 4. Sync & Schedule
   /// 5. Show MIUI / Battery optimization hint dialog if first time on Android
   Future<bool> requestAllNotificationPermissions({BuildContext? context}) async {
-    debugPrint('🔔 [NotifEngine] ▶ requestAllNotificationPermissions() started...');
+    debugPrint('🔔 [NotifEngine] ▶ requestAllNotificationPermissions() (User Gesture) started...');
     
     try {
       // 1. AwesomeNotifications permission check & request (Sequential Step 1)
@@ -223,6 +276,11 @@ class NotificationEngine {
 
       // 4. Sync all schedules & schedule prayer times if allowed
       final isFinalAllowed = await AwesomeNotifications().isNotificationAllowed();
+      final prayerPerms = await AwesomeNotifications().checkPermissionList(
+        channelKey: AppConstants.notificationChannelPrayer,
+      );
+      debugPrint('🔔 [NotifEngine] Final isNotificationAllowed = $isFinalAllowed, prayer channel perms = $prayerPerms');
+
       if (isFinalAllowed) {
         await syncSchedules();
         await schedulePrayerNotifications(force: true);
@@ -362,53 +420,77 @@ class NotificationEngine {
     Prayer.isha: 'العشاء',
   };
 
-  /// Schedules push notifications for each of the 5 daily prayers:
-  ///   - 10 minutes before prayer time  →  "⏳ اقتربت صلاة {name}"
+  bool _isSchedulingPrayer = false;
+  DateTime? _lastPrayerScheduleRun;
+
+  /// Schedules push notifications for each of the 5 daily prayers (Today + Tomorrow rolling window):
+  ///   - 10 minutes before prayer time  →  "⏳ اقتربت صلاة {name}" (with 10-minute auto timeout)
   ///   - At prayer time                 →  "🕌 حان وقت صلاة {name}"
   ///
   /// This method is **idempotent per day**: it stores the date of the last
   /// scheduling run and skips if already done today (unless [force] is true).
   /// It cancels all previous prayer_channel notifications before re-scheduling.
-  ///
-  /// Call this:
-  ///   1. At app startup (via [initialize])
-  ///   2. From [PrayerTaskHandler] when the date rolls over at midnight
   Future<void> schedulePrayerNotifications({bool force = false}) async {
-    debugPrint('🕌 [PrayerNotif] ▶ schedulePrayerNotifications() CALLED (force=$force)');
     final now = DateTime.now();
+
+    // Guard 1: Prevent concurrent re-entry
+    if (_isSchedulingPrayer) {
+      debugPrint('🕌 [PrayerNotif] ⏭ Skipping schedulePrayerNotifications — already running');
+      return;
+    }
+
+    // Guard 2: Throttling — do not reschedule within 5 seconds unless forced
+    if (!force && _lastPrayerScheduleRun != null && now.difference(_lastPrayerScheduleRun!).inSeconds < 5) {
+      debugPrint('🕌 [PrayerNotif] ⏭ Skipping schedulePrayerNotifications — throttled (<5s)');
+      return;
+    }
+
+    _isSchedulingPrayer = true;
+    _lastPrayerScheduleRun = now;
+
+    debugPrint('🕌 [PrayerNotif] ▶ schedulePrayerNotifications() CALLED (force=$force)');
     final todayStr = '${now.year}-${now.month}-${now.day}';
     debugPrint('🕌 [PrayerNotif] now=$now, todayStr=$todayStr');
 
-    // Guard: don't reschedule if already done today (unless forced)
+    // Guard 3: don't reschedule if already done today (unless forced)
     if (!force) {
       final prefs = await SharedPreferences.getInstance();
       final lastScheduled = prefs.getString(_kPrayerScheduleDateKey);
       debugPrint('🕌 [PrayerNotif] lastScheduled=$lastScheduled');
       if (lastScheduled == todayStr) {
         debugPrint('🕌 [PrayerNotif] ⏭ SKIPPING — already scheduled today');
+        _isSchedulingPrayer = false;
         return;
       }
     }
 
     try {
-      // 1. Compute today's prayer times
+      // 1. Compute today's and tomorrow's prayer times
       final coords = await PrayerConfig.getCoordinates();
       debugPrint('🕌 [PrayerNotif] coords=(${coords.latitude}, ${coords.longitude})');
       final params = PrayerConfig.params;
-      final prayerTimes = PrayerTimes.today(coords, params);
 
-      final prayers = <Prayer, DateTime>{
-        Prayer.fajr: prayerTimes.fajr,
-        Prayer.dhuhr: prayerTimes.dhuhr,
-        Prayer.asr: prayerTimes.asr,
-        Prayer.maghrib: prayerTimes.maghrib,
-        Prayer.isha: prayerTimes.isha,
+      final todayComponents = DateComponents.from(now);
+      final todayTimes = PrayerTimes(coords, todayComponents, params);
+
+      final tomorrowComponents = DateComponents.from(now.add(const Duration(days: 1)));
+      final tomorrowTimes = PrayerTimes(coords, tomorrowComponents, params);
+
+      final todayPrayers = <Prayer, DateTime>{
+        Prayer.fajr: todayTimes.fajr,
+        Prayer.dhuhr: todayTimes.dhuhr,
+        Prayer.asr: todayTimes.asr,
+        Prayer.maghrib: todayTimes.maghrib,
+        Prayer.isha: todayTimes.isha,
       };
 
-      debugPrint('🕌 [PrayerNotif] Prayer times for today:');
-      for (final e in prayers.entries) {
-        debugPrint('   ${_prayerNames[e.key]}: ${e.value}');
-      }
+      final tomorrowPrayers = <Prayer, DateTime>{
+        Prayer.fajr: tomorrowTimes.fajr,
+        Prayer.dhuhr: tomorrowTimes.dhuhr,
+        Prayer.asr: tomorrowTimes.asr,
+        Prayer.maghrib: tomorrowTimes.maghrib,
+        Prayer.isha: tomorrowTimes.isha,
+      };
 
       // 2. Cancel all existing prayer_channel notifications
       await AwesomeNotifications().cancelNotificationsByChannelKey(
@@ -416,115 +498,129 @@ class NotificationEngine {
       );
       debugPrint('🕌 [PrayerNotif] Cancelled old prayer_channel notifications');
 
-      // 3. Schedule 2 notifications per prayer (10 total)
-      var index = 0;
       var scheduledCount = 0;
       var skippedCount = 0;
-      for (final entry in prayers.entries) {
-        final prayer = entry.key;
-        final time = entry.value;
-        final name = _prayerNames[prayer] ?? '';
 
-        // ── 10 minutes before ──────────────────────────────────
-        final beforeTime = time.subtract(const Duration(minutes: 10));
-        final beforeId = _prayerNotifBaseId + (index * 2);
-        if (beforeTime.isAfter(now)) {
-          debugPrint('🕌 [PrayerNotif] 📋 Scheduling BEFORE-$name (id=$beforeId) at $beforeTime');
-          try {
-            final result = await AwesomeNotifications().createNotification(
-              content: NotificationContent(
-                id: beforeId,
-                channelKey: AppConstants.notificationChannelPrayer,
-                title: '⏳ اقتربت صلاة $name',
-                body: 'باقي 10 دقائق على موعد أذان $name — استعد للصلاة',
-                notificationLayout: NotificationLayout.BigText,
-                category: NotificationCategory.Reminder,
-                largeIcon: 'resource://mipmap/ic_launcher',
-                roundedLargeIcon: true,
-                color: AppColors.accent,
-                wakeUpScreen: true,
-              ),
-              actionButtons: [
-                NotificationActionButton(
-                  key: 'DISMISS',
-                  label: 'تم',
-                  actionType: ActionType.DismissAction,
+      // Helper to schedule a day's prayers
+      Future<void> schedulePrayerList(Map<Prayer, DateTime> prayerMap, int baseIdOffset, String dayLabel) async {
+        var index = 0;
+        for (final entry in prayerMap.entries) {
+          final prayer = entry.key;
+          final time = entry.value;
+          final name = _prayerNames[prayer] ?? '';
+
+          // ── 10 minutes before (Auto-expires in 10 minutes when prayer enters) ──
+          final beforeTime = time.subtract(const Duration(minutes: 10));
+          final beforeId = _prayerNotifBaseId + baseIdOffset + (index * 2);
+          if (beforeTime.isAfter(now)) {
+            debugPrint('🕌 [PrayerNotif] 📋 Scheduling BEFORE-$name [$dayLabel] (id=$beforeId) at $beforeTime');
+            try {
+              final result = await AwesomeNotifications().createNotification(
+                content: NotificationContent(
+                  id: beforeId,
+                  channelKey: AppConstants.notificationChannelPrayer,
+                  title: '⏳ اقتربت صلاة $name',
+                  body: 'باقي 10 دقائق على موعد أذان $name — استعد للصلاة',
+                  notificationLayout: NotificationLayout.BigText,
+                  category: NotificationCategory.Reminder,
+                  largeIcon: 'resource://mipmap/ic_launcher',
+                  roundedLargeIcon: true,
+                  color: AppColors.accent,
+                  wakeUpScreen: true,
+                  timeoutAfter: const Duration(minutes: 10),
+                  autoDismissible: true,
+                  groupKey: 'prayer_alerts',
+                  summary: 'مواقيت الصلاة',
                 ),
-              ],
-              schedule: NotificationCalendar(
-                year: beforeTime.year,
-                month: beforeTime.month,
-                day: beforeTime.day,
-                hour: beforeTime.hour,
-                minute: beforeTime.minute,
-                second: 0,
-                millisecond: 0,
-                repeats: false,
-                allowWhileIdle: true,
-                preciseAlarm: true,
-              ),
-            );
-            debugPrint('🕌 [PrayerNotif] ✅ BEFORE-$name result=$result');
-            scheduledCount++;
-          } catch (e) {
-            debugPrint('🕌 [PrayerNotif] ❌ BEFORE-$name ERROR: $e');
-          }
-        } else {
-          debugPrint('🕌 [PrayerNotif] ⏭ SKIP BEFORE-$name — already past ($beforeTime <= $now)');
-          skippedCount++;
-        }
-
-        // ── At prayer time (Athan) ─────────────────────────────
-        final atId = _prayerNotifBaseId + (index * 2) + 1;
-        if (time.isAfter(now)) {
-          debugPrint('🕌 [PrayerNotif] 📋 Scheduling AT-$name (id=$atId) at $time');
-          try {
-            final result = await AwesomeNotifications().createNotification(
-              content: NotificationContent(
-                id: atId,
-                channelKey: AppConstants.notificationChannelPrayer,
-                title: '🕌 حان وقت صلاة $name',
-                body: 'الله أكبر، حان الآن موعد أذان $name — أقم الصلاة يرحمك الله',
-                notificationLayout: NotificationLayout.BigText,
-                category: NotificationCategory.Alarm,
-                criticalAlert: true,
-                largeIcon: 'resource://mipmap/ic_launcher',
-                roundedLargeIcon: true,
-                color: AppColors.gold,
-                wakeUpScreen: true,
-              ),
-              actionButtons: [
-                NotificationActionButton(
-                  key: 'DISMISS',
-                  label: 'تم',
-                  actionType: ActionType.DismissAction,
+                actionButtons: [
+                  NotificationActionButton(
+                    key: 'DISMISS',
+                    label: 'تم',
+                    actionType: ActionType.DismissAction,
+                  ),
+                ],
+                schedule: NotificationCalendar(
+                  year: beforeTime.year,
+                  month: beforeTime.month,
+                  day: beforeTime.day,
+                  hour: beforeTime.hour,
+                  minute: beforeTime.minute,
+                  second: 0,
+                  millisecond: 0,
+                  repeats: false,
+                  allowWhileIdle: true,
+                  preciseAlarm: true,
                 ),
-              ],
-              schedule: NotificationCalendar(
-                year: time.year,
-                month: time.month,
-                day: time.day,
-                hour: time.hour,
-                minute: time.minute,
-                second: 0,
-                millisecond: 0,
-                repeats: false,
-                allowWhileIdle: true,
-                preciseAlarm: true,
-              ),
-            );
-            debugPrint('🕌 [PrayerNotif] ✅ AT-$name result=$result');
-            scheduledCount++;
-          } catch (e) {
-            debugPrint('🕌 [PrayerNotif] ❌ AT-$name ERROR: $e');
+              );
+              debugPrint('🕌 [PrayerNotif] ✅ BEFORE-$name [$dayLabel] result=$result');
+              scheduledCount++;
+            } catch (e) {
+              debugPrint('🕌 [PrayerNotif] ❌ BEFORE-$name [$dayLabel] ERROR: $e');
+            }
+          } else {
+            debugPrint('🕌 [PrayerNotif] ⏭ SKIP BEFORE-$name [$dayLabel] — already past ($beforeTime <= $now)');
+            skippedCount++;
           }
-        } else {
-          debugPrint('🕌 [PrayerNotif] ⏭ SKIP AT-$name — already past ($time <= $now)');
-          skippedCount++;
-        }
 
-        index++;
+          // ── At prayer time (Athan) ─────────────────────────────
+          final atId = _prayerNotifBaseId + baseIdOffset + (index * 2) + 1;
+          if (time.isAfter(now)) {
+            debugPrint('🕌 [PrayerNotif] 📋 Scheduling AT-$name [$dayLabel] (id=$atId) at $time');
+            try {
+              final result = await AwesomeNotifications().createNotification(
+                content: NotificationContent(
+                  id: atId,
+                  channelKey: AppConstants.notificationChannelPrayer,
+                  title: '🕌 حان وقت صلاة $name',
+                  body: 'الله أكبر، حان الآن موعد أذان $name — أقم الصلاة يرحمك الله',
+                  notificationLayout: NotificationLayout.BigText,
+                  category: NotificationCategory.Alarm,
+                  criticalAlert: true,
+                  largeIcon: 'resource://mipmap/ic_launcher',
+                  roundedLargeIcon: true,
+                  color: AppColors.gold,
+                  wakeUpScreen: true,
+                  autoDismissible: true,
+                  groupKey: 'prayer_alerts',
+                  summary: 'مواقيت الصلاة',
+                ),
+                actionButtons: [
+                  NotificationActionButton(
+                    key: 'DISMISS',
+                    label: 'تم',
+                    actionType: ActionType.DismissAction,
+                  ),
+                ],
+                schedule: NotificationCalendar(
+                  year: time.year,
+                  month: time.month,
+                  day: time.day,
+                  hour: time.hour,
+                  minute: time.minute,
+                  second: 0,
+                  millisecond: 0,
+                  repeats: false,
+                  allowWhileIdle: true,
+                  preciseAlarm: true,
+                ),
+              );
+              debugPrint('🕌 [PrayerNotif] ✅ AT-$name [$dayLabel] result=$result');
+              scheduledCount++;
+            } catch (e) {
+              debugPrint('🕌 [PrayerNotif] ❌ AT-$name [$dayLabel] ERROR: $e');
+            }
+          } else {
+            debugPrint('🕌 [PrayerNotif] ⏭ SKIP AT-$name [$dayLabel] — already past ($time <= $now)');
+            skippedCount++;
+          }
+
+          index++;
+        }
       }
+
+      // 3. Schedule Today (offset 0) and Tomorrow (offset 20)
+      await schedulePrayerList(todayPrayers, 0, 'Today');
+      await schedulePrayerList(tomorrowPrayers, 20, 'Tomorrow');
 
       // 4. Mark today as scheduled
       final prefs = await SharedPreferences.getInstance();
@@ -545,6 +641,8 @@ class NotificationEngine {
     } catch (e, st) {
       debugPrint('🕌 [PrayerNotif] ❌ FATAL ERROR: $e');
       debugPrint('🕌 [PrayerNotif] StackTrace: $st');
+    } finally {
+      _isSchedulingPrayer = false;
     }
   }
 

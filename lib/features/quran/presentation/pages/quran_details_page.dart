@@ -420,15 +420,31 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   void _toggleBookmark() {
     HapticFeedback.lightImpact();
 
-    // Save global bookmark (always sets, not toggles)
-    setState(() {
-      _globalBookmarkSurahNum = widget.surahNumber;
-      _globalBookmarkPageIndex = _currentPage;
-      // Also maintain per-surah bookmarks for backward compatibility
-      _bookmarks.add(_currentPage);
-    });
+    final isCurrentlyBookmarked = _isCurrentPageGlobalBookmark;
+    final action = isCurrentlyBookmarked ? 'REMOVE' : 'ADD';
 
-    _saveGlobalBookmark();
+    debugPrint(
+      '🔖 [Bookmark] Before toggle: isBookmarked=$isCurrentlyBookmarked | Action: $action | Surah: ${widget.surahNumber} (${widget.surahName}), Page: $_currentPage',
+    );
+
+    if (isCurrentlyBookmarked) {
+      // 1. Remove bookmark
+      setState(() {
+        _globalBookmarkSurahNum = null;
+        _globalBookmarkPageIndex = null;
+        _bookmarks.remove(_currentPage);
+      });
+      _removeGlobalBookmark();
+    } else {
+      // 2. Add / Update bookmark
+      setState(() {
+        _globalBookmarkSurahNum = widget.surahNumber;
+        _globalBookmarkPageIndex = _currentPage;
+        _bookmarks.add(_currentPage);
+      });
+      _saveGlobalBookmark();
+    }
+
     _scheduleSave();
   }
 
@@ -445,9 +461,21 @@ class _SurahDetailPageState extends State<SurahDetailPage>
         'pageIndex': _currentPage,
         'ayahNumber': firstAyah,
       };
-      await prefs.setString('mushaf_global_bookmark', jsonEncode(bookmark));
-    } catch (_) {
-      // Non-critical — silently handle storage errors
+      final success = await prefs.setString('mushaf_global_bookmark', jsonEncode(bookmark));
+      debugPrint('🔖 [Bookmark] Storage ADD result: ${success ? "SUCCESS" : "FAILED"} -> $bookmark');
+    } catch (e) {
+      debugPrint('🔖 [Bookmark] Storage ADD error: $e');
+    }
+  }
+
+  /// Removes the global bookmark from SharedPreferences.
+  Future<void> _removeGlobalBookmark() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final success = await prefs.remove('mushaf_global_bookmark');
+      debugPrint('🔖 [Bookmark] Storage REMOVE result: ${success ? "SUCCESS" : "FAILED"}');
+    } catch (e) {
+      debugPrint('🔖 [Bookmark] Storage REMOVE error: $e');
     }
   }
 

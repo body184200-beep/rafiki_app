@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:adhan/adhan.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -15,38 +17,61 @@ class PrayerTaskHandler extends TaskHandler {
   DateTime? _cachedDate;
 
   // Alerts tracking to avoid duplicate audio alerts
-  Prayer? _lastAlertPrayer;
-  DateTime? _lastAlertDay;
-
   Prayer? _lastPrayerNow;
   DateTime? _lastPrayerNowDay;
 
   final AudioPlayer _player = AudioPlayer();
 
+  // Diagnostic logging tracker
+  Prayer? _lastLoggedPrayer;
+  String? _lastLoggedSource;
+
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    // Initial immediate update when foreground service starts
-    await _updatePrayerCountdown(timestamp);
+    debugPrint('🚀 [PrayerTaskHandler] onStart called at $timestamp (starter: $starter)');
+    try {
+      // Immediate synchronous initial calculation
+      await _updatePrayerCountdown(timestamp);
+    } catch (e, st) {
+      debugPrint('❌ [PrayerTaskHandler] FATAL in onStart: $e\n$st');
+    }
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    // Called every second (1000ms) by ForegroundTaskEventAction.repeat(1000)
-    _updatePrayerCountdown(timestamp);
+    try {
+      _updatePrayerCountdown(timestamp);
+    } catch (e, st) {
+      debugPrint('❌ [PrayerTaskHandler] FATAL in onRepeatEvent: $e\n$st');
+    }
   }
 
   Future<void> _updatePrayerCountdown(DateTime now) async {
     try {
       final today = DateTime(now.year, now.month, now.day);
 
-      // Refresh coordinates if needed (initial load or every 5 minutes)
-      if (_cachedCoordinates == null ||
-          _lastCoordsFetch == null ||
+      // 1. Coordinates: immediate fallback default, never hang
+      _cachedCoordinates ??= Coordinates(
+        PrayerConfig.defaultLatitude,
+        PrayerConfig.defaultLongitude,
+      );
+
+      if (_lastCoordsFetch == null ||
           now.difference(_lastCoordsFetch!).inMinutes >= 5) {
-        _cachedCoordinates = await PrayerConfig.getCoordinates();
+        try {
+          final freshCoords = await PrayerConfig.getCoordinates().timeout(
+            const Duration(seconds: 2),
+            onTimeout: () => _cachedCoordinates!,
+          );
+          if (freshCoords.latitude != _cachedCoordinates!.latitude ||
+              freshCoords.longitude != _cachedCoordinates!.longitude) {
+            _cachedCoordinates = freshCoords;
+            _cachedDate = null;
+          }
+        } catch (e) {
+          debugPrint('⚠️ [PrayerTaskHandler] Failed fetching fresh coordinates (using cached): $e');
+        }
         _lastCoordsFetch = now;
-        // Invalidate cached times so they recalculate with new coordinates
-        _cachedDate = null;
       }
 
       final coords = _cachedCoordinates!;
@@ -56,9 +81,11 @@ class PrayerTaskHandler extends TaskHandler {
       if (_cachedTodayTimes == null ||
           _cachedDate == null ||
           _cachedDate != today) {
-        _cachedTodayTimes = PrayerTimes.today(coords, params);
-        final tomorrow = DateComponents.from(now.add(const Duration(days: 1)));
-        _cachedTomorrowTimes = PrayerTimes(coords, tomorrow, params);
+        final todayComponents = DateComponents.from(now);
+        _cachedTodayTimes = PrayerTimes(coords, todayComponents, params);
+
+        final tomorrowComponents = DateComponents.from(now.add(const Duration(days: 1)));
+        _cachedTomorrowTimes = PrayerTimes(coords, tomorrowComponents, params);
         _cachedDate = today;
       }
 
@@ -73,17 +100,19 @@ class PrayerTaskHandler extends TaskHandler {
         MapEntry(Prayer.isha, todayTimes.isha),
       ];
 
-      // Check audio alerts (10 minutes before and at prayer time)
+      // Check audio alerts at prayer time
       _checkAudioAlerts(todayPrayers, now, today);
 
-      // Find the next upcoming prayer
+      // Find the next upcoming prayer for today
       Prayer nextPrayer = Prayer.none;
       DateTime? nextPrayerTime;
+      String source = 'today';
 
       for (final entry in todayPrayers) {
         if (entry.value.isAfter(now)) {
           nextPrayer = entry.key;
           nextPrayerTime = entry.value;
+          source = 'today';
           break;
         }
       }
@@ -92,21 +121,45 @@ class PrayerTaskHandler extends TaskHandler {
       if (nextPrayer == Prayer.none || nextPrayerTime == null) {
         nextPrayer = Prayer.fajr;
         nextPrayerTime = tomorrowTimes.fajr;
+        source = 'tomorrow';
       }
 
       final diff = nextPrayerTime.difference(now);
       final safeDiff = diff.isNegative ? Duration.zero : diff;
 
+      // 📝 Temporary diagnostic log (logs every 10s or when target changes)
+      if (now.second % 10 == 0 ||
+          _lastLoggedPrayer != nextPrayer ||
+          _lastLoggedSource != source) {
+        _lastLoggedPrayer = nextPrayer;
+        _lastLoggedSource = source;
+        debugPrint(
+          '⏱ [PrayerTaskHandler] now: $now | Next: ${_getName(nextPrayer)} at: $nextPrayerTime (source: $source) | diff: $safeDiff',
+        );
+      }
+
       final prayerName = _getName(nextPrayer);
       final prayerTimeStr = TimeFormat.format12h(nextPrayerTime);
       final countdownStr = TimeFormat.hhmmss(safeDiff);
+      final isTomorrow = source == 'tomorrow';
 
-      // Live update foreground notification (WeMuslim style: 2 clean lines, bold title, time + countdown)
+      final title = isTomorrow
+          ? 'الصلاة القادمة: $prayerName (غداً)'
+          : 'الصلاة القادمة: $prayerName';
+      final text = '$prayerTimeStr   •   -$countdownStr';
+
+      // Live update foreground notification with brand accent color and clear typography
       FlutterForegroundTask.updateService(
-        notificationTitle: 'الصلاة القادمة: $prayerName',
-        notificationText: '$prayerTimeStr   -$countdownStr',
+        notificationTitle: title,
+        notificationText: text,
+        notificationIcon: const NotificationIcon(
+          metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
+          backgroundColor: Color(0xFF4ECCA3),
+        ),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('⏱ [PrayerTaskHandler] Error updating countdown: $e\n$st');
+    }
   }
 
   void _checkAudioAlerts(
@@ -117,17 +170,6 @@ class PrayerTaskHandler extends TaskHandler {
     for (final entry in prayers) {
       final diff = entry.value.difference(now);
       final seconds = diff.inSeconds;
-
-      // 🔔 10 minutes before prayer (diff is ~600 seconds)
-      if (seconds > 0 && seconds <= 600 && seconds >= 595) {
-        final alreadyAlerted =
-            _lastAlertPrayer == entry.key && _lastAlertDay == today;
-        if (!alreadyAlerted) {
-          _lastAlertPrayer = entry.key;
-          _lastAlertDay = today;
-          _playAdhan();
-        }
-      }
 
       // 🕌 Prayer time has entered (diff is <= 0 and within 2 seconds)
       if (seconds <= 0 && seconds >= -2) {
