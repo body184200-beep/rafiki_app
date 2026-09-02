@@ -61,7 +61,6 @@ class NotificationPage extends StatefulWidget {
 class _NotificationPageState extends State<NotificationPage> with TickerProviderStateMixin {
   late final AnimationController _headerAnim;
   late final Animation<double> _headerFade;
-  bool _isAllowed = true;
 
   @override
   void initState() {
@@ -72,16 +71,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
     );
     _headerFade = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
     _headerAnim.forward();
-    _checkPermission();
-  }
-
-  Future<void> _checkPermission() async {
-    final allowed = await sl<NotificationEngine>().checkAndRequestPermission();
-    if (mounted) {
-      setState(() {
-        _isAllowed = allowed;
-      });
-    }
+    sl<NotificationEngine>().checkAndRequestPermission();
   }
 
   @override
@@ -188,49 +178,45 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
               ),
 
               // ── Permission Warning Banner ───────────────────────────────────
-              if (!_isAllowed)
-                SliverToBoxAdapter(
-                  child: Container(
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _T.errorBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: _T.errorAcc.withValues(alpha: 0.3)),
-                    ),
-                    child: Builder(
-                      builder: (ctx) {
-                        final loc = AppLocalizations.of(ctx)!;
-                        return Row(
-                      children: [
-                        const Icon(Icons.warning_amber_rounded, color: _T.errorAcc),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            loc.notif_permission_disabled,
-                            style: const TextStyle(color: _T.txt, fontSize: 13, fontWeight: FontWeight.w500),
+              ValueListenableBuilder<bool>(
+                valueListenable: sl<NotificationEngine>().isGlobalAllowed,
+                builder: (context, allowed, _) {
+                  if (allowed) return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  final loc = AppLocalizations.of(context)!;
+                  return SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _T.errorBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: _T.errorAcc.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: _T.errorAcc),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              loc.notif_permission_disabled,
+                              style: const TextStyle(color: _T.txt, fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            final success = await sl<NotificationEngine>().checkAndRequestPermission();
-                            if (mounted) {
-                              setState(() {
-                                _isAllowed = success;
-                              });
-                            }
-                          },
-                          child: Text(
-                            loc.notif_enable_button,
-                            style: const TextStyle(color: _T.acc, fontWeight: FontWeight.bold),
+                          TextButton(
+                            onPressed: () async {
+                              await sl<NotificationEngine>().requestAllNotificationPermissions(context: context);
+                            },
+                            child: Text(
+                              loc.notif_enable_button,
+                              style: const TextStyle(color: _T.acc, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                      },
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
+              ),
 
               // ── List ──────────────────────────────────────────────────
               ValueListenableBuilder<List<CustomNotification>>(

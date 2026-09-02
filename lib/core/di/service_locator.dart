@@ -108,8 +108,8 @@ class ServiceLocator {
     sl.registerSingleton<BonusEngine>(bonusEngine);
 
     final notificationEngine = NotificationEngine.instance;
-    await notificationEngine.initialize();
     sl.registerSingleton<NotificationEngine>(notificationEngine);
+    await notificationEngine.initialize();
 
     final lootBoxEngine = LootBoxEngine.instance;
     await lootBoxEngine.initialize();

@@ -62,6 +62,7 @@ class _StartState extends State<Start>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    NotificationEngine.instance.onEnsureForegroundService = ensureForegroundServiceRunning;
     _navCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
@@ -80,14 +81,17 @@ class _StartState extends State<Start>
       _home.bindLocalizations(AppLocalizations.of(context)!);
       _home.startCountdown();
 
-      // 1. Start foreground service immediately with synchronous initial calculation
-      if (mounted) {
-        await _startPrayerNotification();
-      }
-
-      // 2. Check and prompt for notification permission via user gesture if not already granted
-      if (mounted) {
-        await _checkAndPromptNotificationPermission();
+      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      if (isAllowed) {
+        if (mounted) {
+          await ensureForegroundServiceRunning();
+          if (!mounted) return;
+          await NotificationEngine.instance.checkAndRequestExactAlarmPermission(context: context);
+        }
+      } else {
+        if (mounted) {
+          await _checkAndPromptNotificationPermission();
+        }
       }
     });
   }
@@ -103,8 +107,9 @@ class _StartState extends State<Start>
         return;
       }
       _lastResumeTimestamp = now;
-      debugPrint('🔔 [StartPage] App resumed — checking notification & channel permissions...');
+      debugPrint('🔔 [StartPage] App resumed — checking notification & foreground service...');
       NotificationEngine.instance.checkAndHandleAppResume(context: context);
+      ensureForegroundServiceRunning();
     }
   }
 
@@ -120,6 +125,7 @@ class _StartState extends State<Start>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    NotificationEngine.instance.onEnsureForegroundService = null;
     _home.removeListener(_onHomeChanged);
     _home.dispose();
     _navCtrl.dispose();
@@ -131,8 +137,11 @@ class _StartState extends State<Start>
     debugPrint('🔔 [StartPage] Cold start permission check: isAllowed=$isAllowed');
 
     if (isAllowed) {
-      await NotificationEngine.instance.syncSchedules();
-      await NotificationEngine.instance.schedulePrayerNotifications();
+      // General notifications are allowed. Now verify if Android 12+ exact alarm
+      // permission is also granted, and prompt if missing.
+      if (mounted) {
+        await NotificationEngine.instance.checkAndRequestExactAlarmPermission(context: context);
+      }
       return;
     }
 
@@ -192,6 +201,9 @@ class _StartState extends State<Start>
               // Direct user gesture
               final granted = await NotificationEngine.instance.requestAllNotificationPermissions(context: context);
               debugPrint('🔔 [StartPage] User gesture permission request completed: granted=$granted');
+              if (granted && mounted) {
+                await ensureForegroundServiceRunning();
+              }
             },
             child: const Text(
               'تفعيل الإشعارات الآن',
@@ -273,10 +285,10 @@ class _StartState extends State<Start>
       final title = isTomorrow
           ? 'الصلاة القادمة: $prayerName (غداً)'
           : 'الصلاة القادمة: $prayerName';
-      final text = '$prayerTimeStr   •   -$countdownStr';
+      final text = '$prayerTimeStr   •   $countdownStr';
       return (title, text);
     } catch (_) {
-      return ('الصلاة القادمة: الفجر', '04:30 ص   •   -00:00:00');
+      return ('الصلاة القادمة: الفجر', '04:30 ص   •   00:00:00');
     }
   }
 
@@ -297,26 +309,42 @@ class _StartState extends State<Start>
     }
   }
 
-  Future<void> _startPrayerNotification() async {
+  /// Central, idempotent method to ensure the prayer foreground service is running.
+  /// 1. Checks if notifications are permitted.
+  /// 2. Checks if service is already running (returns true without duplicating).
+  /// 3. Starts service if stopped.
+  Future<bool> ensureForegroundServiceRunning() async {
     try {
-      final isRunning = await FlutterForegroundTask.isRunningService;
-      if (!isRunning) {
-        final (initialTitle, initialText) = _computeInitialPrayerNotification();
-        debugPrint('🚀 [StartPage] Starting foreground service: title="$initialTitle", text="$initialText"');
-
-        await FlutterForegroundTask.startService(
-          serviceId: 1000,
-          notificationTitle: initialTitle,
-          notificationText: initialText,
-          notificationIcon: const NotificationIcon(
-            metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
-            backgroundColor: Color(0xFF4ECCA3),
-          ),
-          callback: startCallback,
-        );
+      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isAllowed) {
+        debugPrint('🔔 [StartPage] ensureForegroundServiceRunning: Notifications not allowed, skipping.');
+        return false;
       }
+
+      final isRunning = await FlutterForegroundTask.isRunningService;
+      if (isRunning) {
+        debugPrint('🔔 [StartPage] ensureForegroundServiceRunning: Service is already running.');
+        return true;
+      }
+
+      final (initialTitle, initialText) = _computeInitialPrayerNotification();
+      debugPrint('🚀 [StartPage] Starting foreground service: title="$initialTitle", text="$initialText"');
+
+      final serviceResult = await FlutterForegroundTask.startService(
+        serviceId: 1000,
+        notificationTitle: initialTitle,
+        notificationText: initialText,
+        notificationIcon: const NotificationIcon(
+          metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
+          backgroundColor: Color(0xFF4ECCA3),
+        ),
+        callback: startCallback,
+      );
+      debugPrint('🚀 [StartPage] FlutterForegroundTask.startService result = $serviceResult');
+      return true;
     } catch (e, st) {
       debugPrint('❌ [StartPage] Error starting foreground service: $e\n$st');
+      return false;
     }
   }
 

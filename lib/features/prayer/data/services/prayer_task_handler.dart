@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:adhan/adhan.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 import 'package:rafiki_app/core/utils/time_format.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
@@ -15,12 +14,6 @@ class PrayerTaskHandler extends TaskHandler {
   PrayerTimes? _cachedTodayTimes;
   PrayerTimes? _cachedTomorrowTimes;
   DateTime? _cachedDate;
-
-  // Alerts tracking to avoid duplicate audio alerts
-  Prayer? _lastPrayerNow;
-  DateTime? _lastPrayerNowDay;
-
-  final AudioPlayer _player = AudioPlayer();
 
   // Diagnostic logging tracker
   Prayer? _lastLoggedPrayer;
@@ -100,9 +93,6 @@ class PrayerTaskHandler extends TaskHandler {
         MapEntry(Prayer.isha, todayTimes.isha),
       ];
 
-      // Check audio alerts at prayer time
-      _checkAudioAlerts(todayPrayers, now, today);
-
       // Find the next upcoming prayer for today
       Prayer nextPrayer = Prayer.none;
       DateTime? nextPrayerTime;
@@ -127,14 +117,14 @@ class PrayerTaskHandler extends TaskHandler {
       final diff = nextPrayerTime.difference(now);
       final safeDiff = diff.isNegative ? Duration.zero : diff;
 
-      // 📝 Temporary diagnostic log (logs every 10s or when target changes)
+      // 📝 Safe diagnostic log (logs every 10s or when target changes)
       if (now.second % 10 == 0 ||
           _lastLoggedPrayer != nextPrayer ||
           _lastLoggedSource != source) {
         _lastLoggedPrayer = nextPrayer;
         _lastLoggedSource = source;
         debugPrint(
-          '⏱ [PrayerTaskHandler] now: $now | Next: ${_getName(nextPrayer)} at: $nextPrayerTime (source: $source) | diff: $safeDiff',
+          '⏱ [PrayerTaskHandler] id: 1000 | now: $now | Next: ${_getName(nextPrayer)} at: $nextPrayerTime (source: $source) | remaining: $safeDiff',
         );
       }
 
@@ -146,7 +136,7 @@ class PrayerTaskHandler extends TaskHandler {
       final title = isTomorrow
           ? 'الصلاة القادمة: $prayerName (غداً)'
           : 'الصلاة القادمة: $prayerName';
-      final text = '$prayerTimeStr   •   -$countdownStr';
+      final text = '$prayerTimeStr   •   $countdownStr';
 
       // Live update foreground notification with brand accent color and clear typography
       FlutterForegroundTask.updateService(
@@ -160,35 +150,6 @@ class PrayerTaskHandler extends TaskHandler {
     } catch (e, st) {
       debugPrint('⏱ [PrayerTaskHandler] Error updating countdown: $e\n$st');
     }
-  }
-
-  void _checkAudioAlerts(
-    List<MapEntry<Prayer, DateTime>> prayers,
-    DateTime now,
-    DateTime today,
-  ) {
-    for (final entry in prayers) {
-      final diff = entry.value.difference(now);
-      final seconds = diff.inSeconds;
-
-      // 🕌 Prayer time has entered (diff is <= 0 and within 2 seconds)
-      if (seconds <= 0 && seconds >= -2) {
-        final alreadyNotified =
-            _lastPrayerNow == entry.key && _lastPrayerNowDay == today;
-        if (!alreadyNotified) {
-          _lastPrayerNow = entry.key;
-          _lastPrayerNowDay = today;
-          _playAdhan();
-        }
-      }
-    }
-  }
-
-  Future<void> _playAdhan() async {
-    try {
-      await _player.stop();
-      await _player.play(AssetSource('adhan.mp3'));
-    } catch (_) {}
   }
 
   String _getName(Prayer prayer) {
@@ -210,10 +171,5 @@ class PrayerTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    try {
-      await _player.stop();
-      await _player.dispose();
-    } catch (_) {}
-  }
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}
 }

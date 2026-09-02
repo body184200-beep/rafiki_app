@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,7 @@ import 'package:adhan/adhan.dart';
 import 'package:rafiki_app/core/theme/app_colors.dart';
 import 'package:rafiki_app/features/notification/data/models/notification_model.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
+import 'package:rafiki_app/features/prayer/data/services/prayer_engine.dart';
 import 'package:rafiki_app/core/constants/app_constants.dart';
 
 class NotificationEngine {
@@ -16,7 +18,18 @@ class NotificationEngine {
   NotificationEngine._internal();
 
   final ValueNotifier<List<CustomNotification>> notifications = ValueNotifier([]);
-  
+
+  /// Callback to ensure FlutterForegroundTask is running when notifications are allowed
+  Future<void> Function()? onEnsureForegroundService;
+
+  /// Reactive flag: true when general notification permission is granted.
+  /// Single source of truth for the entire app (Azkar, Prayers, etc.).
+  final ValueNotifier<bool> isGlobalAllowed = ValueNotifier(false);
+
+  /// Reactive flag: true when SCHEDULE_EXACT_ALARM permission is granted.
+  /// UI widgets can listen to this to show a persistent warning when inexact.
+  final ValueNotifier<bool> exactAlarmGranted = ValueNotifier(false);
+
   static const String _kNotificationsKey = 'notifications_list_v2';
   static const String _kLegacyKey = 'notification_data'; // from AppConstants.prefNotificationData
 
@@ -32,17 +45,15 @@ class NotificationEngine {
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // 1. Migration from legacy key
     final legacyRaw = prefs.getString(_kLegacyKey);
     if (legacyRaw != null) {
       try {
         final m = jsonDecode(legacyRaw) as Map<String, dynamic>;
         final legacyNotif = CustomNotification.fromJson(m);
-        // Save to new list
         final list = [legacyNotif];
         await prefs.setString(_kNotificationsKey, jsonEncode(list.map((e) => e.toJson()).toList()));
-        // Delete legacy
         await prefs.remove(_kLegacyKey);
       } catch (_) {}
     }
@@ -60,9 +71,14 @@ class NotificationEngine {
       }
     }
 
+    // Cleanup old legacy channel BEFORE initialize to avoid conflict
+    try {
+      await AwesomeNotifications().removeChannel('prayer_channel');
+    } catch (_) {}
+
     // 3. Initialize AwesomeNotifications if not already done
     debugPrint('🔔 [NotifEngine] Calling AwesomeNotifications().initialize()...');
-    AwesomeNotifications().initialize(
+    await AwesomeNotifications().initialize(
       'resource://mipmap/ic_launcher',
       [
         NotificationChannel(
@@ -84,18 +100,17 @@ class NotificationEngine {
           enableLights: true,
           enableVibration: true,
           playSound: true,
-          criticalAlerts: true,
-          defaultRingtoneType: DefaultRingtoneType.Alarm,
-        )
+          soundSource: 'resource://raw/abdul_hakam',
+        ),
       ],
     );
     debugPrint('🔔 [NotifEngine] AwesomeNotifications().initialize() DONE');
 
     // 4. Check permissions
     final allowed = await AwesomeNotifications().isNotificationAllowed();
+    isGlobalAllowed.value = allowed;
     debugPrint('🔔 [NotifEngine] isNotificationAllowed = $allowed');
 
-    // 4b. Detailed permission check
     try {
       final permList = await AwesomeNotifications().checkPermissionList();
       debugPrint('🔔 [NotifEngine] checkPermissionList = $permList');
@@ -106,21 +121,23 @@ class NotificationEngine {
     if (allowed) {
       await syncSchedules();
       debugPrint('🔔 [NotifEngine] syncSchedules() DONE, now calling schedulePrayerNotifications()...');
-      // Schedule today's prayer alert notifications (10-min-before + at-time)
       await schedulePrayerNotifications();
       debugPrint('🔔 [NotifEngine] schedulePrayerNotifications() DONE');
     } else {
       debugPrint('🔔 [NotifEngine] ⚠️ Notifications NOT allowed — skipping all scheduling');
     }
+
+    // 5. Subscribe to PrayerEngine midnight events so notifications are
+    //    re-scheduled for the new day even when the app stays open overnight.
+    _listenToMidnightEvent();
   }
 
   // ── Validation ────────────────────────────────────────────────────────
 
   bool _hasConflict(CustomNotification newNotif) {
     for (final existing in notifications.value) {
-      if (existing.id == newNotif.id) continue; // skip self
+      if (existing.id == newNotif.id) continue;
       if (existing.time.hour == newNotif.time.hour && existing.time.minute == newNotif.time.minute) {
-        // Check if any days overlap
         final overlap = existing.days.any((d) => newNotif.days.contains(d));
         if (overlap) return true;
       }
@@ -173,21 +190,16 @@ class NotificationEngine {
   bool _isResuming = false;
   DateTime? _lastResumeCheck;
 
-  /// Checked whenever app enters foreground / resumes.
-  /// Detects if permissions were granted in settings or changed, logs it, and schedules prayer times.
-  /// Guarded with re-entry lock and 5-second debounce.
   Future<bool> checkAndHandleAppResume({BuildContext? context}) async {
     final now = DateTime.now();
 
-    // Guard 1: Prevent concurrent re-entry
     if (_isResuming) {
       debugPrint('🔔 [NotifEngine] ⏭ Skipping checkAndHandleAppResume — already running');
       return false;
     }
 
-    // Guard 2: Debounce rapid consecutive calls (<5 seconds)
-    if (_lastResumeCheck != null && now.difference(_lastResumeCheck!).inSeconds < 5) {
-      debugPrint('🔔 [NotifEngine] ⏭ Skipping checkAndHandleAppResume — throttled (<5s since last run)');
+    if (_lastResumeCheck != null && now.difference(_lastResumeCheck!).inSeconds < 30) {
+      debugPrint('🔔 [NotifEngine] ⏭ Skipping checkAndHandleAppResume — throttled (<30s since last run)');
       return false;
     }
 
@@ -195,21 +207,31 @@ class NotificationEngine {
     _lastResumeCheck = now;
 
     try {
-      final isGlobalAllowed = await AwesomeNotifications().isNotificationAllowed();
+      final isGlobalAllowedVal = await AwesomeNotifications().isNotificationAllowed();
+      isGlobalAllowed.value = isGlobalAllowedVal;
       final globalPerms = await AwesomeNotifications().checkPermissionList();
       final prayerPerms = await AwesomeNotifications().checkPermissionList(
         channelKey: AppConstants.notificationChannelPrayer,
       );
 
       debugPrint('🔔 [NotifEngine] 📊 Resumed status:');
-      debugPrint('   • isNotificationAllowed: $isGlobalAllowed');
+      debugPrint('   • isNotificationAllowed: $isGlobalAllowedVal');
       debugPrint('   • Global permissions: $globalPerms');
       debugPrint('   • Prayer channel permissions: $prayerPerms');
 
-      if (isGlobalAllowed) {
-        debugPrint('🔔 [NotifEngine] ✅ Permissions are ACTIVE — syncing schedules & prayer notifications...');
+      if (isGlobalAllowedVal) {
+        debugPrint('🔔 [NotifEngine] ✅ Permissions are ACTIVE — checking exact alarms & syncing...');
+        // Check exact alarm permission FIRST so any false->true transition triggers a force reschedule immediately
+        if (context != null && context.mounted) {
+          await checkAndRequestExactAlarmPermission(context: context);
+        } else {
+          await checkAndRequestExactAlarmPermission();
+        }
+
         await syncSchedules();
         await schedulePrayerNotifications();
+        await onEnsureForegroundService?.call();
+
         return true;
       } else {
         debugPrint('🔔 [NotifEngine] ⚠️ Notifications are currently NOT allowed.');
@@ -224,21 +246,136 @@ class NotificationEngine {
   }
 
   static const String _kMiuiGuideShownKey = 'miui_battery_guide_shown_v1';
+  static const String _kExactAlarmPromptLastShownKey = 'exact_alarm_prompt_last_shown_ms';
+  static const int _kExactAlarmPromptCooldownHours = 24;
 
-  /// Unified sequential permission request triggered by direct user gesture (button click).
-  /// 1. AwesomeNotifications permissions (Alert, Sound, Badge, Vibration, PreciseAlarms, CriticalAlert)
-  /// 2. FlutterForegroundTask permission
-  /// 3. Precise Alarms check (Android 12+)
-  /// 4. Sync & Schedule
-  /// 5. Show MIUI / Battery optimization hint dialog if first time on Android
+  /// Checks if [NotificationPermission.PreciseAlarms] is granted at runtime.
+  /// On Android 12+ (API 31+), `SCHEDULE_EXACT_ALARM` must be actively allowed.
+  /// If missing, redirects the user to Android's `ACTION_REQUEST_SCHEDULE_EXACT_ALARM`
+  /// settings screen via [AwesomeNotifications().showAlarmPage()].
+  ///
+  /// If the user dismisses the dialog ("لاحقاً"), the prompt will not nag them
+  /// on every app resume, but will re-prompt after [_kExactAlarmPromptCooldownHours] hours.
+  /// When granted, immediately force-reschedules all prayer notifications so they become exact.
+  Future<bool> checkAndRequestExactAlarmPermission({
+    BuildContext? context,
+    bool forcePrompt = false,
+  }) async {
+    try {
+      final perms = await AwesomeNotifications().checkPermissionList(
+        permissions: [NotificationPermission.PreciseAlarms],
+      );
+      final hasExactAlarm = perms.contains(NotificationPermission.PreciseAlarms);
+      final wasGranted = exactAlarmGranted.value;
+      exactAlarmGranted.value = hasExactAlarm;
+      debugPrint('🔔 [NotifEngine] Exact Alarm (PreciseAlarms) permission status: $hasExactAlarm (prev: $wasGranted)');
+
+      // Transition detection: If permission was false (or unconfirmed) and is now true,
+      // the user enabled it (from System Settings or external flow).
+      // Force reschedule prayer notifications immediately so any inexact alerts become exact!
+      if (!wasGranted && hasExactAlarm) {
+        debugPrint('🔔 [NotifEngine] 🎉 PreciseAlarms transitioned false -> true! Force re-scheduling prayer notifications...');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_kExactAlarmPromptLastShownKey);
+        await schedulePrayerNotifications(force: true);
+      }
+
+      if (!hasExactAlarm) {
+        final prefs = await SharedPreferences.getInstance();
+        final lastShownMs = prefs.getInt(_kExactAlarmPromptLastShownKey) ?? 0;
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        final cooldownMs = _kExactAlarmPromptCooldownHours * 3600 * 1000;
+
+        if (!forcePrompt && (nowMs - lastShownMs < cooldownMs)) {
+          debugPrint('🔔 [NotifEngine] ⏭ Exact Alarm prompt throttled (<$_kExactAlarmPromptCooldownHours h since last prompt)');
+          return false;
+        }
+
+        debugPrint('🔔 [NotifEngine] ⚠️ PreciseAlarms NOT granted. Requesting via showAlarmPage()...');
+
+        if (context != null && context.mounted) {
+          final proceed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.alarm, color: AppColors.gold, size: 28),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'تنبيهات الصلاة الدقيقة',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'لضمان إطلاق إشعارات الأذان والـ 10 دقائق في موعدها الدقيق بالثانية على جهازك، يتطلب النظام تفعيل إذن "المنبهات والتذكيرات الدقيقة" (Exact Alarms).\n\nسننقلك الآن لصفحة الإعدادات لتفعيله.',
+                style: TextStyle(fontSize: 14, height: 1.5),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('لاحقاً'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('الانتقال للإعدادات'),
+                ),
+              ],
+            ),
+          );
+
+          if (proceed == true) {
+            await AwesomeNotifications().showAlarmPage();
+          } else {
+            // User explicitly pressed "لاحقاً" — activate cooldown
+            debugPrint('🔔 [NotifEngine] 🕐 User dismissed prompt — activating ${_kExactAlarmPromptCooldownHours}h cooldown');
+            await prefs.setInt(_kExactAlarmPromptLastShownKey, nowMs);
+          }
+        } else {
+          // No context to show dialog — do NOT activate cooldown so next
+          // resume with a valid context can prompt the user properly.
+          debugPrint('🔔 [NotifEngine] ⚠️ No valid context for Exact Alarm dialog — skipping prompt without cooldown');
+          return false;
+        }
+
+        final rechecked = await AwesomeNotifications().checkPermissionList(
+          permissions: [NotificationPermission.PreciseAlarms],
+        );
+        final isNowAllowed = rechecked.contains(NotificationPermission.PreciseAlarms);
+        exactAlarmGranted.value = isNowAllowed;
+        debugPrint('🔔 [NotifEngine] Exact Alarm status after prompt: $isNowAllowed');
+
+        if (isNowAllowed) {
+          debugPrint('🔔 [NotifEngine] 🎉 Exact Alarm granted! Clearing cooldown & force re-scheduling...');
+          await prefs.remove(_kExactAlarmPromptLastShownKey);
+          await schedulePrayerNotifications(force: true);
+        }
+
+        return isNowAllowed;
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('🔔 [NotifEngine] ❌ Error in checkAndRequestExactAlarmPermission: $e');
+      return false;
+    }
+  }
+
   Future<bool> requestAllNotificationPermissions({BuildContext? context}) async {
     debugPrint('🔔 [NotifEngine] ▶ requestAllNotificationPermissions() (User Gesture) started...');
-    
+
     try {
-      // 1. AwesomeNotifications permission check & request (Sequential Step 1)
       bool awesomeAllowed = await AwesomeNotifications().isNotificationAllowed();
       debugPrint('🔔 [NotifEngine] AwesomeNotifications initial isNotificationAllowed = $awesomeAllowed');
-      
+
       if (!awesomeAllowed) {
         debugPrint('🔔 [NotifEngine] Requesting AwesomeNotifications permissions...');
         awesomeAllowed = await AwesomeNotifications().requestPermissionToSendNotifications(
@@ -248,34 +385,24 @@ class NotificationEngine {
             NotificationPermission.Badge,
             NotificationPermission.Vibration,
             NotificationPermission.Light,
-            NotificationPermission.PreciseAlarms,
-            NotificationPermission.CriticalAlert,
           ],
         );
         debugPrint('🔔 [NotifEngine] AwesomeNotifications after request = $awesomeAllowed');
       }
 
-      // 2. FlutterForegroundTask permission request (Sequential Step 2)
       debugPrint('🔔 [NotifEngine] Requesting FlutterForegroundTask permission...');
       final fgStatus = await FlutterForegroundTask.requestNotificationPermission();
       debugPrint('🔔 [NotifEngine] FlutterForegroundTask permission status = $fgStatus');
 
-      // 3. Exact Alarm check on Android 12+ (SCHEDULE_EXACT_ALARM)
-      try {
-        final permList = await AwesomeNotifications().checkPermissionList();
-        debugPrint('🔔 [NotifEngine] Granted permissions: $permList');
-        if (!permList.contains(NotificationPermission.PreciseAlarms)) {
-          debugPrint('🔔 [NotifEngine] Requesting PreciseAlarms explicitly...');
-          await AwesomeNotifications().requestPermissionToSendNotifications(
-            permissions: [NotificationPermission.PreciseAlarms],
-          );
-        }
-      } catch (e) {
-        debugPrint('🔔 [NotifEngine] PreciseAlarms check error: $e');
+      // Runtime verification and redirection for SCHEDULE_EXACT_ALARM on Android 12+
+      if (context != null && context.mounted) {
+        await checkAndRequestExactAlarmPermission(context: context);
+      } else {
+        await checkAndRequestExactAlarmPermission();
       }
 
-      // 4. Sync all schedules & schedule prayer times if allowed
       final isFinalAllowed = await AwesomeNotifications().isNotificationAllowed();
+      isGlobalAllowed.value = isFinalAllowed;
       final prayerPerms = await AwesomeNotifications().checkPermissionList(
         channelKey: AppConstants.notificationChannelPrayer,
       );
@@ -283,13 +410,13 @@ class NotificationEngine {
 
       if (isFinalAllowed) {
         await syncSchedules();
-        await schedulePrayerNotifications(force: true);
+        await schedulePrayerNotifications();
+        await onEnsureForegroundService?.call();
         debugPrint('🔔 [NotifEngine] ✅ All schedules synced & prayer notifications scheduled successfully.');
       } else {
         debugPrint('🔔 [NotifEngine] ⚠️ Notification permissions not fully granted.');
       }
 
-      // 5. Check and show MIUI/Xiaomi/Battery Optimization guide dialog
       if (context != null && context.mounted) {
         await _showBatteryOptimizationGuideIfNeeded(context);
       }
@@ -326,9 +453,9 @@ class NotificationEngine {
           ),
           content: const Text(
             'بعض الأجهزة (مثل Xiaomi / MIUI و Huawei و Samsung) تقوم بإيقاف التطبيقات في الخلفية لتوفير البطارية.\n\n'
-            'لضمان وصول إشعارات الأذان والعداد المباشر في موعدها:\n'
-            '1. تفعيل «التشغيل التلقائي» (Autostart).\n'
-            '2. ضبط توفير البطارية على «لا توجد قيود» (No restrictions).',
+                'لضمان وصول إشعارات الأذان والعداد المباشر في موعدها:\n'
+                '1. تفعيل «التشغيل التلقائي» (Autostart).\n'
+                '2. ضبط توفير البطارية على «لا توجد قيود» (No restrictions).',
             style: TextStyle(fontSize: 14, height: 1.5),
           ),
           actions: [
@@ -347,127 +474,189 @@ class NotificationEngine {
   }
 
   Future<bool> checkAndRequestPermission({BuildContext? context}) async {
-    return requestAllNotificationPermissions(context: context);
+    final allowed = await AwesomeNotifications().isNotificationAllowed();
+    isGlobalAllowed.value = allowed;
+    if (!allowed) {
+      if (context != null && !context.mounted) return false;
+      return requestAllNotificationPermissions(context: context);
+    }
+    return allowed;
   }
 
   Future<void> _atomicSave(List<CustomNotification> newList) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = jsonEncode(newList.map((e) => e.toJson()).toList());
-    
-    // Atomic write
+
     final success = await prefs.setString(_kNotificationsKey, jsonStr);
     if (!success) {
       throw Exception('فشل في حفظ البيانات');
     }
 
-    // Update in-memory state
     notifications.value = newList;
-
-    // Resync schedules
     await syncSchedules();
   }
 
   Future<void> syncSchedules() async {
-    // 1. Cancel all azkar_channel schedules
-    await AwesomeNotifications().cancelNotificationsByChannelKey(AppConstants.notificationChannelAzkar);
+    final allowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!allowed) {
+      debugPrint('🔔 [NotifEngine] Azkar scheduling skipped — notifications not allowed');
+      return;
+    }
 
-    // 2. Re-schedule enabled notifications
+    try {
+      await AwesomeNotifications().cancelNotificationsByChannelKey(AppConstants.notificationChannelAzkar);
+    } catch (e) {
+      debugPrint('🔔 [NotifEngine] Error cancelling azkar channel schedules: $e');
+    }
+
     for (final notif in notifications.value) {
       if (!notif.enabled) continue;
 
-      // Base ID generated securely using string hashcode offset
       final baseId = notif.id.hashCode.abs() % 100000;
 
       for (var i = 0; i < notif.days.length; i++) {
         final weekday = _dayMap[notif.days[i]] ?? DateTime.monday;
         final scheduleId = baseId + i;
 
-        await AwesomeNotifications().createNotification(
-          content: NotificationContent(
-            id: scheduleId,
-            channelKey: AppConstants.notificationChannelAzkar,
-            title: notif.title,
-            body: notif.body,
-            notificationLayout: NotificationLayout.BigText,
-          ),
-          schedule: NotificationCalendar(
-            weekday: weekday,
-            hour: notif.time.hour,
-            minute: notif.time.minute,
-            second: 0,
-            repeats: true,
-            allowWhileIdle: true,
-          ),
-        );
+        try {
+          await AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: scheduleId,
+              channelKey: AppConstants.notificationChannelAzkar,
+              title: notif.title,
+              body: notif.body,
+              notificationLayout: NotificationLayout.BigText,
+            ),
+            schedule: NotificationCalendar(
+              weekday: weekday,
+              hour: notif.time.hour,
+              minute: notif.time.minute,
+              second: 0,
+              repeats: true,
+              allowWhileIdle: true,
+              preciseAlarm: false,
+            ),
+          );
+        } catch (e) {
+          debugPrint('🔔 [NotifEngine] Azkar schedule error for ID $scheduleId: $e');
+        }
       }
     }
   }
 
-  // ── Prayer Alert Notifications ──────────────────────────────────────
+  // ── Prayer Alert Notification IDs ──────────────────────────
+  //
+  // Fixed, permanent mapping — never change these unless the old IDs
+  // are explicitly cancelled first (otherwise ghost notifications linger).
+  //
+  // Layout: Prayer × Type × Day → unique int ID
+  //   Today:    BEFORE (10-min) = 90000/02/04/06/08
+  //             AT (prayer time) = 90001/03/05/07/09
+  //   Tomorrow: BEFORE           = 90010/12/14/16/18
+  //             AT               = 90011/13/15/17/19
 
-  /// Stable notification IDs for prayer alerts (range 90000–90009).
-  /// Each prayer gets 2 IDs: one for 10-min-before, one for at-time.
-  /// Fajr=0, Dhuhr=1, Asr=2, Maghrib=3, Isha=4
-  static const int _prayerNotifBaseId = 90000;
+  static const Map<Prayer, int> _beforeIdToday = {
+    Prayer.fajr:    90000,
+    Prayer.dhuhr:   90002,
+    Prayer.asr:     90004,
+    Prayer.maghrib: 90006,
+    Prayer.isha:    90008,
+  };
+
+  static const Map<Prayer, int> _atIdToday = {
+    Prayer.fajr:    90001,
+    Prayer.dhuhr:   90003,
+    Prayer.asr:     90005,
+    Prayer.maghrib: 90007,
+    Prayer.isha:    90009,
+  };
+
+  static const Map<Prayer, int> _beforeIdTomorrow = {
+    Prayer.fajr:    90010,
+    Prayer.dhuhr:   90012,
+    Prayer.asr:     90014,
+    Prayer.maghrib: 90016,
+    Prayer.isha:    90018,
+  };
+
+  static const Map<Prayer, int> _atIdTomorrow = {
+    Prayer.fajr:    90011,
+    Prayer.dhuhr:   90013,
+    Prayer.asr:     90015,
+    Prayer.maghrib: 90017,
+    Prayer.isha:    90019,
+  };
 
   static const String _kPrayerScheduleDateKey = 'prayer_notif_scheduled_date';
 
   static const Map<Prayer, String> _prayerNames = {
-    Prayer.fajr: 'الفجر',
-    Prayer.dhuhr: 'الظهر',
-    Prayer.asr: 'العصر',
+    Prayer.fajr:    'الفجر',
+    Prayer.dhuhr:   'الظهر',
+    Prayer.asr:     'العصر',
     Prayer.maghrib: 'المغرب',
-    Prayer.isha: 'العشاء',
+    Prayer.isha:    'العشاء',
   };
 
   bool _isSchedulingPrayer = false;
   DateTime? _lastPrayerScheduleRun;
 
-  /// Schedules push notifications for each of the 5 daily prayers (Today + Tomorrow rolling window):
-  ///   - 10 minutes before prayer time  →  "⏳ اقتربت صلاة {name}" (with 10-minute auto timeout)
-  ///   - At prayer time                 →  "🕌 حان وقت صلاة {name}"
-  ///
-  /// This method is **idempotent per day**: it stores the date of the last
-  /// scheduling run and skips if already done today (unless [force] is true).
-  /// It cancels all previous prayer_channel notifications before re-scheduling.
+  /// Subscription to PrayerEngine midnight events — triggers re-scheduling
+  /// for the new day without requiring the user to open the app.
+  StreamSubscription<PrayerEvent>? _midnightSubscription;
+
   Future<void> schedulePrayerNotifications({bool force = false}) async {
     final now = DateTime.now();
 
-    // Guard 1: Prevent concurrent re-entry
     if (_isSchedulingPrayer) {
-      debugPrint('🕌 [PrayerNotif] ⏭ Skipping schedulePrayerNotifications — already running');
+      debugPrint('🕌 [PrayerNotification] ⚠️ SKIPPED — scheduling already in progress');
       return;
     }
 
-    // Guard 2: Throttling — do not reschedule within 5 seconds unless forced
-    if (!force && _lastPrayerScheduleRun != null && now.difference(_lastPrayerScheduleRun!).inSeconds < 5) {
-      debugPrint('🕌 [PrayerNotif] ⏭ Skipping schedulePrayerNotifications — throttled (<5s)');
+    if (!force && _lastPrayerScheduleRun != null &&
+        now.difference(_lastPrayerScheduleRun!).inSeconds < 10) {
+      debugPrint('🕌 [PrayerNotification] ⏭ Throttled (<10s) — skip');
       return;
     }
 
     _isSchedulingPrayer = true;
     _lastPrayerScheduleRun = now;
 
-    debugPrint('🕌 [PrayerNotif] ▶ schedulePrayerNotifications() CALLED (force=$force)');
+    debugPrint('🕌 [PrayerNotification] ▶ schedulePrayerNotifications() CALLED (force=$force)');
     final todayStr = '${now.year}-${now.month}-${now.day}';
-    debugPrint('🕌 [PrayerNotif] now=$now, todayStr=$todayStr');
+    debugPrint('🕌 [PrayerNotification] now=$now, todayStr=$todayStr');
 
-    // Guard 3: don't reschedule if already done today (unless forced)
+    // Guard: skip if already scheduled today AND notifications are still pending
+    // in the OS queue — handles battery-optimization wipes by verifying actual
+    // pending count, not just the saved date.
     if (!force) {
       final prefs = await SharedPreferences.getInstance();
       final lastScheduled = prefs.getString(_kPrayerScheduleDateKey);
-      debugPrint('🕌 [PrayerNotif] lastScheduled=$lastScheduled');
-      if (lastScheduled == todayStr) {
-        debugPrint('🕌 [PrayerNotif] ⏭ SKIPPING — already scheduled today');
+      debugPrint('🕌 [PrayerNotification] lastScheduled=$lastScheduled');
+
+      bool hasPendingPrayerNotifs = false;
+      try {
+        final pending = await AwesomeNotifications().listScheduledNotifications();
+        hasPendingPrayerNotifs = pending.any(
+          (n) => n.content?.channelKey == AppConstants.notificationChannelPrayer,
+        );
+        debugPrint(
+          '🕌 [PrayerNotification] hasPendingPrayerNotifs=$hasPendingPrayerNotifs '
+          '(total pending=${pending.length})',
+        );
+      } catch (e) {
+        debugPrint('🕌 [PrayerNotification] listScheduledNotifications ERROR during guard: $e');
+      }
+
+      if (lastScheduled == todayStr && hasPendingPrayerNotifs) {
+        debugPrint('🕌 [PrayerNotification] ⏭ SKIP — already scheduled today & notifications pending');
         _isSchedulingPrayer = false;
         return;
       }
     }
 
     try {
-      // 1. Compute today's and tomorrow's prayer times
       final coords = await PrayerConfig.getCoordinates();
-      debugPrint('🕌 [PrayerNotif] coords=(${coords.latitude}, ${coords.longitude})');
+      debugPrint('🕌 [PrayerNotification] coords=(${coords.latitude}, ${coords.longitude})');
       final params = PrayerConfig.params;
 
       final todayComponents = DateComponents.from(now);
@@ -476,184 +665,245 @@ class NotificationEngine {
       final tomorrowComponents = DateComponents.from(now.add(const Duration(days: 1)));
       final tomorrowTimes = PrayerTimes(coords, tomorrowComponents, params);
 
-      final todayPrayers = <Prayer, DateTime>{
-        Prayer.fajr: todayTimes.fajr,
-        Prayer.dhuhr: todayTimes.dhuhr,
-        Prayer.asr: todayTimes.asr,
-        Prayer.maghrib: todayTimes.maghrib,
-        Prayer.isha: todayTimes.isha,
-      };
-
-      final tomorrowPrayers = <Prayer, DateTime>{
-        Prayer.fajr: tomorrowTimes.fajr,
-        Prayer.dhuhr: tomorrowTimes.dhuhr,
-        Prayer.asr: tomorrowTimes.asr,
-        Prayer.maghrib: tomorrowTimes.maghrib,
-        Prayer.isha: tomorrowTimes.isha,
-      };
-
-      // 2. Cancel all existing prayer_channel notifications
+      // Cancel ALL existing prayer notifications before re-scheduling.
+      // IDs are fixed constants so no orphan notifications are left behind.
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         AppConstants.notificationChannelPrayer,
       );
-      debugPrint('🕌 [PrayerNotif] Cancelled old prayer_channel notifications');
+      debugPrint('🕌 [PrayerNotification] 🗑 Cancelled all prayer_channel notifications');
 
       var scheduledCount = 0;
       var skippedCount = 0;
 
-      // Helper to schedule a day's prayers
-      Future<void> schedulePrayerList(Map<Prayer, DateTime> prayerMap, int baseIdOffset, String dayLabel) async {
-        var index = 0;
-        for (final entry in prayerMap.entries) {
-          final prayer = entry.key;
-          final time = entry.value;
-          final name = _prayerNames[prayer] ?? '';
+      // ── Inner helper ────────────────────────────────────────────────────
+      Future<void> _schedulePrayer({
+        required Prayer prayer,
+        required DateTime prayerTime,
+        required int beforeId,
+        required int atId,
+        required String dayLabel,
+      }) async {
+        final name = _prayerNames[prayer] ?? '';
+        final beforeTime = prayerTime.subtract(const Duration(minutes: 10));
 
-          // ── 10 minutes before (Auto-expires in 10 minutes when prayer enters) ──
-          final beforeTime = time.subtract(const Duration(minutes: 10));
-          final beforeId = _prayerNotifBaseId + baseIdOffset + (index * 2);
-          if (beforeTime.isAfter(now)) {
-            debugPrint('🕌 [PrayerNotif] 📋 Scheduling BEFORE-$name [$dayLabel] (id=$beforeId) at $beforeTime');
-            try {
-              final result = await AwesomeNotifications().createNotification(
-                content: NotificationContent(
-                  id: beforeId,
-                  channelKey: AppConstants.notificationChannelPrayer,
-                  title: '⏳ اقتربت صلاة $name',
-                  body: 'باقي 10 دقائق على موعد أذان $name — استعد للصلاة',
-                  notificationLayout: NotificationLayout.BigText,
-                  category: NotificationCategory.Reminder,
-                  largeIcon: 'resource://mipmap/ic_launcher',
-                  roundedLargeIcon: true,
-                  color: AppColors.accent,
-                  wakeUpScreen: true,
-                  timeoutAfter: const Duration(minutes: 10),
-                  autoDismissible: true,
-                  groupKey: 'prayer_alerts',
-                  summary: 'مواقيت الصلاة',
+        // ── BEFORE notification (10 min early) ──────────────────────────
+        if (beforeTime.isAfter(now)) {
+          debugPrint(
+            '🕌 [PrayerNotification] 📋 Scheduling | $name [$dayLabel] | Type=BEFORE | '
+            'Prayer Time=$prayerTime | 10-Min Time=$beforeTime | ID=$beforeId',
+          );
+          try {
+            final ok = await AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                id: beforeId,
+                channelKey: AppConstants.notificationChannelPrayer,
+                title: '⏳ متبقي 10 دقائق على صلاة $name',
+                body: 'استعد للوضوء والصلاة يرحمك الله',
+                notificationLayout: NotificationLayout.BigText,
+                category: NotificationCategory.Reminder,
+                largeIcon: 'resource://mipmap/ic_launcher',
+                roundedLargeIcon: true,
+                color: AppColors.accent,
+                wakeUpScreen: true,
+                timeoutAfter: const Duration(minutes: 10),
+                autoDismissible: true,
+                groupKey: 'prayer_alerts',
+                summary: 'مواقيت الصلاة',
+              ),
+              actionButtons: [
+                NotificationActionButton(
+                  key: 'DISMISS',
+                  label: 'تم',
+                  actionType: ActionType.DismissAction,
                 ),
-                actionButtons: [
-                  NotificationActionButton(
-                    key: 'DISMISS',
-                    label: 'تم',
-                    actionType: ActionType.DismissAction,
-                  ),
-                ],
-                schedule: NotificationCalendar(
-                  year: beforeTime.year,
-                  month: beforeTime.month,
-                  day: beforeTime.day,
-                  hour: beforeTime.hour,
-                  minute: beforeTime.minute,
-                  second: 0,
-                  millisecond: 0,
-                  repeats: false,
-                  allowWhileIdle: true,
-                  preciseAlarm: true,
-                ),
-              );
-              debugPrint('🕌 [PrayerNotif] ✅ BEFORE-$name [$dayLabel] result=$result');
-              scheduledCount++;
-            } catch (e) {
-              debugPrint('🕌 [PrayerNotif] ❌ BEFORE-$name [$dayLabel] ERROR: $e');
-            }
-          } else {
-            debugPrint('🕌 [PrayerNotif] ⏭ SKIP BEFORE-$name [$dayLabel] — already past ($beforeTime <= $now)');
-            skippedCount++;
+              ],
+              schedule: NotificationCalendar(
+                year: beforeTime.year,
+                month: beforeTime.month,
+                day: beforeTime.day,
+                hour: beforeTime.hour,
+                minute: beforeTime.minute,
+                second: 0,
+                millisecond: 0,
+                repeats: false,
+                allowWhileIdle: true,
+                preciseAlarm: true,
+              ),
+            );
+            debugPrint(
+              '🕌 [PrayerNotification] ${ok ? '✅ SCHEDULED' : '⚠️ SCHEDULED (inexact fallback)'} | $name [$dayLabel] | Type=BEFORE | '
+              'ID=$beforeId | createNotification=$ok',
+            );
+            scheduledCount++;
+          } catch (e) {
+            debugPrint('🕌 [PrayerNotification] ❌ $name [$dayLabel] BEFORE ERROR: $e');
           }
+        } else {
+          debugPrint(
+            '🕌 [PrayerNotification] ⏭ SKIP | $name [$dayLabel] | Type=BEFORE | '
+            'already past ($beforeTime <= $now)',
+          );
+          skippedCount++;
+        }
 
-          // ── At prayer time (Athan) ─────────────────────────────
-          final atId = _prayerNotifBaseId + baseIdOffset + (index * 2) + 1;
-          if (time.isAfter(now)) {
-            debugPrint('🕌 [PrayerNotif] 📋 Scheduling AT-$name [$dayLabel] (id=$atId) at $time');
-            try {
-              final result = await AwesomeNotifications().createNotification(
-                content: NotificationContent(
-                  id: atId,
-                  channelKey: AppConstants.notificationChannelPrayer,
-                  title: '🕌 حان وقت صلاة $name',
-                  body: 'الله أكبر، حان الآن موعد أذان $name — أقم الصلاة يرحمك الله',
-                  notificationLayout: NotificationLayout.BigText,
-                  category: NotificationCategory.Alarm,
-                  criticalAlert: true,
-                  largeIcon: 'resource://mipmap/ic_launcher',
-                  roundedLargeIcon: true,
-                  color: AppColors.gold,
-                  wakeUpScreen: true,
-                  autoDismissible: true,
-                  groupKey: 'prayer_alerts',
-                  summary: 'مواقيت الصلاة',
+        // ── AT notification (prayer time) ────────────────────────────────
+        if (prayerTime.isAfter(now)) {
+          debugPrint(
+            '🕌 [PrayerNotification] 📋 Scheduling | $name [$dayLabel] | Type=AT | '
+            'Prayer Time=$prayerTime | ID=$atId',
+          );
+          try {
+            final ok = await AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                id: atId,
+                channelKey: AppConstants.notificationChannelPrayer,
+                title: '🕌 حان الآن وقت صلاة $name',
+                body: 'الله أكبر، حان موعد أذان $name — أقم الصلاة يرحمك الله',
+                notificationLayout: NotificationLayout.BigText,
+                category: NotificationCategory.Alarm,
+                criticalAlert: true,
+                largeIcon: 'resource://mipmap/ic_launcher',
+                roundedLargeIcon: true,
+                color: AppColors.gold,
+                wakeUpScreen: true,
+                customSound: 'resource://raw/abdul_hakam',
+                autoDismissible: true,
+                groupKey: 'prayer_alerts',
+                summary: 'مواقيت الصلاة',
+              ),
+              actionButtons: [
+                NotificationActionButton(
+                  key: 'DISMISS',
+                  label: 'تم',
+                  actionType: ActionType.DismissAction,
                 ),
-                actionButtons: [
-                  NotificationActionButton(
-                    key: 'DISMISS',
-                    label: 'تم',
-                    actionType: ActionType.DismissAction,
-                  ),
-                ],
-                schedule: NotificationCalendar(
-                  year: time.year,
-                  month: time.month,
-                  day: time.day,
-                  hour: time.hour,
-                  minute: time.minute,
-                  second: 0,
-                  millisecond: 0,
-                  repeats: false,
-                  allowWhileIdle: true,
-                  preciseAlarm: true,
-                ),
-              );
-              debugPrint('🕌 [PrayerNotif] ✅ AT-$name [$dayLabel] result=$result');
-              scheduledCount++;
-            } catch (e) {
-              debugPrint('🕌 [PrayerNotif] ❌ AT-$name [$dayLabel] ERROR: $e');
-            }
-          } else {
-            debugPrint('🕌 [PrayerNotif] ⏭ SKIP AT-$name [$dayLabel] — already past ($time <= $now)');
-            skippedCount++;
+              ],
+              schedule: NotificationCalendar(
+                year: prayerTime.year,
+                month: prayerTime.month,
+                day: prayerTime.day,
+                hour: prayerTime.hour,
+                minute: prayerTime.minute,
+                second: 0,
+                millisecond: 0,
+                repeats: false,
+                allowWhileIdle: true,
+                preciseAlarm: true,
+              ),
+            );
+            debugPrint(
+              '🕌 [PrayerNotification] ${ok ? '✅ SCHEDULED' : '⚠️ SCHEDULED (inexact fallback)'} | $name [$dayLabel] | Type=AT | '
+              'ID=$atId | createNotification=$ok',
+            );
+            scheduledCount++;
+          } catch (e) {
+            debugPrint('🕌 [PrayerNotification] ❌ $name [$dayLabel] AT ERROR: $e');
           }
-
-          index++;
+        } else {
+          debugPrint(
+            '🕌 [PrayerNotification] ⏭ SKIP | $name [$dayLabel] | Type=AT | '
+            'already past ($prayerTime <= $now)',
+          );
+          skippedCount++;
         }
       }
 
-      // 3. Schedule Today (offset 0) and Tomorrow (offset 20)
-      await schedulePrayerList(todayPrayers, 0, 'Today');
-      await schedulePrayerList(tomorrowPrayers, 20, 'Tomorrow');
+      // ── Schedule today's prayers (fixed IDs: 90000–90009) ───────────────
+      final todayPrayers = <Prayer, DateTime>{
+        Prayer.fajr:    todayTimes.fajr,
+        Prayer.dhuhr:   todayTimes.dhuhr,
+        Prayer.asr:     todayTimes.asr,
+        Prayer.maghrib: todayTimes.maghrib,
+        Prayer.isha:    todayTimes.isha,
+      };
 
-      // 4. Mark today as scheduled
+      for (final entry in todayPrayers.entries) {
+        await _schedulePrayer(
+          prayer:     entry.key,
+          prayerTime: entry.value,
+          beforeId:   _beforeIdToday[entry.key]!,
+          atId:       _atIdToday[entry.key]!,
+          dayLabel:   'Today',
+        );
+      }
+
+      // ── Schedule tomorrow's prayers (fixed IDs: 90010–90019) ────────────
+      final tomorrowPrayers = <Prayer, DateTime>{
+        Prayer.fajr:    tomorrowTimes.fajr,
+        Prayer.dhuhr:   tomorrowTimes.dhuhr,
+        Prayer.asr:     tomorrowTimes.asr,
+        Prayer.maghrib: tomorrowTimes.maghrib,
+        Prayer.isha:    tomorrowTimes.isha,
+      };
+
+      for (final entry in tomorrowPrayers.entries) {
+        await _schedulePrayer(
+          prayer:     entry.key,
+          prayerTime: entry.value,
+          beforeId:   _beforeIdTomorrow[entry.key]!,
+          atId:       _atIdTomorrow[entry.key]!,
+          dayLabel:   'Tomorrow',
+        );
+      }
+
+      // Persist the date so the guard can skip unnecessary re-scheduling
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kPrayerScheduleDateKey, todayStr);
 
-      debugPrint('🕌 [PrayerNotif] ✅ DONE — scheduled=$scheduledCount, skipped=$skippedCount');
+      debugPrint(
+        '🕌 [PrayerNotification] ✅ DONE | scheduled=$scheduledCount | skipped=$skippedCount',
+      );
 
-      // 5. Verify: list all pending scheduled notifications
+      // Diagnostic: list all pending notifications
       try {
         final pending = await AwesomeNotifications().listScheduledNotifications();
-        debugPrint('🕌 [PrayerNotif] 📊 Total pending scheduled notifications: ${pending.length}');
+        debugPrint('🕌 [PrayerNotification] 📊 Total pending: ${pending.length}');
         for (final n in pending) {
-          debugPrint('   id=${n.content?.id}, title=${n.content?.title}, schedule=${n.schedule}');
+          debugPrint('   id=${n.content?.id} | title=${n.content?.title} | schedule=${n.schedule}');
         }
       } catch (e) {
-        debugPrint('🕌 [PrayerNotif] listScheduledNotifications ERROR: $e');
+        debugPrint('🕌 [PrayerNotification] listScheduledNotifications ERROR: $e');
       }
     } catch (e, st) {
-      debugPrint('🕌 [PrayerNotif] ❌ FATAL ERROR: $e');
-      debugPrint('🕌 [PrayerNotif] StackTrace: $st');
+      debugPrint('🕌 [PrayerNotification] ❌ FATAL ERROR: $e');
+      debugPrint('🕌 [PrayerNotification] StackTrace: $st');
     } finally {
       _isSchedulingPrayer = false;
     }
   }
 
+  // ── Midnight Re-Scheduling ───────────────────────────────────────────
+  //
+  // When the app remains open past midnight, PrayerEngine emits a
+  // [PrayerEvent.midnight] event.  Without this listener, tomorrow's prayers
+  // (already scheduled) would fire correctly, but the **new tomorrow** would
+  // never get scheduled — only a fresh app open would trigger re-scheduling.
+  //
+  // This listener closes that gap: on midnight, we force a full re-schedule
+  // so the current "today" window always has 10+10 notifications queued.
+
+  void _listenToMidnightEvent() {
+    _midnightSubscription?.cancel();
+    _midnightSubscription = PrayerEngine.instance.eventStream
+        .where((event) => event == PrayerEvent.midnight)
+        .listen((_) async {
+      debugPrint('🕌 [PrayerNotification] 🌙 Midnight event received — forcing re-schedule for new day');
+      final allowed = await AwesomeNotifications().isNotificationAllowed();
+      if (allowed) {
+        await schedulePrayerNotifications(force: true);
+      } else {
+        debugPrint('🕌 [PrayerNotification] ⚠️ Midnight re-schedule skipped — notifications not allowed');
+      }
+    });
+    debugPrint('🕌 [PrayerNotification] 👂 Listening to PrayerEngine midnight events');
+  }
+
   // ── DEBUG: Test Notification ────────────────────────────────────────
 
-  /// Fires a single test notification immediately + one scheduled 30s from now.
-  /// Call via: NotificationEngine.instance.debugFireTestNotification()
   Future<void> debugFireTestNotification() async {
     debugPrint('🧪 [DEBUG] debugFireTestNotification() CALLED');
     final now = DateTime.now();
-    final fireAt = now.add(const Duration(seconds: 30));
+    final fireAt = now.add(const Duration(minutes: 2));
     debugPrint('🧪 [DEBUG] now=$now, will fire scheduled at=$fireAt');
 
     try {
@@ -665,28 +915,18 @@ class NotificationEngine {
         return;
       }
 
-      // Fire immediately (no schedule) to test basic delivery
-      debugPrint('🧪 [DEBUG] Firing IMMEDIATE test notification (id=99999)...');
-      final immediateResult = await AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: 99999,
-          channelKey: AppConstants.notificationChannelPrayer,
-          title: '🧪 اختبار فوري',
-          body: 'هذا إشعار تجريبي فوري — لو ظهر يبقى القناة شغالة',
-          notificationLayout: NotificationLayout.Default,
-        ),
-      );
-      debugPrint('🧪 [DEBUG] Immediate result=$immediateResult');
-
-      // Also fire a scheduled one in 30 seconds
-      debugPrint('🧪 [DEBUG] Scheduling test notification (id=99998) for 30s from now...');
+      debugPrint('🧪 [DEBUG] Scheduling test notification (id=99998) for 2 minutes from now ($fireAt)...');
       final scheduledResult = await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: 99998,
           channelKey: AppConstants.notificationChannelPrayer,
-          title: '🧪 اختبار مجدول',
-          body: 'هذا إشعار تجريبي بعد 30 ثانية — لو ظهر يبقى الجدولة شغالة',
-          notificationLayout: NotificationLayout.Default,
+          title: '🧪 اختبار مجدول (بعد دقيقتين)',
+          body: 'هذا الإشعار المجدول يثبت عمل الإشعارات بدقة أثناء قفل الشاشة',
+          notificationLayout: NotificationLayout.BigText,
+          category: NotificationCategory.Alarm,
+          wakeUpScreen: true,
+          customSound: 'resource://raw/abdul_hakam',
+          criticalAlert: true,
         ),
         schedule: NotificationCalendar(
           year: fireAt.year,
@@ -703,7 +943,6 @@ class NotificationEngine {
       );
       debugPrint('🧪 [DEBUG] Scheduled result=$scheduledResult');
 
-      // List all pending
       final pending = await AwesomeNotifications().listScheduledNotifications();
       debugPrint('🧪 [DEBUG] Total pending after test: ${pending.length}');
       for (final n in pending) {
@@ -714,4 +953,127 @@ class NotificationEngine {
       debugPrint('🧪 [DEBUG] StackTrace: $st');
     }
   }
+
+  // ── IN-APP DIAGNOSTICS ──────────────────────────────────────────────
+  //
+  // Collects all notification permission states and pending schedule info,
+  // schedules a 1-minute test notification, and returns a human-readable
+  // report string to display directly in the UI (no adb needed).
+
+  Future<NotificationDiagnosticsReport> runInAppDiagnostics() async {
+    final now = DateTime.now();
+    final buf = StringBuffer();
+    bool testScheduled = false;
+    bool testCreateResult = false;
+    String testError = '';
+    int pendingTotal = 0;
+    bool hasPrayerPending = false;
+
+    try {
+      // ── 1. Permission states ──────────────────────────────────────────
+      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      final globalPerms = await AwesomeNotifications().checkPermissionList();
+      final prayerPerms = await AwesomeNotifications().checkPermissionList(
+        channelKey: AppConstants.notificationChannelPrayer,
+      );
+      final precisePerms = await AwesomeNotifications().checkPermissionList(
+        permissions: [NotificationPermission.PreciseAlarms],
+      );
+      final hasPrecise = precisePerms.contains(NotificationPermission.PreciseAlarms);
+
+      buf.writeln('📋 حالة الأذونات:');
+      buf.writeln('• isNotificationAllowed: $isAllowed');
+      buf.writeln('• isGlobalAllowed (cached): ${isGlobalAllowed.value}');
+      buf.writeln('• PreciseAlarms: $hasPrecise (cached: ${exactAlarmGranted.value})');
+      buf.writeln('• Global perms: ${globalPerms.map((e) => e.name).join(', ')}');
+      buf.writeln('• Prayer ch perms: ${prayerPerms.map((e) => e.name).join(', ')}');
+      buf.writeln('');
+
+      // ── 2. Pending notifications ──────────────────────────────────────
+      final pending = await AwesomeNotifications().listScheduledNotifications();
+      pendingTotal = pending.length;
+      final prayerPending = pending.where(
+        (n) => n.content?.channelKey == AppConstants.notificationChannelPrayer,
+      ).toList();
+      hasPrayerPending = prayerPending.isNotEmpty;
+
+      buf.writeln('📊 الإشعارات المعلّقة: $pendingTotal إجمالي');
+      buf.writeln('• قناة الصلاة: ${prayerPending.length} معلّق');
+      for (final n in pending) {
+        buf.writeln('  - ID=${n.content?.id} | ${n.content?.title ?? "—"}');
+      }
+      buf.writeln('');
+
+      // ── 3. Schedule 1-minute test notification ────────────────────────
+      final fireAt = now.add(const Duration(minutes: 1));
+      buf.writeln('🧪 إشعار تجريبي مجدول بعد دقيقة:');
+      buf.writeln('• سيُطلق في: ${fireAt.hour.toString().padLeft(2, "0")}:${fireAt.minute.toString().padLeft(2, "0")}:${fireAt.second.toString().padLeft(2, "0")}');
+
+      if (isAllowed) {
+        try {
+          testCreateResult = await AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: 99997,
+              channelKey: AppConstants.notificationChannelPrayer,
+              title: '🧪 اختبار: إشعار بعد دقيقة',
+              body: 'نجحت الجدولة ✅  |  الوقت: ${now.hour.toString().padLeft(2, "0")}:${now.minute.toString().padLeft(2, "0")}',
+              notificationLayout: NotificationLayout.BigText,
+              category: NotificationCategory.Alarm,
+              wakeUpScreen: true,
+              autoDismissible: true,
+            ),
+            schedule: NotificationCalendar(
+              year: fireAt.year,
+              month: fireAt.month,
+              day: fireAt.day,
+              hour: fireAt.hour,
+              minute: fireAt.minute,
+              second: fireAt.second,
+              millisecond: 0,
+              repeats: false,
+              allowWhileIdle: true,
+              preciseAlarm: true,
+            ),
+          );
+          testScheduled = true;
+          buf.writeln('• createNotification() رجعت: $testCreateResult');
+        } catch (e) {
+          testError = e.toString();
+          buf.writeln('• ❌ createNotification() رمى exception: $e');
+        }
+      } else {
+        buf.writeln('• ⛔ الإشعارات غير مسموح بها — لم يتم الجدولة');
+      }
+    } catch (e) {
+      buf.writeln('\n❌ خطأ عام في التشخيص: $e');
+    }
+
+    return NotificationDiagnosticsReport(
+      report: buf.toString(),
+      testScheduled: testScheduled,
+      testCreateResult: testCreateResult,
+      testError: testError,
+      pendingTotal: pendingTotal,
+      hasPrayerPending: hasPrayerPending,
+    );
+  }
+}
+
+// ── Diagnostics result model ────────────────────────────────────────────────
+class NotificationDiagnosticsReport {
+  final String report;
+  final bool testScheduled;
+  final bool testCreateResult;
+  final String testError;
+  final int pendingTotal;
+  final bool hasPrayerPending;
+
+  const NotificationDiagnosticsReport({
+    required this.report,
+    required this.testScheduled,
+    required this.testCreateResult,
+    required this.testError,
+    required this.pendingTotal,
+    required this.hasPrayerPending,
+  });
 }

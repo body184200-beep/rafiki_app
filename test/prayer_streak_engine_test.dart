@@ -93,7 +93,7 @@ void main() {
       final times = PrayerTimes(coords, DateComponents.from(now), params);
       final ruleEngine = PrayerRuleEngine(times);
 
-      // 4 completed on time - 1 missed = +3 base change
+      // 4 completed on time, 1 missed: streak maintained (0 change)
       final typicalDay = DayContext(
         allFardhCongregation: false,
         allFardhWithSunnah: false,
@@ -101,9 +101,9 @@ void main() {
         missed: 1,
         isPerfect3DayStreak: false,
       );
-      expect(ruleEngine.calculateStreak(typicalDay), 3);
+      expect(ruleEngine.calculateStreak(typicalDay), 0);
 
-      // Max clamp 5
+      // 5 completed on time, 0 missed: +1 day
       final perfectDay = DayContext(
         allFardhCongregation: false,
         allFardhWithSunnah: false,
@@ -111,9 +111,9 @@ void main() {
         missed: 0,
         isPerfect3DayStreak: false,
       );
-      expect(ruleEngine.calculateStreak(perfectDay), 5);
+      expect(ruleEngine.calculateStreak(perfectDay), 1);
 
-      // Min clamp -5
+      // >3 missed: -1 (reset is handled by StreakEngine)
       final badDay = DayContext(
         allFardhCongregation: false,
         allFardhWithSunnah: false,
@@ -121,9 +121,9 @@ void main() {
         missed: 5,
         isPerfect3DayStreak: false,
       );
-      expect(ruleEngine.calculateStreak(badDay), -5);
+      expect(ruleEngine.calculateStreak(badDay), -1);
 
-      // Consistency perfect 3 day streak bonus (+15) on top of perfect day (+5) = 20
+      // Consistency perfect 3 day streak bonus (+1) on top of perfect day (+1) = 2 days
       final consistencyDay = DayContext(
         allFardhCongregation: false,
         allFardhWithSunnah: false,
@@ -131,7 +131,7 @@ void main() {
         missed: 0,
         isPerfect3DayStreak: true,
       );
-      expect(ruleEngine.calculateStreak(consistencyDay), 20);
+      expect(ruleEngine.calculateStreak(consistencyDay), 2);
     });
   });
 
@@ -239,8 +239,8 @@ void main() {
 
       await engine.handleMidnightRollover();
 
-      // globalStreak should be: 10 (base) + 5 (daily streak from yesterday completed) + 15 (consistency bonus) = 30
-      expect(engine.globalStreak.value, 30);
+      // globalStreak should be: 10 (base) + 1 (daily streak from yesterday completed) + 1 (consistency bonus) = 12
+      expect(engine.globalStreak.value, 12);
     });
 
     test('Unit test: missed prayer penalties (-2) are applied', () async {
@@ -317,12 +317,11 @@ void main() {
       await PrayerStreakEngine.instance.initialize();
 
       // Check results for ≤3 missed prayers:
-      // Yesterday's score was 10.0.
+      // Yesterday's total score was 20.0 (already accumulated in real-time).
       // Yesterday had 1 missed prayer (isha), which is -2.0 penalty.
-      // Net yesterday's score: 10.0 - 2.0 = 8.0.
-      // totalScore should be: 20.0 (prev total) + 8.0 (net yesterday) = 28.0.
+      // totalScore should be: 20.0 - 2.0 penalty = 18.0.
       // todayScore (for today, fresh start) should be: 0.0.
-      expect(ScoreEngine.instance.totalScore.value, 28.0);
+      expect(ScoreEngine.instance.totalScore.value, 18.0);
       expect(ScoreEngine.instance.todayScore.value, 0.0);
       
       final savedResetDate = prefs.getString('score_engine_last_reset');
@@ -516,6 +515,7 @@ void main() {
       await prefs.setString('streak_engine_date', yesterdayKey);
       await prefs.setStringList('streak_engine_completed_today', ['fajr', 'dhuhr', 'asr']);
       await prefs.setInt('streak_engine_daily', 3);
+      await prefs.setInt('streak_engine_global_v2', 5);
 
       await prefs.setString('score_engine_last_reset', yesterdayKey);
       await prefs.setDouble('score_engine_today', 29.0); // 1 (Fajr) + 27 (Dhuhr) + 1 (Asr)
@@ -531,9 +531,8 @@ void main() {
 
       // Since missedCount = 2 (<=3), score and streak continue
       // Penalties: -2 (Maghrib) + -2 (Isha) = -4.0
-      // Net yesterday score: 29.0 - 4.0 = 25.0
-      // Total score: 100.0 + 25.0 = 125.0
-      expect(ScoreEngine.instance.totalScore.value, 125.0);
+      // Total score: 100.0 - 4.0 = 96.0
+      expect(ScoreEngine.instance.totalScore.value, 96.0);
       expect(ScoreEngine.instance.todayScore.value, 0.0);
       // globalStreak should NOT be reset to 0
       expect(engine.globalStreak.value > 0, isTrue);
@@ -568,10 +567,10 @@ void main() {
       await ScoreEngine.instance.initialize();
       await engine.initialize();
 
-      // Total score: 50 + (3 - 4 penalty) = 49.0 (score continues, not reset to 0)
-      expect(ScoreEngine.instance.totalScore.value, 49.0);
-      // Streak continues (4 base + (3 on-time - 2 missed) = 5)
-      expect(engine.globalStreak.value, 5);
+      // Total score: 50.0 (persisted) - 4.0 penalty = 46.0 (score continues, not reset to 0)
+      expect(ScoreEngine.instance.totalScore.value, 46.0);
+      // Streak continues (4 base + 0 net change for 1-3 missed = 4)
+      expect(engine.globalStreak.value, 4);
     });
 
     test('Scenario: Exactly 4 missed prayers -> FULL score and streak reset', () async {

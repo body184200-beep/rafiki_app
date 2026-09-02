@@ -37,8 +37,8 @@ class PrayerRuleEngine {
   static const double congregationDailyBonus = 30.0;
   static const double perfectSunnahDailyBonus = 50.0;
 
-  // Streak Consistency Bonus (adds to global streak, not score)
-  static const int streakConsistencyBonus = 15;
+  // Streak Consistency Bonus (adds to global streak days, not score)
+  static const int streakConsistencyBonus = 1;
 
   /// SCORE CALCULATION (ONLY ENTRY POINT)
   double calculateScore(PrayerState state, DayContext day, {bool isMidnightRollover = false}) {
@@ -76,22 +76,40 @@ class PrayerRuleEngine {
     return score;
   }
 
-  /// STREAK CALCULATION
+  /// STREAK CALCULATION (Day unit: +1 for 5 on-time prayers, 0 for 1-3 missed, bonus for 3-day consistency)
   int calculateStreak(DayContext day) {
-    int base = day.completedOnTime - day.missed;
-
-    // Clamp base change between [-5, 5] as per day-based streak tracker specifications
-    int clampedChange = base.clamp(-5, 5);
-
-    if (day.isPerfect3DayStreak) {
-      clampedChange += streakConsistencyBonus;
+    int change = 0;
+    if (day.completedOnTime == 5 && day.missed == 0) {
+      change = 1;
+    } else if (day.missed > 0 && day.missed <= 3) {
+      // 0–3 missed prayers: streak is maintained (change = 0)
+      change = 0;
+    } else if (day.missed > 3) {
+      change = -1;
     }
 
-    return clampedChange;
+    if (day.isPerfect3DayStreak) {
+      change += streakConsistencyBonus;
+    }
+
+    return change;
   }
 
   /// PRAYER WINDOW (PURE)
   bool isPrayerOpen(PrayerType type, DateTime now) {
+    final dayTimes = PrayerTimes(times.coordinates, DateComponents.from(now), times.calculationParameters);
+    if (type == PrayerType.isha) {
+      if (now.isBefore(dayTimes.fajr)) {
+        // Between midnight and Fajr, Isha from yesterday is still open until Fajr
+        final yesterday = now.subtract(const Duration(days: 1));
+        final yesterdayTimes = PrayerTimes(times.coordinates, DateComponents.from(yesterday), times.calculationParameters);
+        return !now.isBefore(yesterdayTimes.isha) && now.isBefore(dayTimes.fajr);
+      } else {
+        final tomorrow = now.add(const Duration(days: 1));
+        final tomorrowTimes = PrayerTimes(times.coordinates, DateComponents.from(tomorrow), times.calculationParameters);
+        return !now.isBefore(dayTimes.isha) && now.isBefore(tomorrowTimes.fajr);
+      }
+    }
     final start = getStart(type, now);
     final end = getEnd(type, now);
 

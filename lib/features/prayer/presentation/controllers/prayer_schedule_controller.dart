@@ -162,7 +162,18 @@ const double kMaxDayScore = 3.0;
 String dateKey(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-String todayKey() => dateKey(DateTime.now());
+DateTime prayerDate(DateTime now) {
+  final times = sl.isRegistered<PrayerEngine>() ? sl<PrayerEngine>().todayTimes : null;
+  if (times != null && now.isBefore(times.fajr)) {
+    return now.subtract(const Duration(days: 1));
+  }
+  return now;
+}
+
+String todayKey([DateTime? now]) {
+  final d = now ?? DateTime.now();
+  return dateKey(prayerDate(d));
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Prayer Time Service
@@ -207,9 +218,9 @@ class PrayerTimeService {
     if (active == prayerIndex) return PrayerState.available;
 
     final prayer = kPrayers[prayerIndex];
-    final today  = DateTime(now.year, now.month, now.day);
-    final start  = prayer.start(today);
-    final end    = prayer.end(today);
+    final prayerDay = prayerDate(now);
+    final start  = prayer.start(prayerDay);
+    final end    = prayer.end(prayerDay);
 
     if (now.isBefore(start)) return PrayerState.locked;
     if (now.isAfter(end) || now.isAtSameMomentAs(end) || (active != -1 && active > prayerIndex)) {

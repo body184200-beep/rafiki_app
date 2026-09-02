@@ -2,6 +2,7 @@ import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rafiki_app/core/di/service_locator.dart';
+import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
 import 'package:rafiki_app/features/prayer/data/models/prayer_models.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_engine.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_streak_engine.dart';
@@ -15,6 +16,8 @@ class _T {
   static const bg = T.bg;
   static const ruby = T.ruby;
   static const rubyL = T.rubyL;
+  static const gold = T.gold;
+  static const goldSoft = T.goldSoft;
   static const t1 = T.t1;
   static const t2 = T.t2;
 }
@@ -152,7 +155,8 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
   // ── Day rollover ─────────────────────────────────────────────
   void _rolloverDay(DateTime now) {
     DateTime currentDate = DateTime.parse(_today.dateKey);
-    final todayDate = DateTime(now.year, now.month, day(now));
+    final targetDate = prayerDate(now);
+    final todayDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
 
     while (currentDate.isBefore(todayDate)) {
       // ── Finalise the current day ──────────────────────────────
@@ -465,6 +469,58 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                   // Rollover Banner if active
                   if (_banner.isNotEmpty)
                     SliverToBoxAdapter(child: BannerWidget(text: _banner)),
+
+                  // Exact Alarm Warning Banner (persistent until permission granted)
+                  SliverToBoxAdapter(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: NotificationEngine.instance.exactAlarmGranted,
+                      builder: (context, granted, _) {
+                        if (granted) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          child: GestureDetector(
+                            onTap: () => NotificationEngine.instance
+                                .checkAndRequestExactAlarmPermission(
+                              context: context,
+                              forcePrompt: true,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _T.gold.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: _T.gold.withValues(alpha: 0.35)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.alarm_off_rounded,
+                                      color: _T.goldSoft, size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'إشعارات الصلاة قد تتأخر — فعّل المنبهات الدقيقة',
+                                      style: TextStyle(
+                                        color: _T.goldSoft,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward_ios_rounded,
+                                      color: _T.goldSoft.withValues(alpha: 0.6),
+                                      size: 14),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
                   // 1. Hero Score Element (Unlimited Score + Daily Gain + Current Streak)
                   SliverToBoxAdapter(

@@ -65,9 +65,13 @@ class PrayerStreakEngine {
           final todayDate = DateTime(now.year, now.month, now.day);
 
           while (current.isBefore(todayDate)) {
-            await handleMidnightRollover(overrideDate: current);
+            await handleMidnightRollover(overrideDate: current, isHistoricalCatchUp: true);
             current = current.add(const Duration(days: 1));
           }
+
+          // Safe recovery ordering: Score state first, then Streak state
+          await ScoreEngine.instance.saveCurrentState();
+          await _saveState(overrideToday: todayDate);
         } catch (_) {}
       } else if (savedDate == todayKey) {
         final completedList = prefs.getStringList('streak_engine_completed_today') ?? [];
@@ -186,7 +190,7 @@ class PrayerStreakEngine {
     AppLogger.info('Streaks boosted by +$amount via BonusEngine consistency rule', tag: 'StreakEngine');
   }
 
-  Future<void> handleMidnightRollover({DateTime? overrideDate}) async {
+  Future<void> handleMidnightRollover({DateTime? overrideDate, bool isHistoricalCatchUp = false}) async {
     final allFardh = [Prayer.fajr, Prayer.dhuhr, Prayer.asr, Prayer.maghrib, Prayer.isha];
     final yesterday = overrideDate ?? DateTime.now().subtract(const Duration(days: 1));
     final dateKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
@@ -204,13 +208,14 @@ class PrayerStreakEngine {
       yesterdayRecord = await sl<PrayerRepository>().loadTodayRecord(dateKey);
     } catch (_) {}
 
-    // Check if a prayer was completed either in memory/preferences or in DayRecord
+    // Check if a prayer was completed either in memory/preferences or in DayRecord (including Qada)
     bool isCompleted(Prayer p) {
       if (_completedToday.contains(p)) return true;
       if (yesterdayRecord != null) {
         final rec = yesterdayRecord.recordFor(_getPrayerArabicName(p));
         if (rec.state == PrayerState.completedIndividual ||
-            rec.state == PrayerState.completedCongregation) {
+            rec.state == PrayerState.completedCongregation ||
+            rec.state == PrayerState.oadaCompleted) {
           return true;
         }
       }
@@ -228,7 +233,7 @@ class PrayerStreakEngine {
           isPerfect3DayStreak: false,
         );
         final scorePenalty = ruleEngine.calculateScore(PrayerState.oadaPending, dummyContext);
-        await ScoreEngine.instance.addScore('penalty_${p.name}_$dateKey', scorePenalty);
+        await ScoreEngine.instance.addScore('penalty_${p.name}_$dateKey', scorePenalty, saveToDisk: !isHistoricalCatchUp);
       }
     }
 
@@ -249,7 +254,7 @@ class PrayerStreakEngine {
         tag: 'StreakEngine',
       );
 
-      await ScoreEngine.instance.resetTotalScore();
+      await ScoreEngine.instance.resetTotalScore(saveToDisk: !isHistoricalCatchUp);
       globalStreak.value = 0;
 
       // Update Fardh-specific streaks
@@ -264,10 +269,11 @@ class PrayerStreakEngine {
       _completedToday.clear();
       dailyStreak.value = 0;
       final nextDay = yesterday.add(const Duration(days: 1));
-      await _saveState(overrideToday: nextDay);
-
-      // Tell score engine to check/perform rollover for the new day
-      await ScoreEngine.instance.checkMidnightReset();
+      if (!isHistoricalCatchUp) {
+        await _saveState(overrideToday: nextDay);
+        // Tell score engine to check/perform rollover for the new day
+        await ScoreEngine.instance.checkMidnightReset();
+      }
       return; // Skip all bonus calculations
     }
 
@@ -351,14 +357,14 @@ class PrayerStreakEngine {
         // Since calculateScore returns total score including base state (here base state is locked -> 0, plus Congregation daily bonus 30),
         // we add the congregation daily bonus to ScoreEngine
         if (bonusScore >= PrayerRuleEngine.congregationDailyBonus) {
-          await ScoreEngine.instance.addScore('congregation_daily_bonus_$dateKey', PrayerRuleEngine.congregationDailyBonus);
+          await ScoreEngine.instance.addScore('congregation_daily_bonus_$dateKey', PrayerRuleEngine.congregationDailyBonus, saveToDisk: !isHistoricalCatchUp);
           AppLogger.info('Daily Congregation Bonus (+30 score) applied for date: $dateKey', tag: 'StreakEngine');
         }
       }
 
       if (allFardhWithSunnah) {
         // Sunnah daily bonus is 50
-        await ScoreEngine.instance.addScore('sunnah_daily_bonus_$dateKey', PrayerRuleEngine.perfectSunnahDailyBonus);
+        await ScoreEngine.instance.addScore('sunnah_daily_bonus_$dateKey', PrayerRuleEngine.perfectSunnahDailyBonus, saveToDisk: !isHistoricalCatchUp);
         AppLogger.info('Daily Sunnah Bonus (+50 score) applied for date: $dateKey', tag: 'StreakEngine');
       }
 
@@ -394,10 +400,11 @@ class PrayerStreakEngine {
     _completedToday.clear();
     dailyStreak.value = 0;
     final nextDay = yesterday.add(const Duration(days: 1));
-    await _saveState(overrideToday: nextDay);
-    
-    // Tell score engine to check/perform rollover
-    await ScoreEngine.instance.checkMidnightReset();
+    if (!isHistoricalCatchUp) {
+      await _saveState(overrideToday: nextDay);
+      // Tell score engine to check/perform rollover
+      await ScoreEngine.instance.checkMidnightReset();
+    }
   }
 
   Future<void> _saveState({DateTime? overrideToday}) async {

@@ -126,11 +126,19 @@ class PrayerEngine with WidgetsBindingObserver {
   
   PrayerTimes? get todayTimes => _todayTimes;
 
+  @visibleForTesting
+  void setTodayTimesForTesting(PrayerTimes times) {
+    _todayTimes = times;
+  }
+
   Prayer getActiveFardhPrayer(DateTime now) {
     if (_todayTimes == null) return Prayer.none;
     final times = _todayTimes!;
     
-    if (!now.isBefore(times.fajr) && now.isBefore(times.sunrise)) {
+    if (now.isBefore(times.fajr)) {
+      // Between midnight and Fajr, Isha from the preceding evening is still open until Fajr
+      return Prayer.isha;
+    } else if (now.isBefore(times.sunrise)) {
       return Prayer.fajr;
     } else if (!now.isBefore(times.dhuhr) && now.isBefore(times.asr)) {
       return Prayer.dhuhr;
@@ -138,12 +146,8 @@ class PrayerEngine with WidgetsBindingObserver {
       return Prayer.asr;
     } else if (!now.isBefore(times.maghrib) && now.isBefore(times.isha)) {
       return Prayer.maghrib;
-    } else {
-      final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-      final tomorrowTimes = PrayerTimes(times.coordinates, DateComponents.from(tomorrow), times.calculationParameters);
-      if (!now.isBefore(times.isha) && now.isBefore(tomorrowTimes.fajr)) {
-        return Prayer.isha;
-      }
+    } else if (!now.isBefore(times.isha)) {
+      return Prayer.isha;
     }
     return Prayer.none;
   }

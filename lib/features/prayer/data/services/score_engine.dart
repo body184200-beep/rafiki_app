@@ -37,19 +37,14 @@ class ScoreEngine {
     _processedTransactions.clear();
     _processedTransactions.addAll(txList);
 
-    // Legacy Migration: If lastResetDate is not today, yesterday's score was not yet aggregated.
+    // Total score is already updated atomically in addScore.
+    // If lastResetDate is null, establish todayKey as baseline.
     final lastResetDate = await _repository.loadLastResetDate();
     final now = DateTime.now();
     final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     
-    if (lastResetDate != null && lastResetDate != todayKey) {
-      totalScore.value += todayScore.value;
-      if (totalScore.value < 0.0) totalScore.value = 0.0;
-      await _repository.saveScoreState(
-        todayScore: todayScore.value,
-        totalScore: totalScore.value,
-        processedTransactions: _processedTransactions.toList(),
-      );
+    if (lastResetDate == null) {
+      await _repository.saveLastResetDate(todayKey);
     }
   }
 
@@ -61,15 +56,13 @@ class ScoreEngine {
 
   /// Resets the total score and today's score to zero.
   /// Called when the streak breaks (more than 3 missed prayers in a day).
-  Future<void> resetTotalScore() async {
+  Future<void> resetTotalScore({bool saveToDisk = true}) async {
     todayScore.value = 0.0;
     totalScore.value = 0.0;
 
-    await _repository.saveScoreState(
-      todayScore: 0.0,
-      totalScore: 0.0,
-      processedTransactions: _processedTransactions.toList(),
-    );
+    if (saveToDisk) {
+      await saveCurrentState();
+    }
 
     AppLogger.info(
       'Total score reset to 0 due to streak break (>3 missed prayers)',
@@ -77,7 +70,16 @@ class ScoreEngine {
     );
   }
 
-  Future<bool> addScore(String transactionId, double amount) async {
+  /// Persists current in-memory score state to disk.
+  Future<void> saveCurrentState() async {
+    await _repository.saveScoreState(
+      todayScore: todayScore.value,
+      totalScore: totalScore.value,
+      processedTransactions: _processedTransactions.toList(),
+    );
+  }
+
+  Future<bool> addScore(String transactionId, double amount, {bool saveToDisk = true}) async {
     if (_processedTransactions.contains(transactionId)) {
       AppLogger.warning('Transaction $transactionId already processed. Skipping.', tag: 'ScoreEngine');
       return false; // Already processed
@@ -92,12 +94,9 @@ class ScoreEngine {
     _eventController.add(ScoreEvent(transactionId, amount));
     AppLogger.info('Score updated: +$amount (Tx: $transactionId). Today: ${todayScore.value}', tag: 'ScoreEngine');
     
-    // Save to disk atomically
-    await _repository.saveScoreState(
-      todayScore: todayScore.value,
-      totalScore: totalScore.value,
-      processedTransactions: _processedTransactions.toList(),
-    );
+    if (saveToDisk) {
+      await saveCurrentState();
+    }
     
     return true;
   }
