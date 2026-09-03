@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rafiki_app/core/logging/app_logger.dart';
 
 import 'package:rafiki_app/features/prayer/data/services/score_engine.dart';
 import 'package:rafiki_app/features/gamification/data/models/loot_box_model.dart';
@@ -45,7 +46,9 @@ class LootBoxEngine {
       try {
         final List j = jsonDecode(chestsStr);
         unopenedChests.value = j.map((e) => Chest.fromJson(e)).toList();
-      } catch (_) {}
+      } catch (e, st) {
+        AppLogger.warning('Failed to restore unopened chests', error: e, stackTrace: st);
+      }
     }
 
     final invStr = prefs.getString(_kInventory);
@@ -53,7 +56,9 @@ class LootBoxEngine {
       try {
         final List j = jsonDecode(invStr);
         inventory.value = j.map((e) => RewardItem.fromJson(e)).toList();
-      } catch (_) {}
+      } catch (e, st) {
+        AppLogger.warning('Failed to restore inventory', error: e, stackTrace: st);
+      }
     }
 
     _processedTxs.addAll(prefs.getStringList(_kProcessedTxs) ?? []);

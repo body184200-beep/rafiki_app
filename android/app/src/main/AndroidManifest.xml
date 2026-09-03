@@ -17,8 +17,6 @@
         android:label="رفيقي"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"

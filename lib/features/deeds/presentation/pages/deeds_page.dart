@@ -126,7 +126,9 @@ class _DeedsPageState extends State<DeedsScreen>
       final jsonList = _adhkar.map((e) => e.toJson()).toList();
       await prefs.setString('deeds_adhkar_list', jsonEncode(jsonList));
       await prefs.setInt('deeds_selected_index', _selectedIndex);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[DeedsPage] Error saving state: $e');
+    }
   }
 
   Future<void> _loadState() async {
@@ -146,7 +148,9 @@ class _DeedsPageState extends State<DeedsScreen>
           _displayedCount = _current.count;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[DeedsPage] Error loading state: $e');
+    }
   }
 
   @override

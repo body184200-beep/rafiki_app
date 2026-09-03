@@ -2,8 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:adhan/adhan.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart'
+    hide NotificationPermission;
+import 'package:awesome_notifications/awesome_notifications.dart';
 
+import 'package:rafiki_app/core/theme/app_colors.dart';
+import 'package:rafiki_app/core/constants/app_constants.dart';
 import 'package:rafiki_app/core/utils/time_format.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 
@@ -18,6 +22,24 @@ class PrayerTaskHandler extends TaskHandler {
   // Diagnostic logging tracker
   Prayer? _lastLoggedPrayer;
   String? _lastLoggedSource;
+
+  // ── Live-fire tracking ──────────────────────────────────────────────
+  //
+  // This service ticks every 1 second while running, which is exactly
+  // what lets it act as its own "exact alarm": it doesn't need Android's
+  // SCHEDULE_EXACT_ALARM permission at all, because it isn't scheduling
+  // anything for the future — it notices the right second arriving in
+  // real time and fires immediately. `_firedKeys` guards against firing
+  // the same prayer/type more than once per day (reset on date change).
+  final Set<String> _firedKeys = {};
+
+  static const Map<Prayer, String> _prayerNamesAr = {
+    Prayer.fajr: 'الفجر',
+    Prayer.dhuhr: 'الظهر',
+    Prayer.asr: 'العصر',
+    Prayer.maghrib: 'المغرب',
+    Prayer.isha: 'العشاء',
+  };
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -80,6 +102,10 @@ class PrayerTaskHandler extends TaskHandler {
         final tomorrowComponents = DateComponents.from(now.add(const Duration(days: 1)));
         _cachedTomorrowTimes = PrayerTimes(coords, tomorrowComponents, params);
         _cachedDate = today;
+
+        // New calendar day → reset the live-fire guards so today's
+        // BEFORE/AT notifications can fire again.
+        _firedKeys.clear();
       }
 
       final todayTimes = _cachedTodayTimes!;
@@ -92,6 +118,45 @@ class PrayerTaskHandler extends TaskHandler {
         MapEntry(Prayer.maghrib, todayTimes.maghrib),
         MapEntry(Prayer.isha, todayTimes.isha),
       ];
+
+      // ── Live fire: BEFORE (10 min) & AT (prayer time) ─────────────────
+      //
+      // Checked every tick (every 1s) against every one of today's five
+      // prayers — independent of which one is "next" for the countdown
+      // display below. Each combination fires at most once/day.
+      for (final entry in todayPrayers) {
+        final prayer = entry.key;
+        final prayerTime = entry.value;
+        final beforeTime = prayerTime.subtract(const Duration(minutes: 10));
+        final dateKey = '${today.year}-${today.month}-${today.day}-${prayer.name}';
+
+        final beforeKey = '${dateKey}_before';
+        if (!_firedKeys.contains(beforeKey) &&
+            now.isAfter(beforeTime) &&
+            now.isBefore(prayerTime)) {
+          _firedKeys.add(beforeKey);
+          await _fireLiveNotification(
+            id: AppConstants.prayerBeforeIdToday[prayer]!,
+            prayer: prayer,
+            isAthanTime: false,
+          );
+        }
+
+        final atKey = '${dateKey}_at';
+        // Small grace window (2 min) so a service that was briefly
+        // suspended still catches the moment; beyond that it's stale
+        // and we skip it rather than fire a late "حان الوقت" notice.
+        if (!_firedKeys.contains(atKey) &&
+            now.isAfter(prayerTime) &&
+            now.difference(prayerTime) < const Duration(minutes: 2)) {
+          _firedKeys.add(atKey);
+          await _fireLiveNotification(
+            id: AppConstants.prayerAtIdToday[prayer]!,
+            prayer: prayer,
+            isAthanTime: true,
+          );
+        }
+      }
 
       // Find the next upcoming prayer for today
       Prayer nextPrayer = Prayer.none;
@@ -149,6 +214,78 @@ class PrayerTaskHandler extends TaskHandler {
       );
     } catch (e, st) {
       debugPrint('⏱ [PrayerTaskHandler] Error updating countdown: $e\n$st');
+    }
+  }
+
+  /// Fires a real notification RIGHT NOW (no `schedule:` block at all) —
+  /// this is what makes it independent of the exact-alarm permission.
+  /// Uses the exact same notification ID that [NotificationEngine] uses
+  /// for its OS-scheduled backup, so if that one *is* also pending (e.g.
+  /// exact alarm was granted), it gets silently replaced instead of
+  /// duplicated.
+  Future<void> _fireLiveNotification({
+    required int id,
+    required Prayer prayer,
+    required bool isAthanTime,
+  }) async {
+    final name = _prayerNamesAr[prayer] ?? '';
+    try {
+      final allowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!allowed) {
+        debugPrint('🕌 [PrayerTaskHandler] ⛔ Live-fire skipped ($name, athan=$isAthanTime) — notifications not allowed');
+        return;
+      }
+
+      final ok = await AwesomeNotifications().createNotification(
+        content: isAthanTime
+            ? NotificationContent(
+                id: id,
+                channelKey: AppConstants.notificationChannelPrayer,
+                title: '🕌 حان الآن وقت صلاة $name',
+                body: 'الله أكبر، حان موعد أذان $name — أقم الصلاة يرحمك الله',
+                notificationLayout: NotificationLayout.BigText,
+                category: NotificationCategory.Alarm,
+                criticalAlert: true,
+                largeIcon: 'resource://mipmap/ic_launcher',
+                roundedLargeIcon: true,
+                color: AppColors.gold,
+                wakeUpScreen: true,
+                customSound: 'resource://raw/abdul_hakam',
+                autoDismissible: true,
+                groupKey: 'prayer_alerts',
+                summary: 'مواقيت الصلاة',
+              )
+            : NotificationContent(
+                id: id,
+                channelKey: AppConstants.notificationChannelPrayer,
+                title: '⏳ متبقي 10 دقائق على صلاة $name',
+                body: 'استعد للوضوء والصلاة يرحمك الله',
+                notificationLayout: NotificationLayout.BigText,
+                category: NotificationCategory.Reminder,
+                largeIcon: 'resource://mipmap/ic_launcher',
+                roundedLargeIcon: true,
+                color: AppColors.accent,
+                wakeUpScreen: true,
+                timeoutAfter: const Duration(minutes: 10),
+                autoDismissible: true,
+                groupKey: 'prayer_alerts',
+                summary: 'مواقيت الصلاة',
+              ),
+        actionButtons: [
+          NotificationActionButton(
+            key: 'DISMISS',
+            label: 'تم',
+            actionType: ActionType.DismissAction,
+          ),
+        ],
+        // No `schedule:` — this fires immediately, this exact second.
+      );
+      debugPrint(
+        '🕌 [PrayerTaskHandler] ${ok ? '✅ LIVE-FIRED' : '⚠️ LIVE-FIRE FAILED'} | $name | '
+        '${isAthanTime ? 'AT' : 'BEFORE'} | id=$id',
+      );
+    } catch (e, st) {
+      debugPrint('🕌 [PrayerTaskHandler] ❌ Live-fire ERROR ($name, athan=$isAthanTime): $e\n$st');
     }
   }
 

@@ -32,10 +32,8 @@ dependencies:
     sdk: flutter
   shared_preferences: ^2.5.5
   http: ^1.6.0
-  flutter_local_notifications: ^21.0.0
   just_audio: ^0.9.46
   confetti: ^0.8.0
-  audioplayers: ^6.7.1
   awesome_notifications: ^0.11.0
   bloc: ^9.2.1
   flutter_background_service: ^5.0.5

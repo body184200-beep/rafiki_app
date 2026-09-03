@@ -64,7 +64,8 @@ class HomeController extends ChangeNotifier with WidgetsBindingObserver {
   bool get isAfterIsha {
     try {
       return _todayTimes().nextPrayer() == Prayer.none;
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Error calculating isAfterIsha', error: e);
       return false;
     }
   }
@@ -76,7 +77,8 @@ class HomeController extends ChangeNotifier with WidgetsBindingObserver {
       final current = _todayTimes().currentPrayer();
       if (current == Prayer.none || current == Prayer.sunrise) return null;
       return current;
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Error calculating currentPrayer', error: e);
       return null;
     }
   }
@@ -88,7 +90,8 @@ class HomeController extends ChangeNotifier with WidgetsBindingObserver {
       );
       final times = PrayerTimes(_coords, tomorrow, PrayerConfig.params);
       return TimeFormat.hhmm(times.fajr);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Error calculating tomorrowFajrLabel', error: e);
       return '--';
     }
   }
@@ -204,7 +207,8 @@ class HomeController extends ChangeNotifier with WidgetsBindingObserver {
       if (diff.isNegative) return loc.next_prayer_calculating;
 
       return '${PrayerNames.of(loc, next)} · ${TimeFormat.hhmmss(diff)}';
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('Error calculating getNextPrayerString', error: e);
       return loc.next_prayer_calculating;
     }
   }

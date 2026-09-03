@@ -5,6 +5,8 @@
 /// these instead of scattering literal values.
 library;
 
+import 'package:adhan/adhan.dart';
+
 class AppConstants {
   AppConstants._(); // prevent instantiation
 
@@ -54,6 +56,33 @@ class AppConstants {
   static const String prefPrayerStreak = 'pt2_streak';
   static const String prefPrayerQada = 'pt2_qada';
   static const String prefRadioFirstLaunch = 'radio_first_launch_done';
+
+  // ── Prayer Alert Notification IDs (today) ───────────────────
+  //
+  // Shared between NotificationEngine (OS-scheduled exact-alarm path)
+  // and PrayerTaskHandler (live foreground-service fired path), so both
+  // paths target the SAME notification ID per prayer/type. Whichever
+  // fires first "wins" and the other is simply a no-op duplicate the OS
+  // naturally collapses — no duplicate notifications, no permission
+  // dependency for the primary (foreground-service) path.
+  //
+  // Fixed, permanent mapping — never change these unless the old IDs
+  // are explicitly cancelled first (otherwise ghost notifications linger).
+  static const Map<Prayer, int> prayerBeforeIdToday = {
+    Prayer.fajr: 90000,
+    Prayer.dhuhr: 90002,
+    Prayer.asr: 90004,
+    Prayer.maghrib: 90006,
+    Prayer.isha: 90008,
+  };
+
+  static const Map<Prayer, int> prayerAtIdToday = {
+    Prayer.fajr: 90001,
+    Prayer.dhuhr: 90003,
+    Prayer.asr: 90005,
+    Prayer.maghrib: 90007,
+    Prayer.isha: 90009,
+  };
 
   // ── Default Coordinates (Damietta, Egypt) ──────────────────
   static const double defaultLatitude = 31.4165;

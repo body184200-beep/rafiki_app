@@ -55,7 +55,9 @@ class NotificationEngine {
         final list = [legacyNotif];
         await prefs.setString(_kNotificationsKey, jsonEncode(list.map((e) => e.toJson()).toList()));
         await prefs.remove(_kLegacyKey);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[NotifEngine] Failed to migrate legacy notifications: $e');
+      }
     }
 
     // 2. Load notifications
@@ -71,10 +73,13 @@ class NotificationEngine {
       }
     }
 
-    // Cleanup old legacy channel BEFORE initialize to avoid conflict
+    // Cleanup old legacy channels BEFORE initialize to avoid conflict
     try {
       await AwesomeNotifications().removeChannel('prayer_channel');
-    } catch (_) {}
+      await AwesomeNotifications().removeChannel('prayer_channel_v2');
+    } catch (e) {
+      debugPrint('Legacy channel removal note: $e');
+    }
 
     // 3. Initialize AwesomeNotifications if not already done
     debugPrint('🔔 [NotifEngine] Calling AwesomeNotifications().initialize()...');
@@ -470,7 +475,9 @@ class NotificationEngine {
       );
 
       await prefs.setBool(_kMiuiGuideShownKey, true);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NotifEngine] Could not show MIUI guide dialog: $e');
+    }
   }
 
   Future<bool> checkAndRequestPermission({BuildContext? context}) async {
@@ -1010,6 +1017,25 @@ class NotificationEngine {
       buf.writeln('• سيُطلق في: ${fireAt.hour.toString().padLeft(2, "0")}:${fireAt.minute.toString().padLeft(2, "0")}:${fireAt.second.toString().padLeft(2, "0")}');
 
       if (isAllowed) {
+        try {
+          final immediateOk = await AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: 99996,
+              channelKey: AppConstants.notificationChannelPrayer,
+              title: '🕌 تجربة الأذان الفورية',
+              body: 'صوت الأذان والتنبيه يعمل الآن بنجاح على القناة الجديدة ✅',
+              notificationLayout: NotificationLayout.BigText,
+              category: NotificationCategory.Alarm,
+              wakeUpScreen: true,
+              criticalAlert: true,
+              autoDismissible: true,
+            ),
+          );
+          buf.writeln('• إشعار فوري بصوت الأذان: ${immediateOk ? "نجح ✅" : "فشل ❌"}');
+        } catch (e) {
+          buf.writeln('• ❌ الإشعار الفوري: $e');
+        }
+
         try {
           testCreateResult = await AwesomeNotifications().createNotification(
             content: NotificationContent(
