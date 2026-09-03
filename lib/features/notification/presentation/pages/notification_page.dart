@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
+import 'package:rafiki_app/features/azkar/data/datasources/azkar_data.dart';
 import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
 import 'package:rafiki_app/features/notification/data/models/notification_model.dart';
 
@@ -81,12 +82,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
   }
 
   void _showForm([CustomNotification? notif]) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _NotificationFormSheet(existing: notif),
-    );
+    NotificationFormSheet.show(context, existing: notif);
   }
 
   Future<void> _toggleNotif(String id, bool val) async {
@@ -338,34 +334,93 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
 // ─────────────────────────────────────────────────────────────────────────────
 //  Form Bottom Sheet
 // ─────────────────────────────────────────────────────────────────────────────
-class _NotificationFormSheet extends StatefulWidget {
+class NotificationFormSheet extends StatefulWidget {
   final CustomNotification? existing;
-  const _NotificationFormSheet({this.existing});
+  final String? initialZekr;
+  final String? initialTitle;
+  final TimeOfDay? initialTime;
+
+  const NotificationFormSheet({
+    super.key,
+    this.existing,
+    this.initialZekr,
+    this.initialTitle,
+    this.initialTime,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    CustomNotification? existing,
+    String? initialZekr,
+    String? initialTitle,
+    TimeOfDay? initialTime,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => NotificationFormSheet(
+        existing: existing,
+        initialZekr: initialZekr,
+        initialTitle: initialTitle,
+        initialTime: initialTime,
+      ),
+    );
+  }
 
   @override
-  State<_NotificationFormSheet> createState() => _NotificationFormSheetState();
+  State<NotificationFormSheet> createState() => _NotificationFormSheetState();
 }
 
-class _NotificationFormSheetState extends State<_NotificationFormSheet> {
+class _NotificationFormSheetState extends State<NotificationFormSheet> {
+  final _titleController = TextEditingController();
   final _zekrController = TextEditingController();
   TimeOfDay _selectedTime = const TimeOfDay(hour: 5, minute: 30);
   final List<String> _selectedDays = [];
   bool _isSaving = false;
+  bool _initializedDays = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.existing != null) {
+      _titleController.text = widget.existing!.title;
       _zekrController.text = widget.existing!.body;
       _selectedTime = widget.existing!.time;
       _selectedDays.addAll(widget.existing!.days);
+      _initializedDays = true;
     } else {
-      _zekrController.text = _readyAzkar.first;
+      _titleController.text = widget.initialTitle ?? '';
+      _zekrController.text = widget.initialZekr ?? _readyAzkar.first;
+      if (widget.initialTime != null) {
+        _selectedTime = widget.initialTime!;
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedDays) {
+      _initializedDays = true;
+      final loc = AppLocalizations.of(context);
+      if (loc != null) {
+        _selectedDays.addAll([
+          loc.day_sat,
+          loc.day_sun,
+          loc.day_mon,
+          loc.day_tue,
+          loc.day_wed,
+          loc.day_thu,
+          loc.day_fri,
+        ]);
+      }
     }
   }
 
   @override
   void dispose() {
+    _titleController.dispose();
     _zekrController.dispose();
     super.dispose();
   }
@@ -402,7 +457,7 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
             dialHandColor: _T.acc,
             entryModeIconColor: _T.txt2,
             dialTextColor: WidgetStateColor.resolveWith(
-                  (states) => states.contains(WidgetState.selected) ? _T.bg : _T.txt,
+              (states) => states.contains(WidgetState.selected) ? _T.bg : _T.txt,
             ),
           ),
         ),
@@ -412,8 +467,26 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
     if (picked != null) setState(() => _selectedTime = picked);
   }
 
+  Future<void> _openZekrLibraryPicker() async {
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ZekrPickerSheet(),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _zekrController.text = result['text'] ?? '';
+        if (_titleController.text.trim().isEmpty ||
+            _titleController.text == 'تذكير بالأذكار') {
+          _titleController.text = result['category'] ?? 'تذكير بذكر الله';
+        }
+      });
+    }
+  }
+
   Future<void> _onSave() async {
-    final loc  = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context)!;
     final text = _zekrController.text.trim();
     if (text.isEmpty) {
       _showSnack(loc.notif_error_no_zekr, isError: true);
@@ -425,10 +498,14 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
     }
 
     setState(() => _isSaving = true);
-    
+
+    final title = _titleController.text.trim().isNotEmpty
+        ? _titleController.text.trim()
+        : loc.notif_default_title;
+
     final notif = CustomNotification(
       id: widget.existing?.id ?? UniqueKey().toString(),
-      title: loc.notif_default_title,
+      title: title,
       body: text,
       time: _selectedTime,
       days: _selectedDays,
@@ -441,7 +518,17 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
       } else {
         await sl<NotificationEngine>().addNotification(notif);
       }
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حفظ وتفعيل إشعار التذكير بنجاح 🔔',
+                style: TextStyle(fontFamily: 'Tajawal')),
+            backgroundColor: Color(0xff1B2332),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } catch (e) {
       _showSnack(e.toString().replaceAll('Exception: ', ''), isError: true);
     } finally {
@@ -450,10 +537,10 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
   }
 
   Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 14),
+    padding: const EdgeInsets.only(bottom: 12),
     child: Text(
       text,
-      style: const TextStyle(color: _T.txt3, fontSize: 10.5, fontWeight: FontWeight.w700),
+      style: const TextStyle(color: _T.txt3, fontSize: 11, fontWeight: FontWeight.w700),
     ),
   );
 
@@ -481,7 +568,7 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
           ? TextDirection.rtl
           : TextDirection.ltr,
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+        height: MediaQuery.of(context).size.height * 0.88,
         decoration: const BoxDecoration(
           color: _T.bg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -490,23 +577,78 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: _T.surf3, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _T.surf3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text(widget.existing != null ? loc.notif_edit_title : loc.notif_add_title, style: const TextStyle(color: _T.txt, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              widget.existing != null ? loc.notif_edit_title : 'تحديد ذكر للتذكير اليومي',
+              style: const TextStyle(color: _T.txt, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  // Zekr Select
+                  // Browse full Azkar library button
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: _openZekrLibraryPicker,
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: _T.acc3.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: _T.acc2.withValues(alpha: 0.5)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.menu_book_rounded, color: _T.acc, size: 22),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'تصفح مكتبة الأذكار الكاملة',
+                                    style: TextStyle(
+                                      color: _T.acc,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'اختر من أذكار الصباح، المساء، أو الأدعية النبوية',
+                                    style: TextStyle(color: _T.txt2, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios_rounded, color: _T.acc, size: 14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Zekr Select & Custom Input
                   _card(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _label(loc.notif_select_ready_zekr),
+                        _label('أذكار وأدعية سريعة:'),
                         Wrap(
-                          spacing: 8, runSpacing: 8,
+                          spacing: 8,
+                          runSpacing: 8,
                           children: _readyAzkar.map((z) {
                             final isActive = _zekrController.text == z;
                             return GestureDetector(
@@ -518,20 +660,40 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                                   borderRadius: BorderRadius.circular(30),
                                   border: Border.all(color: isActive ? _T.acc2 : _T.border2),
                                 ),
-                                child: Text(z, style: TextStyle(color: isActive ? _T.acc : _T.txt2, fontSize: 12.5)),
+                                child: Text(
+                                  z,
+                                  style: TextStyle(
+                                    color: isActive ? _T.acc : _T.txt2,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             );
                           }).toList(),
                         ),
+                        const SizedBox(height: 18),
+                        _label('عنوان التنبيه (اختياري):'),
+                        TextField(
+                          controller: _titleController,
+                          style: const TextStyle(color: _T.txt, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'مثال: أذكار الصباح، ورد الاستغفار، الصلاة على النبي',
+                            hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
+                            filled: true,
+                            fillColor: _T.surf2,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                          ),
+                        ),
                         const SizedBox(height: 16),
-                        _label(loc.notif_custom_zekr_label),
+                        _label('نص الذكر المطلوب التذكير به:'),
                         TextField(
                           controller: _zekrController,
-                          maxLines: 2,
-                          style: const TextStyle(color: _T.txt, fontSize: 15),
+                          maxLines: 3,
+                          style: const TextStyle(color: _T.txt, fontSize: 14, height: 1.5),
                           decoration: InputDecoration(
                             hintText: loc.notif_zekr_hint,
-                            hintStyle: const TextStyle(color: _T.txt3, fontSize: 14),
+                            hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
                             filled: true,
                             fillColor: _T.surf2,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -542,14 +704,19 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                     ),
                   ),
                   const SizedBox(height: 12),
+
                   // Time
                   _card(
                     onTap: _pickTime,
                     child: Row(
                       children: [
                         Container(
-                          width: 48, height: 48,
-                          decoration: BoxDecoration(color: _T.acc3.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(14)),
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _T.acc3.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           child: const Icon(Icons.access_time_rounded, color: _T.acc, size: 22),
                         ),
                         const SizedBox(width: 14),
@@ -557,13 +724,21 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _label(loc.notif_time_label),
-                            Text(_selectedTime.format(context), style: const TextStyle(color: _T.txt, fontSize: 24, fontWeight: FontWeight.bold)),
+                            Text(
+                              _selectedTime.format(context),
+                              style: const TextStyle(
+                                color: _T.txt,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
+
                   // Days
                   _card(
                     child: Column(
@@ -571,7 +746,8 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                       children: [
                         _label(loc.notif_days_label),
                         Wrap(
-                          spacing: 8, runSpacing: 10,
+                          spacing: 8,
+                          runSpacing: 10,
                           children: days.map((d) {
                             final isSel = _selectedDays.contains(d['label']);
                             return GestureDetector(
@@ -581,13 +757,22 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                                 });
                               },
                               child: Container(
-                                width: 52, height: 52,
+                                width: 52,
+                                height: 52,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isSel ? _T.acc3.withValues(alpha: 0.22) : _T.surf2,
                                   border: Border.all(color: isSel ? _T.acc : _T.border2),
                                 ),
-                                child: Center(child: Text(d['short']!, style: TextStyle(color: isSel ? _T.acc : _T.txt2, fontSize: 11))),
+                                child: Center(
+                                  child: Text(
+                                    d['short']!,
+                                    style: TextStyle(
+                                      color: isSel ? _T.acc : _T.txt2,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           }).toList(),
@@ -596,8 +781,11 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Save button
                   SizedBox(
-                    width: double.infinity, height: 58,
+                    width: double.infinity,
+                    height: 58,
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _onSave,
                       style: ElevatedButton.styleFrom(
@@ -605,9 +793,12 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
                         foregroundColor: _T.bg,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      child: _isSaving 
-                        ? const CircularProgressIndicator(color: _T.bg)
-                        : Text(loc.notif_save, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: _isSaving
+                          ? const CircularProgressIndicator(color: _T.bg)
+                          : Text(
+                              loc.notif_save,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -617,6 +808,208 @@ class _NotificationFormSheetState extends State<_NotificationFormSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Full Zekr Library Picker Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+class _ZekrPickerSheet extends StatefulWidget {
+  const _ZekrPickerSheet();
+
+  @override
+  State<_ZekrPickerSheet> createState() => _ZekrPickerSheetState();
+}
+
+class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabCtrl;
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabCtrl = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabCtrl.dispose();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<String> _filter(List<String> list) {
+    if (_searchQuery.isEmpty) return list;
+    final q = _searchQuery.trim().toLowerCase();
+    return list.where((s) => s.toLowerCase().contains(q)).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final morningList = morningAzkar.map((m) => m['text'] as String).toList();
+    final eveningList = eveningAzkar.map((m) => m['text'] as String).toList();
+    final generalList = _readyAzkar;
+
+    return Directionality(
+      textDirection: Localizations.localeOf(context).languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: _T.bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _T.surf3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'اختر ذكراً لضبط التذكير',
+              style: TextStyle(
+                color: _T.txt,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _searchCtrl,
+                onChanged: (val) => setState(() => _searchQuery = val),
+                style: const TextStyle(color: _T.txt, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'ابحث في الأذكار...',
+                  hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded, color: _T.acc, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, color: _T.txt3, size: 18),
+                          onPressed: () => setState(() {
+                            _searchCtrl.clear();
+                            _searchQuery = '';
+                          }),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: _T.surf,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: _T.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: _T.border),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Tabs
+            TabBar(
+              controller: _tabCtrl,
+              indicatorColor: _T.acc,
+              labelColor: _T.acc,
+              unselectedLabelColor: _T.txt3,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              tabs: const [
+                Tab(text: 'أذكار الصباح ☀️'),
+                Tab(text: 'أذكار المساء 🌙'),
+                Tab(text: 'جوامع الأذكار 📿'),
+              ],
+            ),
+            const Divider(height: 1, color: _T.border),
+
+            // Tab contents
+            Expanded(
+              child: TabBarView(
+                controller: _tabCtrl,
+                children: [
+                  _buildList(_filter(morningList), 'أذكار الصباح'),
+                  _buildList(_filter(eveningList), 'أذكار المساء'),
+                  _buildList(_filter(generalList), 'تذكير بذكر الله'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(List<String> items, String category) {
+    if (items.isEmpty) {
+      return const Center(
+        child: Text(
+          'لا توجد أذكار مطابقة للبحث',
+          style: TextStyle(color: _T.txt3, fontSize: 13),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (ctx, i) {
+        final text = items[i];
+        return InkWell(
+          onTap: () {
+            Navigator.pop(context, {'text': text, 'category': category});
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: _T.surf,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _T.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _T.acc3.withValues(alpha: 0.22),
+                  ),
+                  child: const Icon(Icons.add_rounded, color: _T.acc, size: 16),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      color: _T.txt,
+                      fontSize: 14,
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

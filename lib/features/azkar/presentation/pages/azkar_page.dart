@@ -8,6 +8,7 @@ import 'package:rafiki_app/features/azkar/presentation/widgets/azkar_painters.da
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/features/azkar/data/datasources/azkar_data.dart';
+import 'package:rafiki_app/features/notification/presentation/pages/notification_page.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AzkarPage  –  Morning & Evening Adhkar
@@ -315,6 +316,17 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
     );
   }
 
+  void _setReminderForZekr(String text, {required bool isMorning}) {
+    NotificationFormSheet.show(
+      context,
+      initialZekr: text,
+      initialTitle: isMorning ? 'أذكار الصباح' : 'أذكار المساء',
+      initialTime: isMorning
+          ? const TimeOfDay(hour: 7, minute: 0)
+          : const TimeOfDay(hour: 17, minute: 0),
+    );
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -386,13 +398,19 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   controller: _tabCtrl,
                   children: [
                     AzkarList(
-                      azkar: morningAzkar, type: 'morning',
-                      progress: progress, onTap: _increase,
+                      azkar: morningAzkar,
+                      type: 'morning',
+                      progress: progress,
+                      onTap: _increase,
+                      onSetReminder: (text) => _setReminderForZekr(text, isMorning: true),
                       entryCtrl: _entryCtrl,
                     ),
                     AzkarList(
-                      azkar: eveningAzkar, type: 'evening',
-                      progress: progress, onTap: _increase,
+                      azkar: eveningAzkar,
+                      type: 'evening',
+                      progress: progress,
+                      onTap: _increase,
+                      onSetReminder: (text) => _setReminderForZekr(text, isMorning: false),
                       entryCtrl: _entryCtrl,
                     ),
                   ],

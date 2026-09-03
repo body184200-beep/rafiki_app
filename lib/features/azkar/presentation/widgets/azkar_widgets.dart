@@ -99,6 +99,7 @@ class AzkarCard extends StatefulWidget {
   final int    current;
   final bool   done;
   final VoidCallback onTap;
+  final VoidCallback? onSetReminder;
   final int    index;
 
   const AzkarCard({
@@ -106,6 +107,7 @@ class AzkarCard extends StatefulWidget {
     required this.text,    required this.keyId,
     required this.max,     required this.current,
     required this.done,    required this.onTap,
+    this.onSetReminder,
     required this.index,
   });
 
@@ -194,22 +196,58 @@ class _AzkarCardState extends State<AzkarCard>
                         widget.done
                             ? const DoneChip()
                             : IndexBadge(index: widget.index),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: _gold.withValues(alpha: 0.09),
-                            border: Border.all(
-                                color: _gold.withValues(alpha: 0.22)),
-                          ),
-                          child: Text(
-                            widget.max == 1 ? 'مرة' : '${widget.max} مرة',
-                            style: const TextStyle(
-                              color: _gold, fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.onSetReminder != null)
+                              GestureDetector(
+                                onTap: widget.onSetReminder,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  margin: const EdgeInsets.only(left: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: _teal.withValues(alpha: 0.12),
+                                    border: Border.all(
+                                        color: _teal.withValues(alpha: 0.28)),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.notifications_active_outlined,
+                                          color: _tealLt, size: 13),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'تذكير',
+                                        style: TextStyle(
+                                          color: _tealLt,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: _gold.withValues(alpha: 0.09),
+                                border: Border.all(
+                                    color: _gold.withValues(alpha: 0.22)),
+                              ),
+                              child: Text(
+                                widget.max == 1 ? 'مرة' : '${widget.max} مرة',
+                                style: const TextStyle(
+                                  color: _gold, fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -292,12 +330,14 @@ class AzkarList extends StatelessWidget {
   final String                           type;
   final Map<String, Map<String, int>>   progress;
   final void Function(String, int)       onTap;
+  final void Function(String text)?     onSetReminder;
   final AnimationController             entryCtrl;
 
   const AzkarList({
     super.key,
     required this.azkar,    required this.type,
     required this.progress, required this.onTap,
+    this.onSetReminder,
     required this.entryCtrl,
   });
 
@@ -330,6 +370,9 @@ class AzkarList extends StatelessWidget {
               text: azkar[i]['text'] as String,
               keyId: key, max: max, current: cur, done: done,
               onTap: () => onTap(key, max),
+              onSetReminder: onSetReminder != null
+                  ? () => onSetReminder!(azkar[i]['text'] as String)
+                  : null,
               index: i + 1,
             ),
           ),

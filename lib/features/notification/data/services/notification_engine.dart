@@ -34,14 +34,47 @@ class NotificationEngine {
   static const String _kLegacyKey = 'notification_data'; // from AppConstants.prefNotificationData
 
   static const Map<String, int> _dayMap = {
+    // Arabic Full
     'السبت': DateTime.saturday,
     'الأحد': DateTime.sunday,
     'الاثنين': DateTime.monday,
+    'الإثنين': DateTime.monday,
     'الثلاثاء': DateTime.tuesday,
     'الأربعاء': DateTime.wednesday,
     'الخميس': DateTime.thursday,
     'الجمعة': DateTime.friday,
+    // Arabic Short
+    'سبت': DateTime.saturday,
+    'أحد': DateTime.sunday,
+    'إثن': DateTime.monday,
+    'اثن': DateTime.monday,
+    'ثلا': DateTime.tuesday,
+    'أرب': DateTime.wednesday,
+    'ارب': DateTime.wednesday,
+    'خمس': DateTime.thursday,
+    'جمع': DateTime.friday,
+    // English Full
+    'Saturday': DateTime.saturday,
+    'Sunday': DateTime.sunday,
+    'Monday': DateTime.monday,
+    'Tuesday': DateTime.tuesday,
+    'Wednesday': DateTime.wednesday,
+    'Thursday': DateTime.thursday,
+    'Friday': DateTime.friday,
+    // English Short
+    'Sat': DateTime.saturday,
+    'Sun': DateTime.sunday,
+    'Mon': DateTime.monday,
+    'Tue': DateTime.tuesday,
+    'Wed': DateTime.wednesday,
+    'Thu': DateTime.thursday,
+    'Fri': DateTime.friday,
   };
+
+  @pragma('vm:entry-point')
+  static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+    debugPrint('🔔 [NotifEngine] Notification Action: id=${receivedAction.id}, key=${receivedAction.buttonKeyPressed}');
+  }
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -122,6 +155,10 @@ class NotificationEngine {
       ],
     );
     debugPrint('🔔 [NotifEngine] AwesomeNotifications().initialize() DONE');
+
+    await AwesomeNotifications().setListeners(
+      onActionReceivedMethod: onActionReceivedMethod,
+    );
 
     // 4. Check permissions
     final allowed = await AwesomeNotifications().isNotificationAllowed();
@@ -412,20 +449,27 @@ class NotificationEngine {
     for (final notif in notifications.value) {
       if (!notif.enabled) continue;
 
-      final baseId = notif.id.hashCode.abs() % 100000;
+      // Unique hash block in 10000..79000 range (strictly disjoint from prayer IDs 90000..90019)
+      final baseBlock = 10000 + ((notif.id.hashCode.abs() % 6900) * 10);
 
       for (var i = 0; i < notif.days.length; i++) {
-        final weekday = _dayMap[notif.days[i]] ?? DateTime.monday;
-        final scheduleId = baseId + i;
+        final weekday = _dayMap[notif.days[i].trim()] ?? DateTime.monday;
+        final scheduleId = baseBlock + weekday;
 
         try {
           await AwesomeNotifications().createNotification(
             content: NotificationContent(
               id: scheduleId,
               channelKey: AppConstants.notificationChannelAzkar,
-              title: notif.title,
+              title: notif.title.isNotEmpty ? notif.title : 'تذكير بذكر الله',
               body: notif.body,
               notificationLayout: NotificationLayout.BigText,
+              category: NotificationCategory.Reminder,
+              largeIcon: 'resource://mipmap/ic_launcher',
+              roundedLargeIcon: true,
+              color: AppColors.accent,
+              wakeUpScreen: true,
+              autoDismissible: true,
             ),
             schedule: NotificationCalendar(
               weekday: weekday,
