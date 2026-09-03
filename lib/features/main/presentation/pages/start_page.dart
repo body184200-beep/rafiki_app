@@ -85,8 +85,6 @@ class _StartState extends State<Start>
       if (isAllowed) {
         if (mounted) {
           await ensureForegroundServiceRunning();
-          if (!mounted) return;
-          await NotificationEngine.instance.checkAndRequestExactAlarmPermission(context: context);
         }
       } else {
         if (mounted) {
@@ -136,14 +134,7 @@ class _StartState extends State<Start>
     final isAllowed = await AwesomeNotifications().isNotificationAllowed();
     debugPrint('🔔 [StartPage] Cold start permission check: isAllowed=$isAllowed');
 
-    if (isAllowed) {
-      // General notifications are allowed. Now verify if Android 12+ exact alarm
-      // permission is also granted, and prompt if missing.
-      if (mounted) {
-        await NotificationEngine.instance.checkAndRequestExactAlarmPermission(context: context);
-      }
-      return;
-    }
+    if (isAllowed) return;
 
     if (!mounted) return;
 

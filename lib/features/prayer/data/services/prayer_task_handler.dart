@@ -257,7 +257,7 @@ class PrayerTaskHandler extends TaskHandler {
               )
             : NotificationContent(
                 id: id,
-                channelKey: AppConstants.notificationChannelPrayer,
+                channelKey: AppConstants.notificationChannelPrayerReminder,
                 title: '⏳ متبقي 10 دقائق على صلاة $name',
                 body: 'استعد للوضوء والصلاة يرحمك الله',
                 notificationLayout: NotificationLayout.BigText,

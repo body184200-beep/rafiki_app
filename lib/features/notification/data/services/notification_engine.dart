@@ -98,7 +98,7 @@ class NotificationEngine {
         NotificationChannel(
           channelKey: AppConstants.notificationChannelPrayer,
           channelName: 'Prayer Notifications',
-          channelDescription: 'تنبيهات مواقيت الصلاة والأذان',
+          channelDescription: 'تنبيهات مواقيت الصلاة وصوت الأذان',
           importance: NotificationImportance.Max,
           defaultColor: AppColors.gold,
           ledColor: AppColors.gold,
@@ -106,6 +106,18 @@ class NotificationEngine {
           enableVibration: true,
           playSound: true,
           soundSource: 'resource://raw/abdul_hakam',
+        ),
+        NotificationChannel(
+          channelKey: AppConstants.notificationChannelPrayerReminder,
+          channelName: 'Prayer Reminders',
+          channelDescription: 'تنبيه اقتراب موعد الصلاة قبلها بـ 10 دقائق',
+          importance: NotificationImportance.High,
+          channelShowBadge: true,
+          defaultColor: AppColors.accent,
+          ledColor: AppColors.accent,
+          enableLights: true,
+          enableVibration: true,
+          playSound: true,
         ),
       ],
     );
@@ -225,14 +237,7 @@ class NotificationEngine {
       debugPrint('   • Prayer channel permissions: $prayerPerms');
 
       if (isGlobalAllowedVal) {
-        debugPrint('🔔 [NotifEngine] ✅ Permissions are ACTIVE — checking exact alarms & syncing...');
-        // Check exact alarm permission FIRST so any false->true transition triggers a force reschedule immediately
-        if (context != null && context.mounted) {
-          await checkAndRequestExactAlarmPermission(context: context);
-        } else {
-          await checkAndRequestExactAlarmPermission();
-        }
-
+        debugPrint('🔔 [NotifEngine] ✅ Permissions are ACTIVE — syncing schedules...');
         await syncSchedules();
         await schedulePrayerNotifications();
         await onEnsureForegroundService?.call();
@@ -251,127 +256,15 @@ class NotificationEngine {
   }
 
   static const String _kMiuiGuideShownKey = 'miui_battery_guide_shown_v1';
-  static const String _kExactAlarmPromptLastShownKey = 'exact_alarm_prompt_last_shown_ms';
-  static const int _kExactAlarmPromptCooldownHours = 24;
 
-  /// Checks if [NotificationPermission.PreciseAlarms] is granted at runtime.
-  /// On Android 12+ (API 31+), `SCHEDULE_EXACT_ALARM` must be actively allowed.
-  /// If missing, redirects the user to Android's `ACTION_REQUEST_SCHEDULE_EXACT_ALARM`
-  /// settings screen via [AwesomeNotifications().showAlarmPage()].
-  ///
-  /// If the user dismisses the dialog ("لاحقاً"), the prompt will not nag them
-  /// on every app resume, but will re-prompt after [_kExactAlarmPromptCooldownHours] hours.
-  /// When granted, immediately force-reschedules all prayer notifications so they become exact.
+  /// Exact alarms are not required — the app uses standard notifications +
+  /// live Foreground Service countdown to fire on time.
   Future<bool> checkAndRequestExactAlarmPermission({
     BuildContext? context,
     bool forcePrompt = false,
   }) async {
-    try {
-      final perms = await AwesomeNotifications().checkPermissionList(
-        permissions: [NotificationPermission.PreciseAlarms],
-      );
-      final hasExactAlarm = perms.contains(NotificationPermission.PreciseAlarms);
-      final wasGranted = exactAlarmGranted.value;
-      exactAlarmGranted.value = hasExactAlarm;
-      debugPrint('🔔 [NotifEngine] Exact Alarm (PreciseAlarms) permission status: $hasExactAlarm (prev: $wasGranted)');
-
-      // Transition detection: If permission was false (or unconfirmed) and is now true,
-      // the user enabled it (from System Settings or external flow).
-      // Force reschedule prayer notifications immediately so any inexact alerts become exact!
-      if (!wasGranted && hasExactAlarm) {
-        debugPrint('🔔 [NotifEngine] 🎉 PreciseAlarms transitioned false -> true! Force re-scheduling prayer notifications...');
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove(_kExactAlarmPromptLastShownKey);
-        await schedulePrayerNotifications(force: true);
-      }
-
-      if (!hasExactAlarm) {
-        final prefs = await SharedPreferences.getInstance();
-        final lastShownMs = prefs.getInt(_kExactAlarmPromptLastShownKey) ?? 0;
-        final nowMs = DateTime.now().millisecondsSinceEpoch;
-        final cooldownMs = _kExactAlarmPromptCooldownHours * 3600 * 1000;
-
-        if (!forcePrompt && (nowMs - lastShownMs < cooldownMs)) {
-          debugPrint('🔔 [NotifEngine] ⏭ Exact Alarm prompt throttled (<$_kExactAlarmPromptCooldownHours h since last prompt)');
-          return false;
-        }
-
-        debugPrint('🔔 [NotifEngine] ⚠️ PreciseAlarms NOT granted. Requesting via showAlarmPage()...');
-
-        if (context != null && context.mounted) {
-          final proceed = await showDialog<bool>(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Row(
-                children: [
-                  Icon(Icons.alarm, color: AppColors.gold, size: 28),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'تنبيهات الصلاة الدقيقة',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              content: const Text(
-                'لضمان إطلاق إشعارات الأذان والـ 10 دقائق في موعدها الدقيق بالثانية على جهازك، يتطلب النظام تفعيل إذن "المنبهات والتذكيرات الدقيقة" (Exact Alarms).\n\nسننقلك الآن لصفحة الإعدادات لتفعيله.',
-                style: TextStyle(fontSize: 14, height: 1.5),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('لاحقاً'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.gold,
-                    foregroundColor: Colors.black,
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('الانتقال للإعدادات'),
-                ),
-              ],
-            ),
-          );
-
-          if (proceed == true) {
-            await AwesomeNotifications().showAlarmPage();
-          } else {
-            // User explicitly pressed "لاحقاً" — activate cooldown
-            debugPrint('🔔 [NotifEngine] 🕐 User dismissed prompt — activating ${_kExactAlarmPromptCooldownHours}h cooldown');
-            await prefs.setInt(_kExactAlarmPromptLastShownKey, nowMs);
-          }
-        } else {
-          // No context to show dialog — do NOT activate cooldown so next
-          // resume with a valid context can prompt the user properly.
-          debugPrint('🔔 [NotifEngine] ⚠️ No valid context for Exact Alarm dialog — skipping prompt without cooldown');
-          return false;
-        }
-
-        final rechecked = await AwesomeNotifications().checkPermissionList(
-          permissions: [NotificationPermission.PreciseAlarms],
-        );
-        final isNowAllowed = rechecked.contains(NotificationPermission.PreciseAlarms);
-        exactAlarmGranted.value = isNowAllowed;
-        debugPrint('🔔 [NotifEngine] Exact Alarm status after prompt: $isNowAllowed');
-
-        if (isNowAllowed) {
-          debugPrint('🔔 [NotifEngine] 🎉 Exact Alarm granted! Clearing cooldown & force re-scheduling...');
-          await prefs.remove(_kExactAlarmPromptLastShownKey);
-          await schedulePrayerNotifications(force: true);
-        }
-
-        return isNowAllowed;
-      }
-
-      return true;
-    } catch (e) {
-      debugPrint('🔔 [NotifEngine] ❌ Error in checkAndRequestExactAlarmPermission: $e');
-      return false;
-    }
+    exactAlarmGranted.value = true;
+    return true;
   }
 
   Future<bool> requestAllNotificationPermissions({BuildContext? context}) async {
@@ -644,7 +537,8 @@ class NotificationEngine {
       try {
         final pending = await AwesomeNotifications().listScheduledNotifications();
         hasPendingPrayerNotifs = pending.any(
-          (n) => n.content?.channelKey == AppConstants.notificationChannelPrayer,
+          (n) => n.content?.channelKey == AppConstants.notificationChannelPrayer ||
+                 n.content?.channelKey == AppConstants.notificationChannelPrayerReminder,
         );
         debugPrint(
           '🕌 [PrayerNotification] hasPendingPrayerNotifs=$hasPendingPrayerNotifs '
@@ -677,7 +571,10 @@ class NotificationEngine {
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         AppConstants.notificationChannelPrayer,
       );
-      debugPrint('🕌 [PrayerNotification] 🗑 Cancelled all prayer_channel notifications');
+      await AwesomeNotifications().cancelNotificationsByChannelKey(
+        AppConstants.notificationChannelPrayerReminder,
+      );
+      debugPrint('🕌 [PrayerNotification] 🗑 Cancelled all prayer channels notifications');
 
       var scheduledCount = 0;
       var skippedCount = 0;
@@ -703,7 +600,7 @@ class NotificationEngine {
             final ok = await AwesomeNotifications().createNotification(
               content: NotificationContent(
                 id: beforeId,
-                channelKey: AppConstants.notificationChannelPrayer,
+                channelKey: AppConstants.notificationChannelPrayerReminder,
                 title: '⏳ متبقي 10 دقائق على صلاة $name',
                 body: 'استعد للوضوء والصلاة يرحمك الله',
                 notificationLayout: NotificationLayout.BigText,
@@ -734,7 +631,7 @@ class NotificationEngine {
                 millisecond: 0,
                 repeats: false,
                 allowWhileIdle: true,
-                preciseAlarm: true,
+                preciseAlarm: false,
               ),
             );
             debugPrint(
@@ -795,7 +692,7 @@ class NotificationEngine {
                 millisecond: 0,
                 repeats: false,
                 allowWhileIdle: true,
-                preciseAlarm: true,
+                preciseAlarm: false,
               ),
             );
             debugPrint(
@@ -945,7 +842,7 @@ class NotificationEngine {
           millisecond: 0,
           repeats: false,
           allowWhileIdle: true,
-          preciseAlarm: true,
+          preciseAlarm: false,
         ),
       );
       debugPrint('🧪 [DEBUG] Scheduled result=$scheduledResult');
@@ -1058,7 +955,7 @@ class NotificationEngine {
               millisecond: 0,
               repeats: false,
               allowWhileIdle: true,
-              preciseAlarm: true,
+              preciseAlarm: false,
             ),
           );
           testScheduled = true;
