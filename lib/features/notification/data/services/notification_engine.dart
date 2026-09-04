@@ -108,8 +108,11 @@ class NotificationEngine {
 
     // Cleanup old legacy channels BEFORE initialize to avoid conflict
     try {
+      await AwesomeNotifications().removeChannel('azkar_channel');
       await AwesomeNotifications().removeChannel('prayer_channel');
       await AwesomeNotifications().removeChannel('prayer_channel_v2');
+      await AwesomeNotifications().removeChannel('prayer_channel_v3');
+      await AwesomeNotifications().removeChannel('prayer_reminder_channel');
     } catch (e) {
       debugPrint('Legacy channel removal note: $e');
     }
@@ -122,23 +125,31 @@ class NotificationEngine {
         NotificationChannel(
           channelKey: AppConstants.notificationChannelAzkar,
           channelName: 'Azkar Notifications',
-          channelDescription: 'Notifications for daily Azkar',
+          channelDescription: 'إشعارات التذكير اليومي بالأذكار والأدعية',
           importance: NotificationImportance.High,
           channelShowBadge: true,
           defaultColor: AppColors.accent,
           ledColor: AppColors.accent,
+          enableLights: true,
+          enableVibration: true,
+          playSound: true,
+          onlyAlertOnce: true,
+          defaultPrivacy: NotificationPrivacy.Public,
         ),
         NotificationChannel(
           channelKey: AppConstants.notificationChannelPrayer,
           channelName: 'Prayer Notifications',
           channelDescription: 'تنبيهات مواقيت الصلاة وصوت الأذان',
-          importance: NotificationImportance.Max,
+          importance: NotificationImportance.High,
+          channelShowBadge: true,
           defaultColor: AppColors.gold,
           ledColor: AppColors.gold,
           enableLights: true,
           enableVibration: true,
           playSound: true,
-          soundSource: 'resource://raw/abdul_hakam',
+          soundSource: 'resource://raw/res_abdul_hakam',
+          onlyAlertOnce: true,
+          defaultPrivacy: NotificationPrivacy.Public,
         ),
         NotificationChannel(
           channelKey: AppConstants.notificationChannelPrayerReminder,
@@ -151,6 +162,8 @@ class NotificationEngine {
           enableLights: true,
           enableVibration: true,
           playSound: true,
+          onlyAlertOnce: true,
+          defaultPrivacy: NotificationPrivacy.Public,
         ),
       ],
     );
@@ -442,9 +455,12 @@ class NotificationEngine {
 
     try {
       await AwesomeNotifications().cancelNotificationsByChannelKey(AppConstants.notificationChannelAzkar);
+      await AwesomeNotifications().cancelNotificationsByChannelKey('azkar_channel');
     } catch (e) {
       debugPrint('🔔 [NotifEngine] Error cancelling azkar channel schedules: $e');
     }
+
+    final localTimeZone = await AwesomeNotifications().getLocalTimeZoneIdentifier();
 
     for (final notif in notifications.value) {
       if (!notif.enabled) continue;
@@ -476,6 +492,7 @@ class NotificationEngine {
               hour: notif.time.hour,
               minute: notif.time.minute,
               second: 0,
+              timeZone: localTimeZone,
               repeats: true,
               allowWhileIdle: true,
               preciseAlarm: false,
@@ -618,7 +635,11 @@ class NotificationEngine {
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         AppConstants.notificationChannelPrayerReminder,
       );
+      await AwesomeNotifications().cancelNotificationsByChannelKey('prayer_channel_v3');
+      await AwesomeNotifications().cancelNotificationsByChannelKey('prayer_reminder_channel');
       debugPrint('🕌 [PrayerNotification] 🗑 Cancelled all prayer channels notifications');
+
+      final localTimeZone = await AwesomeNotifications().getLocalTimeZoneIdentifier();
 
       var scheduledCount = 0;
       var skippedCount = 0;
@@ -653,7 +674,6 @@ class NotificationEngine {
                 roundedLargeIcon: true,
                 color: AppColors.accent,
                 wakeUpScreen: true,
-                timeoutAfter: const Duration(minutes: 10),
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',
@@ -673,6 +693,7 @@ class NotificationEngine {
                 minute: beforeTime.minute,
                 second: 0,
                 millisecond: 0,
+                timeZone: localTimeZone,
                 repeats: false,
                 allowWhileIdle: true,
                 preciseAlarm: false,
@@ -708,13 +729,12 @@ class NotificationEngine {
                 title: '🕌 حان الآن وقت صلاة $name',
                 body: 'الله أكبر، حان موعد أذان $name — أقم الصلاة يرحمك الله',
                 notificationLayout: NotificationLayout.BigText,
-                category: NotificationCategory.Alarm,
-                criticalAlert: true,
+                category: NotificationCategory.Reminder,
                 largeIcon: 'resource://mipmap/ic_launcher',
                 roundedLargeIcon: true,
                 color: AppColors.gold,
                 wakeUpScreen: true,
-                customSound: 'resource://raw/abdul_hakam',
+                customSound: 'resource://raw/res_abdul_hakam',
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',
@@ -734,6 +754,7 @@ class NotificationEngine {
                 minute: prayerTime.minute,
                 second: 0,
                 millisecond: 0,
+                timeZone: localTimeZone,
                 repeats: false,
                 allowWhileIdle: true,
                 preciseAlarm: false,
@@ -839,6 +860,7 @@ class NotificationEngine {
       final allowed = await AwesomeNotifications().isNotificationAllowed();
       if (allowed) {
         await schedulePrayerNotifications(force: true);
+        await syncSchedules();
       } else {
         debugPrint('🕌 [PrayerNotification] ⚠️ Midnight re-schedule skipped — notifications not allowed');
       }
@@ -863,18 +885,18 @@ class NotificationEngine {
         return;
       }
 
-      debugPrint('🧪 [DEBUG] Scheduling test notification (id=99998) for 2 minutes from now ($fireAt)...');
+      final localTimeZone = await AwesomeNotifications().getLocalTimeZoneIdentifier();
+      debugPrint('🧪 [DEBUG] Scheduling test notification (id=99998) for 2 minutes from now ($fireAt, tz=$localTimeZone)...');
       final scheduledResult = await AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: 99998,
-          channelKey: AppConstants.notificationChannelPrayer,
-          title: '🧪 اختبار مجدول (بعد دقيقتين)',
-          body: 'هذا الإشعار المجدول يثبت عمل الإشعارات بدقة أثناء قفل الشاشة',
+          channelKey: AppConstants.notificationChannelPrayerReminder,
+          title: '🧪 اختبار التذكير (بعد دقيقتين)',
+          body: 'هذا إشعار تذكير عادي يثبت وصول التنبيه بدقة',
           notificationLayout: NotificationLayout.BigText,
-          category: NotificationCategory.Alarm,
+          category: NotificationCategory.Reminder,
           wakeUpScreen: true,
-          customSound: 'resource://raw/abdul_hakam',
-          criticalAlert: true,
+          autoDismissible: true,
         ),
         schedule: NotificationCalendar(
           year: fireAt.year,
@@ -884,6 +906,7 @@ class NotificationEngine {
           minute: fireAt.minute,
           second: fireAt.second,
           millisecond: 0,
+          timeZone: localTimeZone,
           repeats: false,
           allowWhileIdle: true,
           preciseAlarm: false,
@@ -964,12 +987,13 @@ class NotificationEngine {
               id: 99996,
               channelKey: AppConstants.notificationChannelPrayer,
               title: '🕌 تجربة الأذان الفورية',
-              body: 'صوت الأذان والتنبيه يعمل الآن بنجاح على القناة الجديدة ✅',
+              body: 'صوت الأذان والتنبيه يعمل الآن كإشعار عادي بنجاح ✅',
               notificationLayout: NotificationLayout.BigText,
-              category: NotificationCategory.Alarm,
+              category: NotificationCategory.Reminder,
               wakeUpScreen: true,
-              criticalAlert: true,
               autoDismissible: true,
+              color: AppColors.gold,
+              customSound: 'resource://raw/res_abdul_hakam',
             ),
           );
           buf.writeln('• إشعار فوري بصوت الأذان: ${immediateOk ? "نجح ✅" : "فشل ❌"}');
@@ -978,14 +1002,15 @@ class NotificationEngine {
         }
 
         try {
+          final diagTz = await AwesomeNotifications().getLocalTimeZoneIdentifier();
           testCreateResult = await AwesomeNotifications().createNotification(
             content: NotificationContent(
               id: 99997,
-              channelKey: AppConstants.notificationChannelPrayer,
+              channelKey: AppConstants.notificationChannelPrayerReminder,
               title: '🧪 اختبار: إشعار بعد دقيقة',
               body: 'نجحت الجدولة ✅  |  الوقت: ${now.hour.toString().padLeft(2, "0")}:${now.minute.toString().padLeft(2, "0")}',
               notificationLayout: NotificationLayout.BigText,
-              category: NotificationCategory.Alarm,
+              category: NotificationCategory.Reminder,
               wakeUpScreen: true,
               autoDismissible: true,
             ),
@@ -997,6 +1022,7 @@ class NotificationEngine {
               minute: fireAt.minute,
               second: fireAt.second,
               millisecond: 0,
+              timeZone: diagTz,
               repeats: false,
               allowWhileIdle: true,
               preciseAlarm: false,

@@ -51,3 +51,8 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+
+# Keep raw resources and R identifiers for dynamic lookup
+-keepclassmembers class **.R$* {
+    public static <fields>;
+}

@@ -23,7 +23,15 @@ class RadioController {
     } catch (_) {}
   }
 
-  static const String _streamUrl = 'https://stream.radiojar.com/8s5u5tpdtwzuv';
+  // قائمة بروابط البث المباشر لإذاعة القرآن الكريم (الأساسي والاحتياطي)
+  static const List<String> _streamUrls = [
+    // 1. إذاعة القرآن الكريم من القاهرة - البث المباشر الرسمي (HLS m3u8)
+    'https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8',
+    // 2. إذاعة القرآن الكريم العامة - بث مباشر MP3 عالي الاستقرار
+    'https://backup.qurango.net/radio/mix',
+    // 3. إذاعة تراتيل القرآن الكريم - بث مباشر MP3
+    'https://backup.qurango.net/radio/tarateel',
+  ];
 
   /// True only when the player is actually outputting audio.
   bool get isPlaying =>
@@ -46,11 +54,18 @@ class RadioController {
         return true;
       }
 
-      // Fresh start (idle, completed, or first launch).
-      await _player.stop();
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(_streamUrl)));
-      await _player.play();
-      return true;
+      // Fresh start: try each stream URL in priority order until one connects
+      for (final url in _streamUrls) {
+        try {
+          await _player.stop();
+          await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
+          await _player.play();
+          return true;
+        } catch (e, st) {
+          debugPrint('RadioController.play failed on $url: $e\n$st');
+        }
+      }
+      return false;
     } catch (e, st) {
       debugPrint('RadioController.play error: $e\n$st');
       return false;
@@ -290,14 +305,32 @@ class _QuranRadioPageState extends State<QuranRadioPage>
     HapticFeedback.mediumImpact();
     _pressCtrl.forward().then((_) => _pressCtrl.reverse());
 
+    final bool success;
     if (shouldPause) {
-      await _radio.pause();
+      success = await _radio.pause();
     } else {
-      await _radio.play();
+      success = await _radio.play();
     }
 
     if (!mounted) return;
     setState(() => _isLoading = false);
+
+    if (!shouldPause && !success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'تعذر تشغيل إذاعة القرآن الكريم، يرجى التحقق من اتصال الإنترنت والمحاولة مجدداً.',
+            textDirection: TextDirection.rtl,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: const Color(0xFFC0392B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   @override

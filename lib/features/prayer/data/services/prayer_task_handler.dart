@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adhan/adhan.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart'
     hide NotificationPermission;
@@ -10,6 +12,7 @@ import 'package:rafiki_app/core/theme/app_colors.dart';
 import 'package:rafiki_app/core/constants/app_constants.dart';
 import 'package:rafiki_app/core/utils/time_format.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
+import 'package:rafiki_app/features/notification/data/models/notification_model.dart';
 
 class PrayerTaskHandler extends TaskHandler {
   // Caching
@@ -18,6 +21,10 @@ class PrayerTaskHandler extends TaskHandler {
   PrayerTimes? _cachedTodayTimes;
   PrayerTimes? _cachedTomorrowTimes;
   DateTime? _cachedDate;
+
+  // Custom Azkar caching
+  List<CustomNotification>? _cachedCustomNotifications;
+  DateTime? _lastCustomNotifFetch;
 
   // Diagnostic logging tracker
   Prayer? _lastLoggedPrayer;
@@ -143,12 +150,11 @@ class PrayerTaskHandler extends TaskHandler {
         }
 
         final atKey = '${dateKey}_at';
-        // Small grace window (2 min) so a service that was briefly
-        // suspended still catches the moment; beyond that it's stale
-        // and we skip it rather than fire a late "حان الوقت" notice.
+        // Grace window (10 min) so a service that was briefly
+        // suspended during doze still catches the moment and fires.
         if (!_firedKeys.contains(atKey) &&
             now.isAfter(prayerTime) &&
-            now.difference(prayerTime) < const Duration(minutes: 2)) {
+            now.difference(prayerTime) < const Duration(minutes: 10)) {
           _firedKeys.add(atKey);
           await _fireLiveNotification(
             id: AppConstants.prayerAtIdToday[prayer]!,
@@ -157,6 +163,9 @@ class PrayerTaskHandler extends TaskHandler {
           );
         }
       }
+
+      // ── Live fire: Custom Azkar Reminders ────────────────────────────
+      await _checkLiveCustomAzkar(now, today);
 
       // Find the next upcoming prayer for today
       Prayer nextPrayer = Prayer.none;
@@ -236,6 +245,15 @@ class PrayerTaskHandler extends TaskHandler {
         return;
       }
 
+      // Mutual exclusion: cancel the OS-scheduled backup alarm for this ID
+      // so it cannot fire a second time (prevents duplicate audio/chime).
+      try {
+        await AwesomeNotifications().cancelSchedule(id);
+        debugPrint('🕌 [PrayerTaskHandler] 🛑 Cancelled OS backup schedule for id=$id (Live fire taking over)');
+      } catch (e) {
+        debugPrint('🕌 [PrayerTaskHandler] Note on cancelSchedule($id): $e');
+      }
+
       final ok = await AwesomeNotifications().createNotification(
         content: isAthanTime
             ? NotificationContent(
@@ -244,13 +262,12 @@ class PrayerTaskHandler extends TaskHandler {
                 title: '🕌 حان الآن وقت صلاة $name',
                 body: 'الله أكبر، حان موعد أذان $name — أقم الصلاة يرحمك الله',
                 notificationLayout: NotificationLayout.BigText,
-                category: NotificationCategory.Alarm,
-                criticalAlert: true,
+                category: NotificationCategory.Reminder,
                 largeIcon: 'resource://mipmap/ic_launcher',
                 roundedLargeIcon: true,
                 color: AppColors.gold,
                 wakeUpScreen: true,
-                customSound: 'resource://raw/abdul_hakam',
+                customSound: 'resource://raw/res_abdul_hakam',
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',
@@ -266,7 +283,6 @@ class PrayerTaskHandler extends TaskHandler {
                 roundedLargeIcon: true,
                 color: AppColors.accent,
                 wakeUpScreen: true,
-                timeoutAfter: const Duration(minutes: 10),
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',
@@ -304,6 +320,114 @@ class PrayerTaskHandler extends TaskHandler {
       case Prayer.none:
       case Prayer.sunrise:
         return '';
+    }
+  }
+
+  static const Map<int, List<String>> _weekdayTokens = {
+    DateTime.monday: [
+      'الاثنين', 'الإثنين', 'إثنين', 'اثنين', 'إثن', 'اثن',
+      'Monday', 'Mon',
+    ],
+    DateTime.tuesday: [
+      'الثلاثاء', 'ثلاثاء', 'ثلا',
+      'Tuesday', 'Tue',
+    ],
+    DateTime.wednesday: [
+      'الأربعاء', 'الاربعاء', 'أربعاء', 'اربعاء', 'أرب', 'ارب',
+      'Wednesday', 'Wed',
+    ],
+    DateTime.thursday: [
+      'الخميس', 'خميس', 'خمس',
+      'Thursday', 'Thu',
+    ],
+    DateTime.friday: [
+      'الجمعة', 'جمعة', 'جمع',
+      'Friday', 'Fri',
+    ],
+    DateTime.saturday: [
+      'السبت', 'سبت',
+      'Saturday', 'Sat',
+    ],
+    DateTime.sunday: [
+      'الأحد', 'الاحد', 'أحد', 'احد',
+      'Sunday', 'Sun',
+    ],
+  };
+
+  Future<void> _checkLiveCustomAzkar(DateTime now, DateTime today) async {
+    // Refresh custom notifications from SharedPreferences every 20 seconds
+    if (_lastCustomNotifFetch == null ||
+        now.difference(_lastCustomNotifFetch!).inSeconds >= 20) {
+      _lastCustomNotifFetch = now;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString('notifications_list_v2');
+        if (raw != null && raw.isNotEmpty) {
+          final List dynamicList = jsonDecode(raw);
+          _cachedCustomNotifications =
+              dynamicList.map((e) => CustomNotification.fromJson(e)).toList();
+        } else {
+          _cachedCustomNotifications = [];
+        }
+      } catch (e) {
+        debugPrint('⚠️ [PrayerTaskHandler] Error loading custom azkar: $e');
+      }
+    }
+
+    final azkarList = _cachedCustomNotifications;
+    if (azkarList == null || azkarList.isEmpty) return;
+
+    final todayTokens = _weekdayTokens[now.weekday] ?? [];
+
+    for (final notif in azkarList) {
+      if (!notif.enabled) continue;
+
+      // Check if notif includes today
+      final matchesToday = notif.days.any((d) {
+        final trimmed = d.trim();
+        return todayTokens.contains(trimmed);
+      });
+
+      if (!matchesToday) continue;
+
+      // Check hour and minute
+      if (now.hour == notif.time.hour && now.minute == notif.time.minute) {
+        final fireKey = 'zikr_${notif.id}_${today.year}_${today.month}_${today.day}_${now.hour}_${now.minute}';
+        if (_firedKeys.contains(fireKey)) continue;
+
+        _firedKeys.add(fireKey);
+
+        final baseBlock = 10000 + ((notif.id.hashCode.abs() % 6900) * 10);
+        final scheduleId = baseBlock + now.weekday;
+
+        try {
+          final ok = await AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: scheduleId,
+              channelKey: AppConstants.notificationChannelAzkar,
+              title: notif.title.isNotEmpty ? notif.title : 'تذكير بذكر الله',
+              body: notif.body,
+              notificationLayout: NotificationLayout.BigText,
+              category: NotificationCategory.Reminder,
+              largeIcon: 'resource://mipmap/ic_launcher',
+              roundedLargeIcon: true,
+              color: AppColors.accent,
+              wakeUpScreen: true,
+              autoDismissible: true,
+            ),
+            actionButtons: [
+              NotificationActionButton(
+                key: 'DISMISS',
+                label: 'تم',
+                actionType: ActionType.DismissAction,
+              ),
+            ],
+          );
+          debugPrint('📿 [PrayerTaskHandler] ${ok ? "✅ LIVE-FIRED" : "⚠️ LIVE-FIRE FAILED"} Azkar "${notif.title}" (id=$scheduleId)');
+        } catch (e, st) {
+          debugPrint('📿 [PrayerTaskHandler] ❌ Error firing live custom azkar: $e\n$st');
+        }
+      }
     }
   }
 
