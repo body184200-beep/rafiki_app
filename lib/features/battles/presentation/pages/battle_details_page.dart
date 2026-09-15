@@ -42,16 +42,21 @@ class BattleDetails extends StatefulWidget {
 
   // ── fromName مع معالجة آمنة ──────────────────────────
   static BattleDetails fromName(String name) {
-    // البحث المباشر أولاً
-    Map<String, dynamic>? data = battlesData[name];
+    final trimmed = name.trim();
+    Map<String, dynamic>? data = battlesData[name] ?? sarayaData[name];
 
-    // لو مش لاقيه، ابحث بعد trim
     if (data == null) {
-      final trimmed = name.trim();
       final match = battlesData.entries.where(
-            (e) => e.key.trim() == trimmed,
+        (e) => e.key.trim() == trimmed || e.key.contains(trimmed) || trimmed.contains(e.key),
       );
-      if (match.isNotEmpty) data = match.first.value;
+      if (match.isNotEmpty) {
+        data = match.first.value;
+      } else {
+        final matchSaraya = sarayaData.entries.where(
+          (e) => e.key.trim() == trimmed || e.key.contains(trimmed) || trimmed.contains(e.key),
+        );
+        if (matchSaraya.isNotEmpty) data = matchSaraya.first.value;
+      }
     }
 
     // لو لسه null، ارجع بيانات فاضية بدل ما تـ crash
@@ -559,8 +564,13 @@ class _BattleDetailsState extends State<BattleDetails>
     );
   }
 
-  // ── AHDAS CARD ────────────────────────────────────────
+  // ── AHDAS / STORY CARD ────────────────────────────────
   Widget _buildAhdasCard() {
+    final paragraphs = widget.ahdas
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
@@ -576,7 +586,7 @@ class _BattleDetailsState extends State<BattleDetails>
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             gradient: LinearGradient(
@@ -584,31 +594,89 @@ class _BattleDetailsState extends State<BattleDetails>
             ),
           ),
           child: Row(children: [
-            const Icon(Icons.history_edu_rounded, color: _crimsonLt, size: 24),
-            const SizedBox(width: 12),
-            const Text("أحداث الغزوة",
+            const Icon(Icons.history_edu_rounded, color: _crimsonLt, size: 22),
+            const SizedBox(width: 10),
+            const Text("أحداث ورواية الغزوة",
                 style: TextStyle(
-                  color: Color(0xFFE57373), fontSize: 18,
-                  fontWeight: FontWeight.bold, letterSpacing: 0.8,
+                  color: Color(0xFFE57373), fontSize: 17,
+                  fontWeight: FontWeight.bold, letterSpacing: 0.5,
                 )),
             const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: _crimson.withValues(alpha: 0.15),
-                border: Border.all(color: _crimson.withValues(alpha: 0.3)),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => _BattleBookReaderPage(
+                    name: widget.name,
+                    story: widget.ahdas,
+                  ),
+                ),
               ),
-              child: const Text("رواية", style: TextStyle(color: _crimsonLt, fontSize: 11)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: _crimson.withValues(alpha: 0.2),
+                  border: Border.all(color: _crimson.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fullscreen_rounded, color: _crimsonLt, size: 16),
+                    SizedBox(width: 5),
+                    Text("وضع القراءة",
+                        style: TextStyle(
+                            color: _crimsonLt,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
             ),
           ]),
         ),
         Container(height: 1, color: _crimson.withValues(alpha: 0.1)),
         Padding(
-          padding: const EdgeInsets.all(22),
-          child: Text(widget.ahdas,
-              textAlign: TextAlign.right,
-              style: const TextStyle(color: _text, fontSize: 15, height: 2.0)),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: paragraphs.map((p) {
+              final isHeader = p.startsWith('أولاً:') ||
+                  p.startsWith('ثانياً:') ||
+                  p.startsWith('ثالثاً:') ||
+                  p.startsWith('رابعاً:') ||
+                  p.startsWith('خامساً:') ||
+                  p.startsWith('سادساً:') ||
+                  p.startsWith('سابعاً:');
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: isHeader
+                    ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+                    : EdgeInsets.zero,
+                decoration: isHeader
+                    ? BoxDecoration(
+                        color: _crimson.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          right: BorderSide(
+                              color: _crimsonLt.withValues(alpha: 0.7), width: 3),
+                        ),
+                      )
+                    : null,
+                child: Text(
+                  p,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    color: isHeader ? _text : _text.withValues(alpha: 0.92),
+                    fontSize: 16,
+                    height: 2.1,
+                    letterSpacing: 0.15,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ]),
     );
@@ -692,4 +760,177 @@ class _WarMeshPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_) => false;
+}
+
+// ══════════════════════════════════════════════════════════
+//  BATTLE FULL-SCREEN BOOK READER
+// ══════════════════════════════════════════════════════════
+class _BattleBookReaderPage extends StatelessWidget {
+  final String name;
+  final String story;
+
+  const _BattleBookReaderPage({
+    required this.name,
+    required this.story,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final paragraphs = story
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF080C18),
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 160,
+              pinned: true,
+              backgroundColor: const Color(0xFF0F1525),
+              surfaceTintColor: Colors.transparent,
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFC0392B).withValues(alpha: 0.15),
+                      border: Border.all(
+                        color: const Color(0xFFC0392B).withValues(alpha: 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Color(0xFFE74C3C),
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFFF0EAD6),
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                centerTitle: true,
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            const Color(0xFFC0392B).withValues(alpha: 0.22),
+                            const Color(0xFF080C18),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Center(
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: Icon(Icons.history_edu_rounded,
+                            size: 80, color: Color(0xFFC0392B)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 48),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC0392B).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFC0392B).withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.shield_rounded,
+                              color: Color(0xFFE74C3C), size: 20),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "وقائع وأحداث الغزوة — رواية تاريخية موثقة",
+                              style: TextStyle(
+                                color: Color(0xFFE74C3C),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ...paragraphs.map((p) => _buildParagraphCard(p)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParagraphCard(String p) {
+    final isHeader = p.startsWith('أولاً:') ||
+        p.startsWith('ثانياً:') ||
+        p.startsWith('ثالثاً:') ||
+        p.startsWith('رابعاً:') ||
+        p.startsWith('خامساً:') ||
+        p.startsWith('سادساً:') ||
+        p.startsWith('سابعاً:');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1525),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHeader
+              ? const Color(0xFFC0392B).withValues(alpha: 0.4)
+              : const Color(0xFFC0392B).withValues(alpha: 0.08),
+          width: isHeader ? 1.2 : 0.8,
+        ),
+      ),
+      child: Text(
+        p,
+        textDirection: TextDirection.rtl,
+        style: TextStyle(
+          color: isHeader
+              ? const Color(0xFFF0EAD6)
+              : const Color(0xFFF0EAD6).withValues(alpha: 0.92),
+          fontSize: 16.5,
+          height: 2.1,
+          letterSpacing: 0.15,
+        ),
+      ),
+    );
+  }
 }

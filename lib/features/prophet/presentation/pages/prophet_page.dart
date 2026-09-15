@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:rafiki_app/features/prophet/data/datasources/prophet_data.dart';
 
+
 // ─── COLOUR TOKENS ────────────────────────────────────────────────────────────
 
 class _C {
@@ -131,19 +132,19 @@ class _ProphetPageState extends State<ProphetPage> with TickerProviderStateMixin
         section: prophetSections[i],
         index: i,
         entryController: _entryCtrl,
-        onTap: () => _showDetailSheet(context, prophetSections[i]),
+        onTap: () => _openReader(context, prophetSections[i]),
       ),
     );
   }
 
-  // ── BOTTOM SHEET ──────────────────────────────────────────────────────────
+  // ── FULL-SCREEN READER ────────────────────────────────────────────────────
 
-  void _showDetailSheet(BuildContext context, ProphetBiographySection section) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _DetailSheet(section: section),
+  void _openReader(BuildContext context, ProphetBiographySection section) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _ProphetSectionReader(section: section),
+      ),
     );
   }
 }
@@ -323,147 +324,167 @@ class ProphetBiographySectionCardState extends State<ProphetBiographySectionCard
   }
 }
 
-// ─── DETAIL BOTTOM SHEET ─────────────────────────────────────────────────────
+// ─── PROPHET SECTION FULL-SCREEN READER ──────────────────────────────────────
 
-class _DetailSheet extends StatelessWidget {
+class _ProphetSectionReader extends StatelessWidget {
   final ProphetBiographySection section;
 
-  const _DetailSheet({required this.section});
+  const _ProphetSectionReader({required this.section});
 
   @override
   Widget build(BuildContext context) {
     final s = section;
+    final paragraphs = s.content
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        builder: (_, controller) => Container(
-          decoration: BoxDecoration(
-            color: _C.surfaceAlt,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: s.accent.withValues(alpha: 0.25), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: s.accent.withValues(alpha: 0.12),
-                blurRadius: 40,
-                spreadRadius: 2,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Handle
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    color: _C.muted,
+      child: Scaffold(
+        backgroundColor: _C.bg,
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 160,
+              pinned: true,
+              backgroundColor: _C.surface,
+              surfaceTintColor: Colors.transparent,
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: s.accent.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: s.accent.withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: s.accent,
+                      size: 16,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  s.title,
+                  style: const TextStyle(
+                    color: _C.onCard,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                centerTitle: true,
+                background: Stack(
+                  fit: StackFit.expand,
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: s.accent.withValues(alpha: 0.14),
-                        border: Border.all(color: s.accent.withValues(alpha: 0.4), width: 1.2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: s.accent.withValues(alpha: 0.2),
-                            blurRadius: 16,
-                          ),
-                        ],
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            s.accent.withValues(alpha: 0.20),
+                            _C.bg,
+                          ],
+                        ),
                       ),
-                      child: Icon(s.icon, color: s.accent, size: 24),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s.title,
-                            style: TextStyle(
-                              color: s.accent,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            s.subtitle,
-                            style: const TextStyle(
-                              color: _C.muted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    Center(
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: Icon(s.icon, size: 80, color: s.accent),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              Divider(color: s.accent.withValues(alpha: 0.15), thickness: 1, indent: 24, endIndent: 24),
-              const SizedBox(height: 8),
-              // Body
-              Expanded(
-                child: ListView(
-                  controller: controller,
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 48),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      s.content,
-                      textDirection: TextDirection.rtl,
-                      style: const TextStyle(
-                        color: _C.textBody,
-                        fontSize: 15,
-                        height: 1.95,
-                        letterSpacing: 0.2,
+                    if (s.subtitle.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: s.accent.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: s.accent.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(s.icon, color: s.accent, size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                s.subtitle,
+                                style: TextStyle(
+                                  color: s.accent,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                    ],
+                    ...paragraphs.map((p) => _buildParagraphCard(p, s.accent)),
                   ],
                 ),
               ),
-              // Close button
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      backgroundColor: s.accent.withValues(alpha: 0.12),
-                      foregroundColor: s.accent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(color: s.accent.withValues(alpha: 0.3), width: 1),
-                      ),
-                    ),
-                    child: const Text(
-                      "إغلاق",
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParagraphCard(String paragraph, Color accent) {
+    final isHeader = paragraph.startsWith('أولاً:') ||
+        paragraph.startsWith('ثانياً:') ||
+        paragraph.startsWith('ثالثاً:') ||
+        paragraph.startsWith('رابعاً:') ||
+        paragraph.startsWith('خامساً:') ||
+        paragraph.startsWith('سادساً:') ||
+        paragraph.startsWith('سابعاً:');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: _C.surfaceAlt,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHeader
+              ? accent.withValues(alpha: 0.35)
+              : _C.gold.withValues(alpha: 0.08),
+          width: isHeader ? 1.2 : 0.8,
+        ),
+      ),
+      child: Text(
+        paragraph,
+        textDirection: TextDirection.rtl,
+        style: const TextStyle(
+          color: _C.textBody,
+          fontSize: 16.5,
+          height: 2.1,
+          letterSpacing: 0.2,
         ),
       ),
     );

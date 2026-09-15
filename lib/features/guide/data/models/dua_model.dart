@@ -32,4 +32,6 @@ class DuaData {
     required this.accentB,
     this.isFeatured = false,
   });
+
+  String get id => "${category}_$title";
 }

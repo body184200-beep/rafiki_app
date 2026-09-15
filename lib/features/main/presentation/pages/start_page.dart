@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
@@ -207,6 +208,7 @@ class _StartState extends State<Start>
   }
 
   Future<void> _initForegroundTask() async {
+    if (kIsWeb) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         id: 1000,
@@ -305,6 +307,7 @@ class _StartState extends State<Start>
   /// 2. Checks if service is already running (returns true without duplicating).
   /// 3. Starts service if stopped.
   Future<bool> ensureForegroundServiceRunning() async {
+    if (kIsWeb) return false;
     try {
       final isAllowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isAllowed) {

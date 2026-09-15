@@ -477,8 +477,13 @@ class _SahabiDetailsState extends State<SahabiDetails>
     );
   }
 
-  // ── DAY CARD ──────────────────────────────────────────
+  // ── DAY / STORY CARD ──────────────────────────────────
   Widget _buildDayCard() {
+    final paragraphs = widget.day
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
@@ -498,7 +503,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // ── Header ──────────────────────────────────────
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             gradient: LinearGradient(
@@ -506,33 +511,89 @@ class _SahabiDetailsState extends State<SahabiDetails>
             ),
           ),
           child: Row(children: [
-            const Icon(Icons.auto_stories_rounded, color: _goldLight, size: 24),
-            const SizedBox(width: 12),
-            const Text("يوم من حياته",
+            const Icon(Icons.auto_stories_rounded, color: _goldLight, size: 22),
+            const SizedBox(width: 10),
+            const Text("القصة والسيرة",
                 style: TextStyle(
-                    color: _goldLight, fontSize: 18,
-                    fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+                    color: _goldLight, fontSize: 17,
+                    fontWeight: FontWeight.bold, letterSpacing: 0.5)),
             const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: _gold.withValues(alpha: 0.15),
-                border: Border.all(color: _gold.withValues(alpha: 0.3)),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => _SahabiBookReaderPage(
+                    name: widget.name,
+                    story: widget.day,
+                  ),
+                ),
               ),
-              child: const Text("رواية",
-                  style: TextStyle(color: _goldLight, fontSize: 11)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: _gold.withValues(alpha: 0.2),
+                  border: Border.all(color: _gold.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fullscreen_rounded, color: _goldLight, size: 16),
+                    SizedBox(width: 5),
+                    Text("وضع القراءة",
+                        style: TextStyle(
+                            color: _goldLight,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
             ),
           ]),
         ),
         Container(height: 1, color: _gold.withValues(alpha: 0.1)),
         // ── Content ─────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.all(22),
-          child: Text(widget.day,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                  color: _text, fontSize: 15, height: 2.0)),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: paragraphs.map((p) {
+              final isHeader = p.startsWith('أولاً:') ||
+                  p.startsWith('ثانياً:') ||
+                  p.startsWith('ثالثاً:') ||
+                  p.startsWith('رابعاً:') ||
+                  p.startsWith('خامساً:') ||
+                  p.startsWith('سادساً:') ||
+                  p.startsWith('سابعاً:');
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: isHeader
+                    ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+                    : EdgeInsets.zero,
+                decoration: isHeader
+                    ? BoxDecoration(
+                        color: _gold.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          right: BorderSide(
+                              color: _gold.withValues(alpha: 0.6), width: 3),
+                        ),
+                      )
+                    : null,
+                child: Text(
+                  p,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    color: isHeader ? _text : _text.withValues(alpha: 0.92),
+                    fontSize: 16,
+                    height: 2.1,
+                    letterSpacing: 0.15,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ]),
     );
@@ -630,4 +691,177 @@ class _MeshPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_) => false;
+}
+
+// ══════════════════════════════════════════════════════════
+//  SAHABI FULL-SCREEN BOOK READER
+// ══════════════════════════════════════════════════════════
+class _SahabiBookReaderPage extends StatelessWidget {
+  final String name;
+  final String story;
+
+  const _SahabiBookReaderPage({
+    required this.name,
+    required this.story,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final paragraphs = story
+        .split('\n\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF080D1A),
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 160,
+              pinned: true,
+              backgroundColor: const Color(0xFF0E1628),
+              surfaceTintColor: Colors.transparent,
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFD4A853).withValues(alpha: 0.15),
+                      border: Border.all(
+                        color: const Color(0xFFD4A853).withValues(alpha: 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Color(0xFFF0C97A),
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFFF0EAD6),
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                centerTitle: true,
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            const Color(0xFFD4A853).withValues(alpha: 0.22),
+                            const Color(0xFF080D1A),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Center(
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: Icon(Icons.auto_stories_rounded,
+                            size: 80, color: Color(0xFFD4A853)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 48),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4A853).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFD4A853).withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.menu_book_rounded,
+                              color: Color(0xFFD4A853), size: 20),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "سيرة وقصة الصحابي — رواية موثقة",
+                              style: TextStyle(
+                                color: Color(0xFFD4A853),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ...paragraphs.map((p) => _buildParagraphCard(p)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParagraphCard(String p) {
+    final isHeader = p.startsWith('أولاً:') ||
+        p.startsWith('ثانياً:') ||
+        p.startsWith('ثالثاً:') ||
+        p.startsWith('رابعاً:') ||
+        p.startsWith('خامساً:') ||
+        p.startsWith('سادساً:') ||
+        p.startsWith('سابعاً:');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0E1628),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHeader
+              ? const Color(0xFFD4A853).withValues(alpha: 0.4)
+              : const Color(0xFFD4A853).withValues(alpha: 0.08),
+          width: isHeader ? 1.2 : 0.8,
+        ),
+      ),
+      child: Text(
+        p,
+        textDirection: TextDirection.rtl,
+        style: TextStyle(
+          color: isHeader
+              ? const Color(0xFFF0EAD6)
+              : const Color(0xFFF0EAD6).withValues(alpha: 0.92),
+          fontSize: 16.5,
+          height: 2.1,
+          letterSpacing: 0.15,
+        ),
+      ),
+    );
+  }
 }

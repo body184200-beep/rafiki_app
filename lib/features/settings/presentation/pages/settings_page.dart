@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,24 +16,24 @@ import 'package:rafiki_app/features/gamification/presentation/pages/loot_box_pag
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _DT {
-  static const bg         = Color(0xff060A10);
-  static const surface    = Color(0xff0F1520);
-  static const surfaceHi  = Color(0xff141C2A);
+  static const bg = Color(0xFF060910);
+  static const surface = Color(0xFF0C1320);
+  static const surfaceHi = Color(0xFF131D30);
 
-  static const border     = Color(0xff1C2438);
-  static const borderHi   = Color(0xff263044);
+  static const border = Color(0xFF19253B);
+  static const borderHi = Color(0xFF263857);
 
-  static const accent     = Color(0xff4ECCA3);
-  static const accentMid  = Color(0xff2EB889);
-  static const accentDark = Color(0xff1A9A6E);
+  static const accent = Color(0xFF34D399);
+  static const accentMid = Color(0xFF10B981);
+  static const accentDark = Color(0xFF059669);
 
-  static const maleClr    = Color(0xff5BA4CF);
-  static const femaleClr  = Color(0xffE88FC0);
+  static const maleClr = Color(0xFF4FA8DE);
+  static const femaleClr = Color(0xFFF472B6);
 
-  static const textPri    = Color(0xffEEF2F8);
-  static const textSec    = Color(0xff7A879E);
-  static const textDim    = Color(0xff2E3B4E);
-  static const textHint   = Color(0xff3D4D60);
+  static const textPri = Color(0xFFF8FAFC);
+  static const textSec = Color(0xFF94A3B8);
+  static const textDim = Color(0xFF475569);
+  static const textHint = Color(0xFF4B5B75);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -45,9 +45,12 @@ enum Gender { none, male, female }
 extension GenderExt on Gender {
   String greeting(AppLocalizations loc) {
     switch (this) {
-      case Gender.male:   return loc.greeting_male;
-      case Gender.female: return loc.greeting_female;
-      case Gender.none:   return loc.greeting_neutral;
+      case Gender.male:
+        return loc.greeting_male;
+      case Gender.female:
+        return loc.greeting_female;
+      case Gender.none:
+        return loc.greeting_neutral;
     }
   }
 
@@ -55,41 +58,56 @@ extension GenderExt on Gender {
 
   String badge(AppLocalizations loc) {
     switch (this) {
-      case Gender.male:   return loc.greeting_male_badge;
-      case Gender.female: return loc.greeting_female_badge;
-      case Gender.none:   return '';
+      case Gender.male:
+        return loc.greeting_male_badge;
+      case Gender.female:
+        return loc.greeting_female_badge;
+      case Gender.none:
+        return '';
     }
   }
 
   String label(AppLocalizations loc) {
     switch (this) {
-      case Gender.male:   return loc.profile_gender_male;
-      case Gender.female: return loc.profile_gender_female;
-      case Gender.none:   return '';
+      case Gender.male:
+        return loc.profile_gender_male;
+      case Gender.female:
+        return loc.profile_gender_female;
+      case Gender.none:
+        return '';
     }
   }
 
   String sublabel(AppLocalizations loc) {
     switch (this) {
-      case Gender.male:   return loc.profile_gender_male_label;
-      case Gender.female: return loc.profile_gender_female_label;
-      case Gender.none:   return '';
+      case Gender.male:
+        return loc.profile_gender_male_label;
+      case Gender.female:
+        return loc.profile_gender_female_label;
+      case Gender.none:
+        return '';
     }
   }
 
   Color get color {
     switch (this) {
-      case Gender.male:   return _DT.maleClr;
-      case Gender.female: return _DT.femaleClr;
-      case Gender.none:   return _DT.accent;
+      case Gender.male:
+        return _DT.maleClr;
+      case Gender.female:
+        return _DT.femaleClr;
+      case Gender.none:
+        return _DT.accent;
     }
   }
 
   IconData get icon {
     switch (this) {
-      case Gender.male:   return Icons.person_rounded;
-      case Gender.female: return Icons.person_2_rounded;
-      case Gender.none:   return Icons.person_outline_rounded;
+      case Gender.male:
+        return Icons.person_rounded;
+      case Gender.female:
+        return Icons.person_2_rounded;
+      case Gender.none:
+        return Icons.person_outline_rounded;
     }
   }
 }
@@ -120,50 +138,50 @@ class _MenuItem {
 
 /// Builds the locale-aware menu items list from [loc].
 List<_MenuItem> _buildMenuItems(AppLocalizations loc) => [
-  _MenuItem(
-    title:     loc.settings_menu_rewards_title,
-    subtitle:  loc.settings_menu_rewards_subtitle,
-    icon:      Icons.stars_rounded,
-    gradStart: const Color(0xff2A1E08),
-    gradEnd:   const Color(0xff181205),
-    accentClr: const Color(0xffF0C060),
-    badge:     loc.settings_menu_rewards_badge,
-  ),
-  _MenuItem(
-    title:     loc.settings_menu_quran_radio_title,
-    subtitle:  loc.settings_menu_quran_radio_subtitle,
-    icon:      Icons.graphic_eq_rounded,
-    gradStart: const Color(0xff0E2E22),
-    gradEnd:   const Color(0xff071A14),
-    accentClr: const Color(0xff4ECCA3),
-    badge:     loc.settings_menu_quran_radio_badge,
-  ),
-  _MenuItem(
-    title:     loc.settings_menu_prayer_schedule_title,
-    subtitle:  loc.settings_menu_prayer_schedule_subtitle,
-    icon:      Icons.mosque_rounded,
-    gradStart: const Color(0xff0E2030),
-    gradEnd:   const Color(0xff07131E),
-    accentClr: const Color(0xff60C8E8),
-  ),
-  _MenuItem(
-    title:     loc.settings_menu_challenge_title,
-    subtitle:  loc.settings_menu_challenge_subtitle,
-    icon:      Icons.military_tech_rounded,
-    gradStart: const Color(0xff2A1E08),
-    gradEnd:   const Color(0xff181205),
-    accentClr: const Color(0xffF0C060),
-    badge:     loc.settings_menu_challenge_badge,
-  ),
-  _MenuItem(
-    title:     loc.settings_menu_prophets_title,
-    subtitle:  loc.settings_menu_prophets_subtitle,
-    icon:      Icons.auto_stories_rounded,
-    gradStart: const Color(0xff1E0E2E),
-    gradEnd:   const Color(0xff12071A),
-    accentClr: const Color(0xffC080F0),
-  ),
-];
+      _MenuItem(
+        title: loc.settings_menu_rewards_title,
+        subtitle: loc.settings_menu_rewards_subtitle,
+        icon: Icons.stars_rounded,
+        gradStart: const Color(0xFF281C06),
+        gradEnd: const Color(0xFF130D03),
+        accentClr: const Color(0xFFF5C052),
+        badge: loc.settings_menu_rewards_badge,
+      ),
+      _MenuItem(
+        title: loc.settings_menu_quran_radio_title,
+        subtitle: loc.settings_menu_quran_radio_subtitle,
+        icon: Icons.graphic_eq_rounded,
+        gradStart: const Color(0xFF092B1F),
+        gradEnd: const Color(0xFF04160F),
+        accentClr: const Color(0xFF34D399),
+        badge: loc.settings_menu_quran_radio_badge,
+      ),
+      _MenuItem(
+        title: loc.settings_menu_prayer_schedule_title,
+        subtitle: loc.settings_menu_prayer_schedule_subtitle,
+        icon: Icons.mosque_rounded,
+        gradStart: const Color(0xFF0B2135),
+        gradEnd: const Color(0xFF05111C),
+        accentClr: const Color(0xFF38BDF8),
+      ),
+      _MenuItem(
+        title: loc.settings_menu_challenge_title,
+        subtitle: loc.settings_menu_challenge_subtitle,
+        icon: Icons.military_tech_rounded,
+        gradStart: const Color(0xFF271A06),
+        gradEnd: const Color(0xFF130C02),
+        accentClr: const Color(0xFFFBBF24),
+        badge: loc.settings_menu_challenge_badge,
+      ),
+      _MenuItem(
+        title: loc.settings_menu_prophets_title,
+        subtitle: loc.settings_menu_prophets_subtitle,
+        icon: Icons.auto_stories_rounded,
+        gradStart: const Color(0xFF1F0C30),
+        gradEnd: const Color(0xFF0F0419),
+        accentClr: const Color(0xFFC084FC),
+      ),
+    ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN
@@ -176,19 +194,23 @@ class Setting extends StatefulWidget {
   State<Setting> createState() => _SettingState();
 }
 
-class _SettingState extends State<Setting> with TickerProviderStateMixin, WidgetsBindingObserver {
+class _SettingState extends State<Setting>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final TextEditingController _nameController = TextEditingController();
   late final FocusNode _nameFocusNode;
 
   late final AnimationController _entranceCtrl;
   late final AnimationController _pulseCtrl;
+  late final AnimationController _ambientCtrl;
   late final List<Animation<double>> _cardAnimations;
   late final Animation<double> _pulseAnim;
 
-  String _username    = '';
-  bool   _editingName = false;
-  bool   _isNameFocused = false;
-  Gender _gender      = Gender.none;
+  String _username = '';
+  bool _editingName = false;
+  bool _isNameFocused = false;
+  Gender _gender = Gender.none;
+
+  late final List<_AmbientDot> _ambientDots;
 
   @override
   void initState() {
@@ -206,27 +228,42 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
 
     _entranceCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 900),
     );
 
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2600),
+      duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
 
-    _pulseAnim = Tween<double>(begin: 0.95, end: 1.0).animate(
+    _ambientCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat(reverse: true);
+
+    _pulseAnim = Tween<double>(begin: 0.95, end: 1.03).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
-    // [0]=header  [1]=stats  [2..n]=cards  [last]=footer
-    _cardAnimations = List.generate(5 + 3, (i) {
-      final start = (i * 0.10).clamp(0.0, 0.65);
-      final end   = (start + 0.42).clamp(0.0, 1.0);
+    _cardAnimations = List.generate(8, (i) {
+      final start = (i * 0.08).clamp(0.0, 0.65);
+      final end = (start + 0.38).clamp(0.0, 1.0);
       return CurvedAnimation(
         parent: _entranceCtrl,
         curve: Interval(start, end, curve: Curves.easeOutCubic),
       );
     });
+
+    final rng = Random(65);
+    _ambientDots = List.generate(
+      28,
+      (_) => _AmbientDot(
+        x: rng.nextDouble(),
+        y: rng.nextDouble(),
+        radius: 0.5 + rng.nextDouble() * 1.3,
+        opacity: 0.08 + rng.nextDouble() * 0.22,
+      ),
+    );
 
     _loadPrefs();
   }
@@ -238,6 +275,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
     _nameFocusNode.dispose();
     _entranceCtrl.dispose();
     _pulseCtrl.dispose();
+    _ambientCtrl.dispose();
     super.dispose();
   }
 
@@ -245,8 +283,10 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       if (!_pulseCtrl.isAnimating) _pulseCtrl.repeat(reverse: true);
+      if (!_ambientCtrl.isAnimating) _ambientCtrl.repeat(reverse: true);
     } else if (state == AppLifecycleState.paused) {
       _pulseCtrl.stop();
+      _ambientCtrl.stop();
     }
   }
 
@@ -254,16 +294,16 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
 
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final name  = prefs.getString('username') ?? '';
-    final gKey  = prefs.getString('gender')   ?? 'none';
-    final g     = Gender.values.firstWhere(
-          (e) => e.savedKey == gKey,
+    final name = prefs.getString('username') ?? '';
+    final gKey = prefs.getString('gender') ?? 'none';
+    final g = Gender.values.firstWhere(
+      (e) => e.savedKey == gKey,
       orElse: () => Gender.none,
     );
     if (!mounted) return;
     setState(() {
-      _username            = name;
-      _gender              = g;
+      _username = name;
+      _gender = g;
       _nameController.text = name;
     });
     _entranceCtrl.forward();
@@ -271,11 +311,11 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
 
   Future<void> _saveName(String name) async {
     final trimmed = name.trim();
-    final prefs   = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', trimmed);
     if (!mounted) return;
     setState(() {
-      _username    = trimmed;
+      _username = trimmed;
       _editingName = false;
     });
     HapticFeedback.lightImpact();
@@ -314,13 +354,13 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
             child: child,
           ),
         ),
-        transitionDuration: const Duration(milliseconds: 340),
+        transitionDuration: const Duration(milliseconds: 320),
       ),
     );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILDERS
+  // UI BUILDERS
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _glass({
@@ -333,13 +373,20 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: bg ?? Colors.white.withValues(alpha: 0.04),
+            color: bg ?? _DT.surface.withValues(alpha: 0.65),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: borderColor ?? _DT.border, width: 0.8),
+            border: Border.all(color: borderColor ?? _DT.border, width: 0.9),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: child,
         ),
@@ -348,7 +395,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
   }
 
   Widget _avatar() {
-    final clr    = _gender.color;
+    final clr = _gender.color;
     final letter = _username.isNotEmpty
         ? _username.trimLeft().characters.first
         : (_gender == Gender.none ? '؟' : (_gender == Gender.male ? 'أ' : 'أ'));
@@ -358,27 +405,40 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
       builder: (_, __) => Transform.scale(
         scale: _pulseAnim.value,
         child: Container(
-          width: 66,
-          height: 66,
+          width: 70,
+          height: 70,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [clr.withValues(alpha: 0.85), clr.withValues(alpha: 0.45)],
+              colors: [clr, clr.withValues(alpha: 0.6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
             boxShadow: [
-              BoxShadow(color: clr.withValues(alpha: 0.32), blurRadius: 22, spreadRadius: 2),
-              BoxShadow(color: clr.withValues(alpha: 0.10), blurRadius: 42, spreadRadius: 8),
+              BoxShadow(
+                color: clr.withValues(alpha: 0.45),
+                blurRadius: 22,
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: clr.withValues(alpha: 0.15),
+                blurRadius: 44,
+                spreadRadius: 8,
+              ),
             ],
           ),
           child: Center(
             child: Text(
               letter,
               style: const TextStyle(
-                color: _DT.bg,
-                fontSize: 26,
+                color: Color(0xFF030712),
+                fontSize: 28,
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -393,77 +453,92 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
         : '${_gender.greeting(loc)}، $_username 👋';
 
     return _glass(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
       borderColor: _DT.borderHi,
-      bg: _DT.surfaceHi.withValues(alpha: 0.7),
-      child: Row(
+      bg: _DT.surfaceHi.withValues(alpha: 0.8),
+      child: Column(
         children: [
-          _avatar(),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  greet,
-                  style: const TextStyle(
-                    color: _DT.textPri,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
+          Row(
+            children: [
+              _avatar(),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_gender != Gender.none) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: _gender.color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: _gender.color.withValues(alpha: 0.28)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(_gender.icon, size: 11, color: _gender.color),
-                            const SizedBox(width: 4),
-                            Text(
-                              _gender.badge(loc),
-                              style: TextStyle(
-                                color: _gender.color,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                    Text(
+                      greet,
+                      style: const TextStyle(
+                        color: _DT.textPri,
+                        fontSize: 17.5,
+                        fontWeight: FontWeight.w800,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        if (_gender != Gender.none) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _gender.color.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _gender.color.withValues(alpha: 0.35),
+                                width: 0.8,
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_gender.icon, size: 12, color: _gender.color),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _gender.badge(loc),
+                                  style: TextStyle(
+                                    color: _gender.color,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            _username.isEmpty
+                                ? loc.settings_no_username_hint
+                                : loc.settings_welcome_back,
+                            style: const TextStyle(
+                              color: _DT.textSec,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    Flexible(
-                      child: Text(
-                        _username.isEmpty
-                            ? loc.settings_no_username_hint
-                            : loc.settings_welcome_back,
-                        style: const TextStyle(color: _DT.textSec, fontSize: 11.5),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          _EditButton(
-            isEditing: _editingName,
-            label: _editingName ? loc.profile_close_button : loc.profile_edit_button,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _editingName = !_editingName);
-            },
+              ),
+              const SizedBox(width: 10),
+              _EditButton(
+                isEditing: _editingName,
+                label: _editingName
+                    ? loc.profile_close_button
+                    : loc.profile_edit_button,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _editingName = !_editingName);
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -472,176 +547,186 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
 
   Widget _profileEditor(AppLocalizations loc) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
       child: _editingName
-          ? TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, child) {
-                return Transform.translate(
-                  offset: Offset(0, 15 * (1 - value)),
-                  child: Opacity(
-                    opacity: value,
-                    child: child,
-                  ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: _glass(
-                  bg: _DT.surface.withValues(alpha: 0.95),
-                  borderColor: _DT.borderHi,
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Name input field ─────────────────────────────────
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
+          ? Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: _glass(
+                bg: _DT.surface.withValues(alpha: 0.95),
+                borderColor: _DT.borderHi,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Decorative top highlight
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 3.5,
+                        margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: _isNameFocused ? _DT.surfaceHi : _DT.surface.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _isNameFocused ? _DT.accent : _DT.borderHi,
-                            width: _isNameFocused ? 1.5 : 0.8,
-                          ),
-                          boxShadow: _isNameFocused
-                              ? [
-                                  BoxShadow(
-                                    color: _DT.accent.withValues(alpha: 0.12),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : [],
+                          color: _DT.borderHi,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 14),
-                            Icon(
-                              Icons.person_outline_rounded,
-                              color: _isNameFocused ? _DT.accent : _DT.textSec,
-                              size: 20,
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _nameController,
-                                focusNode: _nameFocusNode,
-                                autofocus: true,
-                                style: const TextStyle(
-                                  color: _DT.textPri,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    // Name input field
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      decoration: BoxDecoration(
+                        color: _isNameFocused
+                            ? _DT.surfaceHi
+                            : _DT.surface.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _isNameFocused ? _DT.accent : _DT.borderHi,
+                          width: _isNameFocused ? 1.5 : 0.9,
+                        ),
+                        boxShadow: _isNameFocused
+                            ? [
+                                BoxShadow(
+                                  color: _DT.accent.withValues(alpha: 0.15),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 3),
                                 ),
-                                cursorColor: _DT.accent,
-                                onSubmitted: _saveName,
-                                decoration: InputDecoration(
-                                  hintText: loc.profile_name_hint,
-                                  hintStyle: const TextStyle(
-                                    color: _DT.textHint,
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 16,
-                                  ),
+                              ]
+                            : [],
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 14),
+                          Icon(
+                            Icons.badge_rounded,
+                            color: _isNameFocused ? _DT.accent : _DT.textSec,
+                            size: 20,
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _nameController,
+                              focusNode: _nameFocusNode,
+                              style: const TextStyle(
+                                color: _DT.textPri,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              cursorColor: _DT.accent,
+                              onSubmitted: _saveName,
+                              decoration: InputDecoration(
+                                hintText: loc.profile_name_hint,
+                                hintStyle: const TextStyle(
+                                  color: _DT.textHint,
+                                  fontSize: 13.5,
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
                                 ),
                               ),
+                            ),
+                          ),
+                          if (_nameController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.clear_rounded,
+                                color: _DT.textSec,
+                                size: 18,
+                              ),
+                              onPressed: () {
+                                _nameController.clear();
+                                setState(() {});
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Gender label
+                    Text(
+                      loc.profile_gender_label,
+                      style: const TextStyle(
+                        color: _DT.textSec,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Gender tiles
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _GenderTile(
+                            gender: Gender.male,
+                            selected: _gender == Gender.male,
+                            loc: loc,
+                            onTap: () => _saveGender(Gender.male),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _GenderTile(
+                            gender: Gender.female,
+                            selected: _gender == Gender.female,
+                            loc: loc,
+                            onTap: () => _saveGender(Gender.female),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Continue / Save button
+                    GestureDetector(
+                      onTap: () => _saveName(_nameController.text),
+                      child: Container(
+                        height: 48,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_DT.accentMid, _DT.accent],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _DT.accent.withValues(alpha: 0.3),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'متابعة',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Icon(
+                              Icons.check_rounded,
+                              color: Colors.black,
+                              size: 18,
                             ),
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 18),
-
-                      // ── Gender label ──────────────────────────────────────
-                      Text(
-                        loc.profile_gender_label,
-                        style: const TextStyle(
-                          color: _DT.textSec,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // ── Gender tiles ──────────────────────────────────────
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _GenderTile(
-                              gender: Gender.male,
-                              selected: _gender == Gender.male,
-                              loc: loc,
-                              onTap: () => _saveGender(Gender.male),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _GenderTile(
-                              gender: Gender.female,
-                              selected: _gender == Gender.female,
-                              loc: loc,
-                              onTap: () => _saveGender(Gender.female),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // ── Continue / Save button ────────────────────────────
-                      GestureDetector(
-                        onTap: () => _saveName(_nameController.text),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          height: 48,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [_DT.accentMid, _DT.accent],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _DT.accent.withValues(alpha: 0.25),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'متابعة',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 6),
-                              Icon(
-                                Icons.check_rounded,
-                                color: Colors.black,
-                                size: 18,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             )
@@ -650,28 +735,56 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
   }
 
   Widget _sectionLabel(String text) => Padding(
-    padding: const EdgeInsets.fromLTRB(2, 0, 2, 14),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: _DT.textSec,
-        fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.4,
-      ),
-    ),
-  );
-
-
-
+        padding: const EdgeInsets.fromLTRB(4, 22, 4, 14),
+        child: Row(
+          children: [
+            Container(
+              width: 3.5,
+              height: 14,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [_DT.accent, _DT.accentDark],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              text,
+              style: const TextStyle(
+                color: _DT.textSec,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                height: 0.8,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _DT.borderHi,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _menuCard(int index, List<_MenuItem> items) {
-    final anim = _cardAnimations[index + 2];
+    final anim = _cardAnimations[(index + 1).clamp(0, _cardAnimations.length - 1)];
     return FadeTransition(
       opacity: anim,
       child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(0, 0.14),
+          begin: const Offset(0, 0.12),
           end: Offset.zero,
         ).animate(anim),
         child: _MenuCardTile(item: items[index], onTap: () => _navigate(index)),
@@ -681,7 +794,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
 
   @override
   Widget build(BuildContext context) {
-    final loc   = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context)!;
     final items = _buildMenuItems(loc);
     final isRtl = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -691,18 +804,61 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
         backgroundColor: _DT.bg,
         body: Stack(
           children: [
-            // Ambient background orbs
-            Positioned(
-              top: -80, right: -60,
-              child: _AmbientOrb(color: _DT.accent, size: 260),
-            ),
-            Positioned(
-              top: 180, left: -80,
-              child: const _AmbientOrb(color: Color(0xff5060C8), size: 200),
-            ),
-            Positioned(
-              bottom: 120, right: 10,
-              child: const _AmbientOrb(color: Color(0xff8040A0), size: 160),
+            // Ambient background lighting & particles
+            AnimatedBuilder(
+              animation: _ambientCtrl,
+              builder: (context, _) => Stack(
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment(
+                            0.2 - _ambientCtrl.value * 0.4,
+                            -0.6 + _ambientCtrl.value * 0.3,
+                          ),
+                          radius: 1.5,
+                          colors: const [
+                            Color(0xFF0C1628),
+                            Color(0xFF070D18),
+                            _DT.bg,
+                          ],
+                          stops: const [0.0, 0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _AmbientDotsPainter(_ambientDots),
+                    ),
+                  ),
+                  Positioned(
+                    top: -90,
+                    right: -70,
+                    child: _AmbientOrb(
+                      color: _DT.accent.withValues(alpha: 0.1),
+                      size: 300,
+                    ),
+                  ),
+                  Positioned(
+                    top: 240,
+                    left: -90,
+                    child: const _AmbientOrb(
+                      color: Color(0xFF4338CA),
+                      size: 240,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 120,
+                    right: -40,
+                    child: const _AmbientOrb(
+                      color: Color(0xFF7E22CE),
+                      size: 200,
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             SafeArea(
@@ -720,17 +876,36 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
                     centerTitle: true,
                     flexibleSpace: ClipRect(
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(color: _DT.bg.withValues(alpha: 0.65)),
+                        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _DT.bg.withValues(alpha: 0.72),
+                            border: const Border(
+                              bottom: BorderSide(
+                                color: _DT.border,
+                                width: 0.6,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    title: Text(
-                      loc.settings_title,
-                      style: const TextStyle(
-                        color: _DT.textPri,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
+                    title: ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Color(0xFFF1F5F9),
+                          Color(0xFFE2E8F0),
+                          Color(0xFFCBD5E1),
+                        ],
+                      ).createShader(bounds),
+                      child: Text(
+                        loc.settings_title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     leading: Padding(
@@ -743,11 +918,10 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
                   ),
 
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-
-                        // ── Profile header ─────────────────────────────
+                        // ── Profile header & editor ───────────────────────
                         FadeTransition(
                           opacity: _cardAnimations[0],
                           child: SlideTransition(
@@ -764,50 +938,53 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin, Widget
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        _sectionLabel(loc.settings_sections_label),
 
-                        // ── Stats row ──────────────────────────────────
-                        FadeTransition(
-                          opacity: _cardAnimations[1],
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.1),
-                              end: Offset.zero,
-                            ).animate(_cardAnimations[1]),
+                        // ── Menu cards ─────────────────────────────────────
+                        ...List.generate(
+                          items.length,
+                          (i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _menuCard(i, items),
                           ),
                         ),
 
                         const SizedBox(height: 28),
 
-                        _sectionLabel(loc.settings_sections_label),
-
-                        // ── Menu cards ─────────────────────────────────
-                        ...List.generate(
-                          items.length,
-                              (i) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _menuCard(i, items),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-
-                        // ── Footer ─────────────────────────────────────
+                        // ── Footer ─────────────────────────────────────────
                         FadeTransition(
                           opacity: _cardAnimations.last,
                           child: Column(
                             children: [
-                              Container(height: 0.5, color: _DT.border),
-                              const SizedBox(height: 18),
+                              Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      _DT.borderHi,
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.favorite_rounded, color: Color(0xffE8506A), size: 13),
-                                  const SizedBox(width: 5),
+                                  const Icon(
+                                    Icons.favorite_rounded,
+                                    color: Color(0xFFF43F5E),
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 6),
                                   Text(
                                     loc.settings_footer,
-                                    style: TextStyle(color: _DT.textDim, fontSize: 12),
+                                    style: const TextStyle(
+                                      color: _DT.textDim,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -851,7 +1028,7 @@ class _GenderTile extends StatefulWidget {
 class _GenderTileState extends State<_GenderTile>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double>   _scale;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
@@ -875,50 +1052,59 @@ class _GenderTileState extends State<_GenderTile>
 
   @override
   Widget build(BuildContext context) {
-    final clr      = widget.gender.color;
+    final clr = widget.gender.color;
     final selected = widget.selected;
-    final loc      = widget.loc;
+    final loc = widget.loc;
 
     return ScaleTransition(
       scale: _scale,
       child: GestureDetector(
-        onTapDown:   (_) => _ctrl.reverse(),
-        onTapUp:     (_) => _ctrl.forward(),
-        onTapCancel: ()  => _ctrl.forward(),
-        onTap:       widget.onTap,
+        onTapDown: (_) => _ctrl.reverse(),
+        onTapUp: (_) => _ctrl.forward(),
+        onTapCancel: () => _ctrl.forward(),
+        onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 240),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: selected ? clr.withValues(alpha: 0.1) : _DT.surfaceHi,
+            color: selected ? clr.withValues(alpha: 0.12) : _DT.surfaceHi,
             border: Border.all(
-              color: selected ? clr.withValues(alpha: 0.45) : _DT.border,
-              width: selected ? 1.2 : 0.8,
+              color: selected ? clr.withValues(alpha: 0.6) : _DT.border,
+              width: selected ? 1.4 : 0.8,
             ),
             boxShadow: selected
-                ? [BoxShadow(color: clr.withValues(alpha: 0.12), blurRadius: 18, spreadRadius: 0)]
+                ? [
+                    BoxShadow(
+                      color: clr.withValues(alpha: 0.16),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
                 : [],
           ),
           child: Column(
             children: [
-              // Icon circle
               AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
+                duration: const Duration(milliseconds: 240),
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: selected ? clr.withValues(alpha: 0.18) : _DT.surface,
+                  color: selected
+                      ? clr.withValues(alpha: 0.22)
+                      : _DT.surface,
                   border: Border.all(
-                    color: selected ? clr.withValues(alpha: 0.38) : _DT.borderHi,
-                    width: 0.8,
+                    color: selected
+                        ? clr.withValues(alpha: 0.45)
+                        : _DT.borderHi,
+                    width: 0.9,
                   ),
                 ),
                 child: Icon(
                   widget.gender.icon,
-                  size: 20,
+                  size: 22,
                   color: selected ? clr : _DT.textSec,
                 ),
               ),
@@ -935,7 +1121,7 @@ class _GenderTileState extends State<_GenderTile>
               Text(
                 widget.gender.sublabel(loc),
                 style: TextStyle(
-                  color: selected ? clr.withValues(alpha: 0.6) : _DT.textSec,
+                  color: selected ? clr.withValues(alpha: 0.75) : _DT.textSec,
                   fontSize: 11,
                 ),
               ),
@@ -945,7 +1131,11 @@ class _GenderTileState extends State<_GenderTile>
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: clr),
-                  child: const Icon(Icons.check_rounded, size: 13, color: Colors.black),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 13,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ],
@@ -956,7 +1146,6 @@ class _GenderTileState extends State<_GenderTile>
   }
 }
 
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // EDIT BUTTON
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -966,7 +1155,11 @@ class _EditButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _EditButton({required this.isEditing, required this.label, required this.onTap});
+  const _EditButton({
+    required this.isEditing,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -976,11 +1169,13 @@ class _EditButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: isEditing ? _DT.accentDark.withValues(alpha: 0.22) : _DT.surfaceHi,
-          borderRadius: BorderRadius.circular(13),
+          color: isEditing
+              ? _DT.accentDark.withValues(alpha: 0.25)
+              : _DT.surfaceHi,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isEditing ? _DT.accentMid : _DT.border,
-            width: 0.8,
+            color: isEditing ? _DT.accentMid : _DT.borderHi,
+            width: 0.9,
           ),
         ),
         child: Row(
@@ -1007,8 +1202,6 @@ class _EditButton extends StatelessWidget {
   }
 }
 
-
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // GLASS ICON BUTTON
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1023,16 +1216,16 @@ class _GlassIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(13),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _DT.border, width: 0.8),
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: _DT.borderHi, width: 0.9),
             ),
             child: Icon(icon, color: _DT.textSec, size: 17),
           ),
@@ -1043,7 +1236,7 @@ class _GlassIconButton extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// AMBIENT ORB
+// AMBIENT ORB & DOTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _AmbientOrb extends StatelessWidget {
@@ -1059,11 +1252,48 @@ class _AmbientOrb extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          colors: [color.withValues(alpha: 0.07), Colors.transparent],
+          colors: [color.withValues(alpha: 0.08), Colors.transparent],
         ),
       ),
     );
   }
+}
+
+class _AmbientDot {
+  final double x;
+  final double y;
+  final double radius;
+  final double opacity;
+
+  const _AmbientDot({
+    required this.x,
+    required this.y,
+    required this.radius,
+    required this.opacity,
+  });
+}
+
+class _AmbientDotsPainter extends CustomPainter {
+  final List<_AmbientDot> dots;
+
+  _AmbientDotsPainter(this.dots);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (final d in dots) {
+      paint.color = Colors.white.withValues(alpha: d.opacity);
+      canvas.drawCircle(
+        Offset(d.x * size.width, d.y * size.height),
+        d.radius,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AmbientDotsPainter oldDelegate) => false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1083,7 +1313,7 @@ class _MenuCardTile extends StatefulWidget {
 class _MenuCardTileState extends State<_MenuCardTile>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pressCtrl;
-  late final Animation<double>   _scaleAnim;
+  late final Animation<double> _scaleAnim;
 
   @override
   void initState() {
@@ -1092,7 +1322,7 @@ class _MenuCardTileState extends State<_MenuCardTile>
       vsync: this,
       duration: const Duration(milliseconds: 90),
       reverseDuration: const Duration(milliseconds: 200),
-      lowerBound: 0.96,
+      lowerBound: 0.965,
       upperBound: 1.0,
       value: 1.0,
     );
@@ -1112,14 +1342,14 @@ class _MenuCardTileState extends State<_MenuCardTile>
     return ScaleTransition(
       scale: _scaleAnim,
       child: GestureDetector(
-        onTapDown:   (_) => _pressCtrl.reverse(),
-        onTapUp:     (_) => _pressCtrl.forward(),
-        onTapCancel: ()  => _pressCtrl.forward(),
-        onTap:       widget.onTap,
+        onTapDown: (_) => _pressCtrl.reverse(),
+        onTapUp: (_) => _pressCtrl.forward(),
+        onTapCancel: () => _pressCtrl.forward(),
+        onTap: widget.onTap,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(22),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
@@ -1128,98 +1358,138 @@ class _MenuCardTileState extends State<_MenuCardTile>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: _DT.border, width: 0.8),
+                border: Border.all(color: _DT.border, width: 0.9),
                 boxShadow: [
                   BoxShadow(
-                    color: item.accentClr.withValues(alpha: 0.06),
+                    color: item.accentClr.withValues(alpha: 0.07),
                     blurRadius: 24,
                     offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-                child: Row(
-                  children: [
-                    // Icon
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: item.accentClr.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: item.accentClr.withValues(alpha: 0.22), width: 0.8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: item.accentClr.withValues(alpha: 0.1),
-                            blurRadius: 12,
-                          ),
+              child: Column(
+                children: [
+                  // Shimmer top light edge
+                  Container(
+                    height: 1.8,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          item.accentClr.withValues(alpha: 0.6),
+                          item.accentClr.withValues(alpha: 0.85),
+                          item.accentClr.withValues(alpha: 0.4),
+                          Colors.transparent,
                         ],
+                        stops: const [0, 0.25, 0.5, 0.75, 1],
                       ),
-                      child: Icon(item.icon, color: item.accentClr, size: 23),
                     ),
-                    const SizedBox(width: 14),
-                    // Text
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  color: _DT.textPri,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+                    child: Row(
+                      children: [
+                        // Icon with glow & border
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: item.accentClr.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: item.accentClr.withValues(alpha: 0.28),
+                              width: 0.9,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: item.accentClr.withValues(alpha: 0.15),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
                               ),
-                              if (item.badge.isNotEmpty) ...[
-                                const SizedBox(width: 7),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                                  decoration: BoxDecoration(
-                                    color: item.accentClr.withValues(alpha: 0.16),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: item.accentClr.withValues(alpha: 0.32), width: 0.8),
-                                  ),
-                                  child: Text(
-                                    item.badge,
-                                    style: TextStyle(
-                                      color: item.accentClr,
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.subtitle,
-                            style: const TextStyle(color: _DT.textSec, fontSize: 12.5),
+                          child: Icon(item.icon, color: item.accentClr, size: 24),
+                        ),
+                        const SizedBox(width: 15),
+                        // Title & Subtitle
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    item.title,
+                                    style: const TextStyle(
+                                      color: _DT.textPri,
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  if (item.badge.isNotEmpty) ...[
+                                    const SizedBox(width: 7),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7.5,
+                                        vertical: 2.5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: item.accentClr.withValues(alpha: 0.16),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: item.accentClr.withValues(alpha: 0.35),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        item.badge,
+                                        style: TextStyle(
+                                          color: item.accentClr,
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item.subtitle,
+                                style: const TextStyle(
+                                  color: _DT.textSec,
+                                  fontSize: 12.5,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        // Trailing chevron
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: item.accentClr.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(
+                              color: item.accentClr.withValues(alpha: 0.15),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: item.accentClr.withValues(alpha: 0.55),
+                            size: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                    // Arrow
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: item.accentClr.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: item.accentClr.withValues(alpha: 0.5),
-                        size: 13,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1228,4 +1498,3 @@ class _MenuCardTileState extends State<_MenuCardTile>
     );
   }
 }
-

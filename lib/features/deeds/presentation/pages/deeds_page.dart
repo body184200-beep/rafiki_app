@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -8,7 +9,6 @@ import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_widgets.dar
 import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_sheets.dart';
 import 'package:rafiki_app/features/deeds/presentation/widgets/deeds_painters.dart';
 
-
 class DeedsPage extends StatelessWidget {
   const DeedsPage({super.key});
 
@@ -18,114 +18,180 @@ class DeedsPage extends StatelessWidget {
       data: ThemeData(
         brightness: Brightness.dark,
         fontFamily: 'serif',
-        scaffoldBackgroundColor: _C.bg,
-        colorScheme: const ColorScheme.dark(primary: _C.jade),
+        scaffoldBackgroundColor: const Color(0xff060D12),
+        colorScheme: const ColorScheme.dark(primary: Color(0xff059669)),
       ),
       child: const DeedsScreen(),
     );
   }
 }
 
-// ── Palette ──────────────────────────────────────────────────────────────────
-class _C {
-  static const Color bg        = Color(0xff060D12);
-
-  static const Color gold      = Color(0xffC9A84C);
-  static const Color goldLight = Color(0xffF0CC7A);
-  static const Color goldDim   = Color(0xff8A6E2A);
-  static const Color jade      = Color(0xff2EB88A);
-  static const Color jadeLight = Color(0xff5EFACC);
-  static const Color jadeDim   = Color(0xff1A7A5C);
-  static const Color textMain  = Color(0xffEEE8D5);
-  static const Color textSub   = Color(0xff7A8F98);
-  static const Color textHint  = Color(0xff3E5260);
-  static const Color red       = Color(0xffE05252);
-
-}
-
-// ── Data model ────────────────────────────────────────────────────────────────
-
+// ═════════════════════════════════════════════════════════════════════════════
+//  DeedsScreen – Modern Islamic Misbaha (المسبحة الإلكترونية المطورة)
 // ═════════════════════════════════════════════════════════════════════════════
 class DeedsScreen extends StatefulWidget {
   const DeedsScreen({super.key});
   @override
-  State<DeedsScreen> createState() => _DeedsPageState();
+  State<DeedsScreen> createState() => _DeedsScreenState();
 }
 
-class _DeedsPageState extends State<DeedsScreen>
+class _DeedsScreenState extends State<DeedsScreen>
     with TickerProviderStateMixin {
-
   // ── State ──────────────────────────────────────────────────────────────────
   late List<DhikrEntry> _adhkar;
   int _selectedIndex = 0;
   bool _showRecord = false;
+  MisbahaTheme _theme = MisbahaTheme.emerald;
+  int _hapticMode = 1; // 0: off, 1: each tap, 2: milestone only
+  bool _soundEnabled = true;
+  bool _fullScreenTap = false;
 
   DhikrEntry get _current => _adhkar[_selectedIndex];
 
-  // ── Animation controllers ─────────────────────────────────────────────────
+  // ── Animation Controllers ──────────────────────────────────────────────────
   late AnimationController _pulseCtrl;
   late AnimationController _rippleCtrl;
   late AnimationController _burstCtrl;
-  late AnimationController _counterCtrl;
+  late AnimationController _beadRotateCtrl;
   late AnimationController _pageCtrl;
 
   late Animation<double> _scaleAnim;
   late Animation<double> _rippleAnim;
   late Animation<double> _burstAnim;
-  // ignore: unused_field
-  late Animation<double> _counterAnim;
   late Animation<double> _pageAnim;
 
-  // Particles
+  double _currentBeadRotation = 0.0;
+  double _targetBeadRotation = 0.0;
   final List<Spark> _sparks = [];
+  Timer? _sparkTimer;
   int _displayedCount = 0;
   final Random _rng = Random();
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  // ── Default Authentic Adhkar ───────────────────────────────────────────────
+  static final List<DhikrEntry> _defaultAdhkar = [
+    DhikrEntry(
+      text: "سُبْحَانَ اللَّهِ",
+      target: 33,
+      virtue: "تعدل صدقة عن كل عظم من عظامك، وهي من أحب الكلام إلى الله",
+    ),
+    DhikrEntry(
+      text: "الْحَمْدُ لِلَّهِ",
+      target: 33,
+      virtue: "الحمد لله تملأ الميزان، وأفضل الدعاء الحمد لله",
+    ),
+    DhikrEntry(
+      text: "اللَّهُ أَكْبَرُ",
+      target: 34,
+      virtue: "تملأ ما بين السماء والأرض عظمة وتوحيداً",
+    ),
+    DhikrEntry(
+      text: "لَا إِلَهَ إِلَّا اللَّهُ",
+      target: 100,
+      virtue: "أفضل ما قاله النبي ﷺ والنبيون من قبله، وأعظم كلمة توحيد",
+    ),
+    DhikrEntry(
+      text: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+      target: 100,
+      virtue: "مفتاح الأرزاق ومغفرة الذنوب، كان النبي ﷺ يستغفر مائة مرة",
+    ),
+    DhikrEntry(
+      text: "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+      target: 100,
+      virtue: "من صلى عليّ صلاة صلى الله عليه بها عشراً ورُفعت له عشر درجات",
+    ),
+    DhikrEntry(
+      text: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ ، سُبْحَانَ اللَّهِ الْعَظِيمِ",
+      target: 100,
+      virtue: "كلمتان خفيفتان على اللسان، ثقيلتان في الميزان، حبيبتان إلى الرحمن",
+    ),
+    DhikrEntry(
+      text: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+      target: 100,
+      virtue: "كنزٌ عظيم من تحت عرش الرحمن ومن كنوز الجنة",
+    ),
+    DhikrEntry(
+      text: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+      target: 100,
+      virtue: "أمان الخائفين وملاذ المتوكلين في كل شدة وكرب",
+    ),
+    DhikrEntry(
+      text: "لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
+      target: 40,
+      virtue: "دعوة ذي النون، لم يدعُ بها مسلم في شيء قط إلا استجاب الله له",
+    ),
+  ];
+
+  // ── Init & Lifecycle ───────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    _adhkar = [
-      DhikrEntry(text: "سبحان الله",            target: 33),
-      DhikrEntry(text: "الحمد لله",             target: 33),
-      DhikrEntry(text: "الله أكبر",             target: 34),
-      DhikrEntry(text: "لا إله إلا الله",       target: 100),
-      DhikrEntry(text: "أستغفر الله",           target: 100),
-      DhikrEntry(text: "اللهم صل وسلم على محمد ﷺ", target: 10),
-      DhikrEntry(text: "سبحان الله وبحمده",    target: 100),
-      DhikrEntry(text: "سبحان الله العظيم",    target: 100),
-    ];
+    _adhkar = List.from(_defaultAdhkar);
     _displayedCount = _current.count;
 
-    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
     _scaleAnim = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.08), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 1.08, end: 0.97), weight: 35),
-      TweenSequenceItem(tween: Tween(begin: 0.97, end: 1.0),  weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.06), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.06, end: 0.98), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 0.98, end: 1.0), weight: 30),
     ]).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
-    _rippleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _rippleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
     _rippleAnim = CurvedAnimation(parent: _rippleCtrl, curve: Curves.easeOut);
 
-    _burstCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _burstCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 950),
+    );
     _burstAnim = CurvedAnimation(parent: _burstCtrl, curve: Curves.easeOut);
 
-    _counterCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    _counterAnim = CurvedAnimation(parent: _counterCtrl, curve: Curves.easeOut);
+    _beadRotateCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    )..addListener(() {
+        setState(() {
+          _currentBeadRotation = _targetBeadRotation -
+              (1.0 - _beadRotateCtrl.value) * (2 * pi / 33);
+        });
+      });
 
-    _pageCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
+    _pageCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _pageAnim = CurvedAnimation(parent: _pageCtrl, curve: Curves.easeOut);
     _pageCtrl.forward();
 
     _loadState();
   }
 
+  @override
+  void dispose() {
+    _sparkTimer?.cancel();
+    _pulseCtrl.dispose();
+    _rippleCtrl.dispose();
+    _burstCtrl.dispose();
+    _beadRotateCtrl.dispose();
+    _pageCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Persistence ────────────────────────────────────────────────────────────
   Future<void> _saveState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = _adhkar.map((e) => e.toJson()).toList();
       await prefs.setString('deeds_adhkar_list', jsonEncode(jsonList));
       await prefs.setInt('deeds_selected_index', _selectedIndex);
+      await prefs.setString('misbaha_theme_id', _theme.id);
+      await prefs.setInt('misbaha_haptic_mode', _hapticMode);
+      await prefs.setBool('misbaha_sound_enabled', _soundEnabled);
+      await prefs.setBool('misbaha_fullscreen_tap', _fullScreenTap);
     } catch (e) {
       debugPrint('[DeedsPage] Error saving state: $e');
     }
@@ -136,116 +202,164 @@ class _DeedsPageState extends State<DeedsScreen>
       final prefs = await SharedPreferences.getInstance();
       final rawList = prefs.getString('deeds_adhkar_list');
       final savedIndex = prefs.getInt('deeds_selected_index');
-      
-      if (rawList != null) {
-        final List<dynamic> decoded = jsonDecode(rawList);
-        final loadedAdhkar = decoded.map((e) => DhikrEntry.fromJson(e as Map<String, dynamic>)).toList();
-        setState(() {
-          _adhkar = loadedAdhkar;
+      final themeId = prefs.getString('misbaha_theme_id');
+      final haptic = prefs.getInt('misbaha_haptic_mode');
+      final sound = prefs.getBool('misbaha_sound_enabled');
+      final fullScreen = prefs.getBool('misbaha_fullscreen_tap');
+
+      setState(() {
+        if (themeId != null) _theme = MisbahaTheme.getTheme(themeId);
+        if (haptic != null) _hapticMode = haptic;
+        if (sound != null) _soundEnabled = sound;
+        if (fullScreen != null) _fullScreenTap = fullScreen;
+
+        if (rawList != null) {
+          final List<dynamic> decoded = jsonDecode(rawList);
+          final loaded = decoded
+              .map((e) => DhikrEntry.fromJson(e as Map<String, dynamic>))
+              .toList();
+
+          // Merge virtues into existing default adhkar if missing
+          for (int i = 0; i < loaded.length && i < _defaultAdhkar.length; i++) {
+            if (loaded[i].virtue == null || loaded[i].virtue!.isEmpty) {
+              loaded[i].virtue = _defaultAdhkar[i].virtue;
+            }
+          }
+
+          _adhkar = loaded;
           if (savedIndex != null && savedIndex < _adhkar.length) {
             _selectedIndex = savedIndex;
           }
           _displayedCount = _current.count;
-        });
-      }
+        }
+      });
     } catch (e) {
       debugPrint('[DeedsPage] Error loading state: $e');
     }
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    _rippleCtrl.dispose();
-    _burstCtrl.dispose();
-    _counterCtrl.dispose();
-    _pageCtrl.dispose();
-    super.dispose();
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   int get _totalHasanat => _adhkar.fold(0, (s, e) => s + e.count);
 
   double get _progressPct {
-    if (_current.target <= 0) return 0;
+    if (_current.target <= 0) {
+      // Free loop mode: loop every 33 counts for the bead ring
+      return (_current.count % 33) / 33.0;
+    }
     return (_current.count / _current.target).clamp(0.0, 1.0);
   }
 
   bool get _hasTarget => _current.target > 0;
 
-  // ── Tap action ─────────────────────────────────────────────────────────────
+  // ── Tap & Gesture Actions ──────────────────────────────────────────────────
   void _tap() {
-    HapticFeedback.lightImpact();
+    // Sound feedback
+    if (_soundEnabled) {
+      SystemSound.play(SystemSoundType.click);
+    }
+
+    // Haptics
+    if (_hapticMode == 1) {
+      HapticFeedback.lightImpact();
+    }
+
+    // Pulse & Ripple
     _pulseCtrl.forward(from: 0);
     _rippleCtrl.forward(from: 0);
+
+    // Rotate beads
+    _targetBeadRotation += (2 * pi / 33);
+    _beadRotateCtrl.forward(from: 0);
 
     final prevCount = _current.count;
     setState(() {
       _current.count++;
       _displayedCount = _current.count;
+      if (_hasTarget && _current.count % _current.target == 0) {
+        _current.cycle++;
+      }
     });
     _saveState();
 
     _spawnSparks(isGold: false);
 
-    // Check for milestone
+    // Check target completion
     if (_hasTarget && prevCount < _current.target && _current.count >= _current.target) {
       _triggerCompletion();
     }
   }
 
-  void _longPress() {
+  void _undo() {
     if (_current.count <= 0) return;
-    HapticFeedback.mediumImpact();
+    if (_hapticMode != 0) HapticFeedback.mediumImpact();
+    _pulseCtrl.forward(from: 0);
+
+    // Rotate beads backwards
+    _targetBeadRotation -= (2 * pi / 33);
+    _beadRotateCtrl.forward(from: 0);
+
     setState(() {
       _current.count--;
       _displayedCount = _current.count;
     });
     _saveState();
-    _pulseCtrl.forward(from: 0);
   }
 
   void _triggerCompletion() {
-    HapticFeedback.heavyImpact();
+    if (_hapticMode != 0) {
+      HapticFeedback.heavyImpact();
+    }
     _burstCtrl.forward(from: 0);
-    _spawnSparks(isGold: true, count: 24);
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) HapticFeedback.heavyImpact();
+    _spawnSparks(isGold: true, count: 28);
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (mounted && _hapticMode != 0) {
+        HapticFeedback.heavyImpact();
+      }
     });
   }
 
-  void _spawnSparks({bool isGold = false, int count = 8}) {
+  void _spawnSparks({bool isGold = false, int count = 10}) {
     setState(() {
       for (int i = 0; i < count; i++) {
         _sparks.add(Spark(
-          angle:    _rng.nextDouble() * 2 * pi,
-          speed:    50 + _rng.nextDouble() * 90,
-          radius:   isGold ? (4 + _rng.nextDouble() * 5) : (3 + _rng.nextDouble() * 4),
-          isGold:   isGold,
+          angle: _rng.nextDouble() * 2 * pi,
+          speed: 60 + _rng.nextDouble() * 100,
+          radius: isGold ? (4 + _rng.nextDouble() * 5) : (3 + _rng.nextDouble() * 4),
+          isGold: isGold,
         ));
       }
     });
-    Future.delayed(const Duration(milliseconds: 950), () {
+    _sparkTimer?.cancel();
+    _sparkTimer = Timer(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => _sparks.clear());
     });
   }
 
   void _resetCurrent() {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _current.count = 0;
-      _displayedCount = 0;
-    });
-    _saveState();
+    if (_hapticMode != 0) HapticFeedback.mediumImpact();
+    _showConfirm(
+      message: "هل تريد تصفير عداد «${_current.text}»؟",
+      onConfirm: () {
+        setState(() {
+          _current.count = 0;
+          _current.cycle = 0;
+          _displayedCount = 0;
+        });
+        _saveState();
+      },
+    );
   }
 
   void _resetAll() {
-    HapticFeedback.heavyImpact();
+    if (_hapticMode != 0) HapticFeedback.heavyImpact();
     _showConfirm(
-      message: "تصفير جميع الأذكار؟",
+      message: "هل تريد تصفير جميع أذكار المسبحة؟",
       onConfirm: () {
         setState(() {
-          for (final e in _adhkar) e.count = 0;
+          for (final e in _adhkar) {
+            e.count = 0;
+            e.cycle = 0;
+          }
           _displayedCount = 0;
         });
         _saveState();
@@ -254,6 +368,8 @@ class _DeedsPageState extends State<DeedsScreen>
   }
 
   void _selectDhikr(int idx) {
+    if (idx < 0 || idx >= _adhkar.length) return;
+    if (_hapticMode != 0) HapticFeedback.selectionClick();
     setState(() {
       _selectedIndex = idx;
       _displayedCount = _current.count;
@@ -262,9 +378,17 @@ class _DeedsPageState extends State<DeedsScreen>
     _pageCtrl.forward(from: 0);
   }
 
-  void _addDhikr(String text, int target) {
+  void _quickSetTarget(int target) {
+    if (_hapticMode != 0) HapticFeedback.selectionClick();
     setState(() {
-      _adhkar.add(DhikrEntry(text: text, target: target));
+      _current.target = target;
+    });
+    _saveState();
+  }
+
+  void _addDhikr(String text, int target, String? virtue) {
+    setState(() {
+      _adhkar.add(DhikrEntry(text: text, target: target, virtue: virtue));
       _selectedIndex = _adhkar.length - 1;
       _displayedCount = 0;
     });
@@ -272,7 +396,7 @@ class _DeedsPageState extends State<DeedsScreen>
   }
 
   void _deleteCustomDhikr(int idx) {
-    if (idx < 8) return; // protect defaults
+    if (idx < 10) return; // Protect default authentic adhkar
     setState(() {
       if (_selectedIndex == idx) _selectedIndex = 0;
       if (_selectedIndex > idx) _selectedIndex--;
@@ -298,12 +422,53 @@ class _DeedsPageState extends State<DeedsScreen>
       builder: (_) => DhikrPickerSheet(
         adhkar: _adhkar,
         selectedIndex: _selectedIndex,
+        theme: _theme,
         onSelect: (idx) {
           Navigator.pop(context);
           _selectDhikr(idx);
         },
         onDelete: _deleteCustomDhikr,
-        onAdd: (text, target) => _addDhikr(text, target),
+        onAdd: (text, target, virtue) => _addDhikr(text, target, virtue),
+      ),
+    );
+  }
+
+  void _openThemeSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => MisbahaThemeSheet(
+        currentTheme: _theme,
+        onSelect: (t) {
+          setState(() => _theme = t);
+          _saveState();
+        },
+      ),
+    );
+  }
+
+  void _openSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => MisbahaSettingsSheet(
+        hapticMode: _hapticMode,
+        soundEnabled: _soundEnabled,
+        fullScreenTap: _fullScreenTap,
+        onHapticChanged: (val) {
+          setState(() => _hapticMode = val);
+          _saveState();
+        },
+        onSoundChanged: (val) {
+          setState(() => _soundEnabled = val);
+          _saveState();
+        },
+        onFullScreenChanged: (val) {
+          setState(() => _fullScreenTap = val);
+          _saveState();
+        },
       ),
     );
   }
@@ -323,104 +488,193 @@ class _DeedsPageState extends State<DeedsScreen>
     );
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  // ── Build Screen ───────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.bg,
-      body: Stack(children: [
-        // Ambient blobs
-        Positioned(top: -100, left: -80,
-            child: GlowBlob(color: _C.jade.withValues(alpha: 0.07), size: 380)),
-        Positioned(bottom: 0, right: -100,
-            child: GlowBlob(color: _C.gold.withValues(alpha: 0.06), size: 320)),
-
-        SafeArea(
-          child: FadeTransition(
-            opacity: _pageAnim,
-            child: Column(children: [
-              _buildHeader(),
-              _buildStatsBanner(),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                  child: Column(children: [
-                    const SizedBox(height: 20),
-                    _buildDhikrSelector(),
-                    const SizedBox(height: 32),
-                    _buildCounterArea(),
-                    const SizedBox(height: 12),
-                    if (_hasTarget) _buildProgressLabel(),
-                    const SizedBox(height: 28),
-                    _buildButtons(),
-                    const SizedBox(height: 28),
-                    _buildRecordToggle(),
-                    if (_showRecord) ...[
-                      const SizedBox(height: 16),
-                      _buildRecordList(),
-                    ],
-                    const SizedBox(height: 16),
-                  ]),
-                ),
-              ),
-            ]),
+      backgroundColor: const Color(0xff060D12),
+      body: Stack(
+        children: [
+          // Background ambient glows matching theme
+          Positioned(
+            top: -120,
+            left: -80,
+            child: GlowBlob(color: _theme.primary.withValues(alpha: 0.12), size: 400),
           ),
-        ),
-      ]),
+          Positioned(
+            bottom: 40,
+            right: -100,
+            child: GlowBlob(color: _theme.accent.withValues(alpha: 0.10), size: 360),
+          ),
+
+          // Main Tap detector (if full screen tap is enabled)
+          if (_fullScreenTap)
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _tap,
+              ),
+            ),
+
+          SafeArea(
+            child: FadeTransition(
+              opacity: _pageAnim,
+              child: Column(
+                children: [
+                  _buildTopHeader(),
+                  const SizedBox(height: 4),
+                  _buildDhikrCarousel(),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                      child: Column(
+                        children: [
+                          _buildActiveDhikrCard(),
+                          const SizedBox(height: 24),
+                          _buildInteractiveMisbaha(),
+                          const SizedBox(height: 22),
+                          _buildTargetPill(),
+                          const SizedBox(height: 20),
+                          _buildActionButtons(),
+                          const SizedBox(height: 24),
+                          _buildRecordToggle(),
+                          if (_showRecord) ...[
+                            const SizedBox(height: 16),
+                            _buildRecordList(),
+                          ],
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────────────────────
-  Widget _buildHeader() {
+  // ── Top Header Bar ─────────────────────────────────────────────────────────
+  Widget _buildTopHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 6),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                ShaderMask(
-                  shaderCallback: (r) => const LinearGradient(
-                    colors: [_C.gold, _C.goldLight],
-                  ).createShader(r),
-                  child: const Text("حَسَنَاتِي",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                          color: Colors.white, height: 1.1)),
-                ),
-                const SizedBox(height: 4),
-                const Text("سبّح واذكر الله",
-                    style: TextStyle(fontSize: 12.5, color: _C.textSub)),
-              ]),
-              Row(children: [
-                GlassIconBtn(
-                  icon: Icons.track_changes_rounded,
-                  color: _C.goldLight,
-                  tooltip: "تعديل الهدف",
-                  onTap: _openTargetEdit,
-                ),
-                const SizedBox(width: 10),
-                GlassIconBtn(
-                  icon: Icons.restart_alt_rounded,
-                  color: _C.red,
-                  tooltip: "تصفير الكل",
-                  onTap: _resetAll,
-                ),
-              ]),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  _C.gold.withValues(alpha: 0.25),
-                  Colors.transparent,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: _theme.accentLight,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: _theme.accentLight.withValues(alpha: 0.6),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                      ShaderMask(
+                        shaderCallback: (r) => LinearGradient(
+                          colors: [_theme.accentLight, Colors.white],
+                        ).createShader(r),
+                        child: const Text(
+                          "المِسْبَحَةُ الإِلِكْتُرُونِيَّة",
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.4,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: DeedsColors.textSub,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ],
               ),
+              Row(
+                children: [
+                  // Theme switch
+                  GlassIconBtn(
+                    icon: Icons.palette_outlined,
+                    color: _theme.primaryLight,
+                    tooltip: "خامة المسبحة (${_theme.name})",
+                    onTap: _openThemeSheet,
+                  ),
+                  const SizedBox(width: 8),
+                  // Settings
+                  GlassIconBtn(
+                    icon: Icons.tune_rounded,
+                    color: _theme.accentLight,
+                    tooltip: "إعدادات الصوت والاهتزاز",
+                    onTap: _openSettingsSheet,
+                  ),
+                  const SizedBox(width: 8),
+                  // Reset all
+                  GlassIconBtn(
+                    icon: Icons.restart_alt_rounded,
+                    color: DeedsColors.red,
+                    tooltip: "تصفير الكل",
+                    onTap: _resetAll,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Total Hasanat Badge Strip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: _theme.primary.withValues(alpha: 0.10),
+              border: Border.all(color: _theme.primary.withValues(alpha: 0.20)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.stars_rounded, color: _theme.accentLight, size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "إجمالي التسبيحات",
+                      style: TextStyle(color: DeedsColors.textSub, fontSize: 12),
+                    ),
+                  ],
+                ),
+                Text(
+                  "$_totalHasanat",
+                  style: TextStyle(
+                    color: _theme.accentLight,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -428,256 +682,449 @@ class _DeedsPageState extends State<DeedsScreen>
     );
   }
 
-  // ── Stats banner ───────────────────────────────────────────────────────────
-  Widget _buildStatsBanner() {
-    final total = _totalHasanat;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: _C.gold.withValues(alpha: 0.07),
-        border: Border.all(color: _C.gold.withValues(alpha: 0.15)),
+  // ── Dhikr Carousel ─────────────────────────────────────────────────────────
+  Widget _buildDhikrCarousel() {
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        physics: const BouncingScrollPhysics(),
+        itemCount: _adhkar.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          if (i == _adhkar.length) {
+            // Add custom dhikr chip
+            return GestureDetector(
+              onTap: _openDhikrSheet,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withValues(alpha: 0.04),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.add_rounded, color: _theme.accentLight, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      "المزيد...",
+                      style: TextStyle(color: _theme.accentLight, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final ep = _adhkar[i];
+          final sel = i == _selectedIndex;
+          return DhikrCapsuleChip(
+            text: ep.text,
+            count: ep.count,
+            target: ep.target,
+            isSelected: sel,
+            theme: _theme,
+            onTap: () => _selectDhikr(i),
+          );
+        },
       ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        StatItem(label: "إجمالي الحسنات", value: total.toString(), color: _C.goldLight),
-        Container(width: 1, height: 28, color: _C.textHint),
-        StatItem(label: "عدد الأذكار", value: _adhkar.length.toString(), color: _C.jadeLight),
-        Container(width: 1, height: 28, color: _C.textHint),
-        StatItem(label: "اكتملت", value: _adhkar.where((e) => e.target > 0 && e.count >= e.target).length.toString(), color: _C.jade),
-      ]),
     );
   }
 
-  // ── Dhikr selector ─────────────────────────────────────────────────────────
-  Widget _buildDhikrSelector() {
+  // ── Active Dhikr Card with Virtue ──────────────────────────────────────────
+  Widget _buildActiveDhikrCard() {
     return GestureDetector(
       onTap: _openDhikrSheet,
       child: GlassCard(
-        child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text("الذكر الحالي",
-                  style: TextStyle(fontSize: 11, color: _C.textSub, letterSpacing: 1.1)),
-              const SizedBox(height: 6),
-              Text(_current.text,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
-                      color: _C.textMain, height: 1.3),
-                  overflow: TextOverflow.ellipsis),
-              if (_hasTarget)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text("الهدف: ${_current.target}",
-                      style: const TextStyle(fontSize: 12, color: _C.textSub)),
-                ),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: _C.jade.withValues(alpha: 0.12),
-              border: Border.all(color: _C.jade.withValues(alpha: 0.25)),
-            ),
-            child: const Row(children: [
-              Text("تغيير", style: TextStyle(color: _C.jadeLight, fontSize: 13,
-                  fontWeight: FontWeight.w600)),
-              SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down_rounded, color: _C.jade, size: 18),
-            ]),
-          ),
-        ]),
-      ),
-    );
-  }
-
-  // ── Counter area ───────────────────────────────────────────────────────────
-  Widget _buildCounterArea() {
-    return Center(
-      child: Stack(alignment: Alignment.center, children: [
-        // Progress arc (behind everything)
-        if (_hasTarget)
-          SizedBox(
-            width: 250, height: 250,
-            child: AnimatedBuilder(
-              animation: _rippleAnim,
-              builder: (_, __) => CustomPaint(
-                painter: ArcPainter(_progressPct, _C.gold, _C.textHint),
-              ),
-            ),
-          ),
-
-        // Ripple rings
-        AnimatedBuilder(
-          animation: _rippleAnim,
-          builder: (_, __) => CustomPaint(
-            size: const Size(250, 250),
-            painter: RipplePainter(_rippleAnim.value, _burstAnim.value, _C.jade, _C.gold),
-          ),
-        ),
-
-        // Sparks
-        AnimatedBuilder(
-          animation: _rippleAnim,
-          builder: (_, __) => CustomPaint(
-            size: const Size(250, 250),
-            painter: SparkPainter(_sparks, _rippleAnim.value, _burstAnim.value, jade: _C.jade, gold: _C.gold),
-          ),
-        ),
-
-        // Main button
-        GestureDetector(
-          onTap: _tap,
-          onLongPress: _longPress,
-          child: ScaleTransition(
-            scale: _scaleAnim,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _hasTarget && _progressPct >= 1.0
-                      ? [_C.gold, _C.goldDim]
-                      : [_C.jade, _C.jadeDim],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_hasTarget && _progressPct >= 1.0 ? _C.gold : _C.jade)
-                        .withValues(alpha: 0.30),
-                    blurRadius: 50,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, anim) => SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.3), end: Offset.zero,
-                    ).animate(anim),
-                    child: FadeTransition(opacity: anim, child: child),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: _theme.primary.withValues(alpha: 0.16),
+                    border: Border.all(color: _theme.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
-                    "$_displayedCount",
-                    key: ValueKey(_displayedCount),
-                    style: const TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1,
+                    _hasTarget ? "الهدف: ${_current.target}" : "تسبيح مفتوح",
+                    style: TextStyle(
+                      color: _theme.primaryLight,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  "اضغط للذكر",
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.50),
-                    letterSpacing: 1.6,
-                  ),
+                const Row(
+                  children: [
+                    Text(
+                      "تغيير الذكر",
+                      style: TextStyle(color: DeedsColors.textSub, fontSize: 11),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.unfold_more_rounded, color: DeedsColors.textSub, size: 16),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  "اضغط مطولاً للتراجع",
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.white.withValues(alpha: 0.30),
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ]),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              _current.text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: DeedsColors.textMain,
+                height: 1.35,
+              ),
+            ),
+            if (_current.virtue != null && _current.virtue!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: _theme.accent.withValues(alpha: 0.10),
+                  border: Border.all(color: _theme.accent.withValues(alpha: 0.22)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: _theme.accentLight, size: 15),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _current.virtue!,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: _theme.accentLight,
+                          fontSize: 11.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
-      ]),
+      ),
     );
   }
 
-  // ── Progress label ─────────────────────────────────────────────────────────
-  Widget _buildProgressLabel() {
-    final remaining = (_current.target - _current.count).clamp(0, _current.target);
-    final done = _current.count >= _current.target;
-    return Column(children: [
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(
-          done ? "✓ اكتمل الهدف!" : "تبقّى $remaining",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: done ? _C.goldLight : _C.textSub,
-          ),
+  // ── The Grand 33-Bead Interactive Misbaha ───────────────────────────────────
+  Widget _buildInteractiveMisbaha() {
+    const size = 290.0;
+    final remaining = _hasTarget
+        ? (_current.target - _current.count).clamp(0, _current.target)
+        : null;
+
+    return Center(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Ripple waves on tap
+            AnimatedBuilder(
+              animation: _rippleAnim,
+              builder: (_, __) => CustomPaint(
+                size: const Size(size, size),
+                painter: RipplePainter(
+                  _rippleAnim.value,
+                  _burstAnim.value,
+                  _theme.primary,
+                  _theme.accentLight,
+                ),
+              ),
+            ),
+
+            // 2. Spark particles
+            AnimatedBuilder(
+              animation: _rippleAnim,
+              builder: (_, __) => CustomPaint(
+                size: const Size(size, size),
+                painter: SparkPainter(
+                  _sparks,
+                  _rippleAnim.value,
+                  _burstAnim.value,
+                  jade: _theme.primaryLight,
+                  gold: _theme.accentLight,
+                ),
+              ),
+            ),
+
+            // 3. The 33 3D Rotating Beads Ring
+            CustomPaint(
+              size: const Size(size, size),
+              painter: MisbahaBeadRingPainter(
+                rotation: _currentBeadRotation,
+                progress: _progressPct,
+                count: _current.count,
+                theme: _theme,
+                pulse: _pulseCtrl.value,
+              ),
+            ),
+
+            // 4. Circular Progress Arc Track
+            SizedBox(
+              width: size - 44,
+              height: size - 44,
+              child: CustomPaint(
+                painter: ArcPainter(
+                  _progressPct,
+                  _theme.accentLight,
+                  _theme.primaryDark,
+                  glowColor: _theme.accent,
+                ),
+              ),
+            ),
+
+            // 5. Central Counter Dial Button
+            GestureDetector(
+              onTap: _tap,
+              child: ScaleTransition(
+                scale: _scaleAnim,
+                child: Container(
+                  width: size - 96,
+                  height: size - 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _theme.dialBg,
+                    border: Border.all(
+                      color: _hasTarget && _current.count >= _current.target
+                          ? _theme.accentLight
+                          : _theme.primaryLight.withValues(alpha: 0.45),
+                      width: 2.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_hasTarget && _current.count >= _current.target
+                                ? _theme.accent
+                                : _theme.primary)
+                            .withValues(alpha: 0.35),
+                        blurRadius: 36,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Eight-pointed Islamic Star Watermark
+                      CustomPaint(
+                        size: const Size(120, 120),
+                        painter: IslamicStarPainter(
+                          color: _theme.primaryLight.withValues(alpha: 0.10),
+                          radius: 46,
+                        ),
+                      ),
+
+                      // Counter Display Content
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Round / Milestone badge
+                          if (_hasTarget && _current.cycle > 0)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: _theme.accent.withValues(alpha: 0.2),
+                              ),
+                              child: Text(
+                                "الدورة ${_current.cycle + 1}",
+                                style: TextStyle(
+                                  color: _theme.accentLight,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+
+                          // Large animated count number
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 140),
+                            transitionBuilder: (child, anim) => SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.25),
+                                end: Offset.zero,
+                              ).animate(anim),
+                              child: FadeTransition(opacity: anim, child: child),
+                            ),
+                            child: Text(
+                              "$_displayedCount",
+                              key: ValueKey(_displayedCount),
+                              style: const TextStyle(
+                                fontSize: 52,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          // Remaining or open state
+                          Text(
+                            _hasTarget
+                                ? (remaining! <= 0
+                                    ? "✓ تم الهدف"
+                                    : "متبقي $remaining")
+                                : "سبّح لله",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _hasTarget && remaining! <= 0
+                                  ? _theme.accentLight
+                                  : _theme.primaryLight,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+
+                          const SizedBox(height: 2),
+                          Text(
+                            "انقر للتسبيح",
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: Colors.white.withValues(alpha: 0.35),
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        if (!done) ...[
+      ),
+    );
+  }
+
+  // ── Quick Target Selector Pill ─────────────────────────────────────────────
+  Widget _buildTargetPill() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withValues(alpha: 0.03),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TargetCapsuleChip(
+            label: "٣٣",
+            isSelected: _current.target == 33,
+            theme: _theme,
+            onTap: () => _quickSetTarget(33),
+          ),
           const SizedBox(width: 6),
-          Text("من ${_current.target}",
-              style: const TextStyle(fontSize: 13, color: _C.textHint)),
+          TargetCapsuleChip(
+            label: "١٠٠",
+            isSelected: _current.target == 100,
+            theme: _theme,
+            onTap: () => _quickSetTarget(100),
+          ),
+          const SizedBox(width: 6),
+          TargetCapsuleChip(
+            label: "١٠٠٠",
+            isSelected: _current.target == 1000,
+            theme: _theme,
+            onTap: () => _quickSetTarget(1000),
+          ),
+          const SizedBox(width: 6),
+          TargetCapsuleChip(
+            label: "مفتوح ∞",
+            isSelected: _current.target == 0,
+            theme: _theme,
+            onTap: () => _quickSetTarget(0),
+          ),
         ],
-      ]),
-      const SizedBox(height: 8),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: _progressPct),
-          duration: const Duration(milliseconds: 400),
-          builder: (_, val, __) => LinearProgressIndicator(
-            value: val,
-            minHeight: 5,
-            backgroundColor: _C.textHint.withValues(alpha: 0.25),
-            valueColor: AlwaysStoppedAnimation(
-                done ? _C.gold : _C.jade),
+      ),
+    );
+  }
+
+  // ── Action Buttons (Undo, Reset, Custom Target) ────────────────────────────
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: ActionBtn(
+            label: "تراجع -١",
+            icon: Icons.undo_rounded,
+            color: _theme.accentLight,
+            onTap: _undo,
           ),
         ),
-      ),
-    ]);
+        const SizedBox(width: 10),
+        Expanded(
+          child: ActionBtn(
+            label: "تصفير",
+            icon: Icons.refresh_rounded,
+            color: DeedsColors.red,
+            onTap: _resetCurrent,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ActionBtn(
+            label: "تعديل الهدف",
+            icon: Icons.flag_outlined,
+            color: _theme.primaryLight,
+            onTap: _openTargetEdit,
+          ),
+        ),
+      ],
+    );
   }
 
-  // ── Action buttons ─────────────────────────────────────────────────────────
-  Widget _buildButtons() {
-    return Row(children: [
-      Expanded(
-        child: ActionBtn(
-          label: "تصفير هذا",
-          icon: Icons.refresh_rounded,
-          color: _C.red,
-          onTap: _resetCurrent,
-        ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: ActionBtn(
-          label: "تعديل الهدف",
-          icon: Icons.flag_outlined,
-          color: _C.gold,
-          onTap: _openTargetEdit,
-        ),
-      ),
-    ]);
-  }
-
-  // ── Record toggle + list ───────────────────────────────────────────────────
+  // ── Record Toggle & Detailed History List ──────────────────────────────────
   Widget _buildRecordToggle() {
     return GestureDetector(
       onTap: () => setState(() => _showRecord = !_showRecord),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(
-          _showRecord ? "إخفاء السجل" : "عرض السجل الكامل",
-          style: const TextStyle(color: _C.jade, fontSize: 13,
-              fontWeight: FontWeight.w600),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white.withValues(alpha: 0.04),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
-        const SizedBox(width: 6),
-        AnimatedRotation(
-          turns: _showRecord ? 0.5 : 0,
-          duration: const Duration(milliseconds: 250),
-          child: const Icon(Icons.keyboard_arrow_down_rounded, color: _C.jade, size: 18),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _showRecord ? "إخفاء سجل الأذكار" : "عرض سجل الأذكار الكامل",
+              style: TextStyle(
+                color: _theme.primaryLight,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 6),
+            AnimatedRotation(
+              turns: _showRecord ? 0.5 : 0,
+              duration: const Duration(milliseconds: 250),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: _theme.primaryLight,
+                size: 18,
+              ),
+            ),
+          ],
         ),
-      ]),
+      ),
     );
   }
 
@@ -693,49 +1140,73 @@ class _DeedsPageState extends State<DeedsScreen>
           final entry = e.value;
           final pct = entry.count / max;
           final done = entry.target > 0 && entry.count >= entry.target;
+
           return Padding(
             padding: EdgeInsets.only(top: idx == 0 ? 0 : 14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Expanded(
-                  child: Text(entry.text,
-                      style: const TextStyle(color: _C.textMain, fontSize: 14,
-                          fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis),
-                ),
-                if (done)
-                  Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _C.gold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        entry.text,
+                        style: const TextStyle(
+                          color: DeedsColors.textMain,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    child: const Text("✓", style: TextStyle(color: _C.goldLight, fontSize: 11)),
-                  ),
-                Text("${entry.count}",
-                    style: const TextStyle(color: _C.goldLight, fontSize: 16,
-                        fontWeight: FontWeight.w800)),
-                if (entry.target > 0)
-                  Text(" / ${entry.target}",
-                      style: const TextStyle(color: _C.textSub, fontSize: 12)),
-              ]),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: pct.clamp(0.0, 1.0),
-                  minHeight: 4,
-                  backgroundColor: Colors.white.withValues(alpha: 0.06),
-                  valueColor: AlwaysStoppedAnimation(done ? _C.gold : _C.jade),
+                    if (done)
+                      Container(
+                        margin: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _theme.accent.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "✓ اكتمل",
+                          style: TextStyle(color: _theme.accentLight, fontSize: 10),
+                        ),
+                      ),
+                    Text(
+                      "${entry.count}",
+                      style: TextStyle(
+                        color: _theme.accentLight,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (entry.target > 0)
+                      Text(
+                        " / ${entry.target}",
+                        style: const TextStyle(
+                          color: DeedsColors.textSub,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-            ]),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: pct.clamp(0.0, 1.0),
+                    minHeight: 4.5,
+                    backgroundColor: Colors.white.withValues(alpha: 0.06),
+                    valueColor: AlwaysStoppedAnimation(
+                      done ? _theme.accentLight : _theme.primaryLight,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         }).toList(),
       ),
     );
   }
 }
-
-// ═════════════════════════════════════════════════════════════════════════════

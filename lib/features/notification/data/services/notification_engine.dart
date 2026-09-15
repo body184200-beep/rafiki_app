@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart'
@@ -338,9 +339,11 @@ class NotificationEngine {
         debugPrint('🔔 [NotifEngine] AwesomeNotifications after request = $awesomeAllowed');
       }
 
-      debugPrint('🔔 [NotifEngine] Requesting FlutterForegroundTask permission...');
-      final fgStatus = await FlutterForegroundTask.requestNotificationPermission();
-      debugPrint('🔔 [NotifEngine] FlutterForegroundTask permission status = $fgStatus');
+      if (!kIsWeb) {
+        debugPrint('🔔 [NotifEngine] Requesting FlutterForegroundTask permission...');
+        final fgStatus = await FlutterForegroundTask.requestNotificationPermission();
+        debugPrint('🔔 [NotifEngine] FlutterForegroundTask permission status = $fgStatus');
+      }
 
       // Runtime verification and redirection for SCHEDULE_EXACT_ALARM on Android 12+
       if (context != null && context.mounted) {
