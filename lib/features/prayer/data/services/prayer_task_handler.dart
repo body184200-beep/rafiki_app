@@ -267,7 +267,7 @@ class PrayerTaskHandler extends TaskHandler {
                 roundedLargeIcon: true,
                 color: AppColors.gold,
                 wakeUpScreen: true,
-                customSound: 'resource://raw/res_abdul_hakam',
+                customSound: 'resource://raw/res_azan',
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',

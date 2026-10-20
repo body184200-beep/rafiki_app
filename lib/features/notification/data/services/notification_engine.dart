@@ -148,7 +148,7 @@ class NotificationEngine {
           enableLights: true,
           enableVibration: true,
           playSound: true,
-          soundSource: 'resource://raw/res_abdul_hakam',
+          soundSource: 'resource://raw/res_azan',
           onlyAlertOnce: true,
           defaultPrivacy: NotificationPrivacy.Public,
         ),
@@ -638,6 +638,7 @@ class NotificationEngine {
       await AwesomeNotifications().cancelNotificationsByChannelKey(
         AppConstants.notificationChannelPrayerReminder,
       );
+      await AwesomeNotifications().cancelNotificationsByChannelKey('prayer_channel_v4');
       await AwesomeNotifications().cancelNotificationsByChannelKey('prayer_channel_v3');
       await AwesomeNotifications().cancelNotificationsByChannelKey('prayer_reminder_channel');
       debugPrint('🕌 [PrayerNotification] 🗑 Cancelled all prayer channels notifications');
@@ -737,7 +738,7 @@ class NotificationEngine {
                 roundedLargeIcon: true,
                 color: AppColors.gold,
                 wakeUpScreen: true,
-                customSound: 'resource://raw/res_abdul_hakam',
+                customSound: 'resource://raw/res_azan',
                 autoDismissible: true,
                 groupKey: 'prayer_alerts',
                 summary: 'مواقيت الصلاة',
@@ -996,7 +997,7 @@ class NotificationEngine {
               wakeUpScreen: true,
               autoDismissible: true,
               color: AppColors.gold,
-              customSound: 'resource://raw/res_abdul_hakam',
+              customSound: 'resource://raw/res_azan',
             ),
           );
           buf.writeln('• إشعار فوري بصوت الأذان: ${immediateOk ? "نجح ✅" : "فشل ❌"}');

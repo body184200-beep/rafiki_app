@@ -30,7 +30,7 @@ class AppConstants {
   // ── Notification ───────────────────────────────────────────
   static const int maxCustomNotifications = 25;
   static const String notificationChannelAzkar = 'azkar_channel_v2';
-  static const String notificationChannelPrayer = 'prayer_channel_v4';
+  static const String notificationChannelPrayer = 'prayer_channel_v5';
   static const String notificationChannelPrayerReminder = 'prayer_reminder_channel_v2';
 
   // ── Gamification ───────────────────────────────────────────
