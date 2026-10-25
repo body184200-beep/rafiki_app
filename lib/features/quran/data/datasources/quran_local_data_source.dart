@@ -7,59 +7,45 @@ import 'package:rafiki_app/features/quran/data/models/mushaf_page_model.dart';
 class QuranLocalDataSource {
   static List<Map<String, dynamic>>? _cachedSurahs;
   static List<MushafPage>? _cachedMushafPages;
+  static Future<void>? _loadingFuture;
+
+  static Future<void> _ensureLoaded() async {
+    if (_cachedSurahs != null && _cachedMushafPages != null) return;
+    if (_loadingFuture != null) return _loadingFuture!;
+
+    _loadingFuture = () async {
+      try {
+        final jsonString = await rootBundle.loadString('assets/quran.json');
+        final result = await compute(_parseAllData, jsonString);
+        _cachedSurahs = result.$1;
+        _cachedMushafPages = result.$2;
+      } catch (e) {
+        AppLogger.warning('Failed to load Quran data', tag: 'QuranLocal', error: e);
+      } finally {
+        _loadingFuture = null;
+      }
+    }();
+
+    return _loadingFuture!;
+  }
 
   Future<List<Map<String, dynamic>>> getSurahs() async {
-    if (_cachedSurahs != null) {
-      return _cachedSurahs!;
-    }
-
-    try {
-      final jsonString = await rootBundle.loadString('assets/quran.json');
-      final parsed = await compute(_parseQuran, jsonString);
-      _cachedSurahs = parsed;
-      return parsed;
-    } catch (e) {
-      AppLogger.warning('Failed to load Quran data', tag: 'QuranLocal', error: e);
-      return [];
-    }
+    if (_cachedSurahs != null) return _cachedSurahs!;
+    await _ensureLoaded();
+    return _cachedSurahs ?? [];
   }
 
   Future<List<MushafPage>> getMushafPages() async {
-    if (_cachedMushafPages != null) {
-      return _cachedMushafPages!;
-    }
-
-    try {
-      final jsonString = await rootBundle.loadString('assets/quran.json');
-      final parsed = await compute(_parseMushafPages, jsonString);
-      _cachedMushafPages = parsed;
-      return parsed;
-    } catch (e) {
-      AppLogger.warning('Failed to load Mushaf pages', tag: 'QuranLocal', error: e);
-      return [];
-    }
+    if (_cachedMushafPages != null) return _cachedMushafPages!;
+    await _ensureLoaded();
+    return _cachedMushafPages ?? [];
   }
 
-  static List<Map<String, dynamic>> _parseQuran(String jsonString) {
-    final decoded = jsonDecode(jsonString);
-    final data = decoded['data']['surahs'] as List;
-    return data.map<Map<String, dynamic>>((s) {
-      final ayahsList = s['ayahs'] as List;
-      return {
-        'number': s['number'] as int,
-        'name': s['name'] as String,
-        'englishName': s['englishName'] as String,
-        'revelationType': s['revelationType'] as String? ?? '',
-        'numberOfAyahs': s['numberOfAyahs'] as int? ?? ayahsList.length,
-        'ayahs': s['ayahs'],
-      };
-    }).toList();
-  }
-
-  static List<MushafPage> _parseMushafPages(String jsonString) {
+  static (List<Map<String, dynamic>>, List<MushafPage>) _parseAllData(String jsonString) {
     final decoded = jsonDecode(jsonString);
     final surahs = decoded['data']['surahs'] as List;
 
+    final List<Map<String, dynamic>> surahList = [];
     final Map<int, List<MushafAyah>> pageAyahsMap = {};
     for (int p = 1; p <= 604; p++) {
       pageAyahsMap[p] = [];
@@ -70,9 +56,19 @@ class QuranLocalDataSource {
     for (final s in surahs) {
       final sNum = s['number'] as int;
       final sName = s['name'] as String;
+      final engName = s['englishName'] as String? ?? '';
       final sRev = s['revelationType'] as String? ?? 'Meccan';
       final ayahs = s['ayahs'] as List;
       final totalAyahs = ayahs.length;
+
+      surahList.add({
+        'number': sNum,
+        'name': sName,
+        'englishName': engName,
+        'revelationType': sRev,
+        'numberOfAyahs': s['numberOfAyahs'] as int? ?? totalAyahs,
+        'ayahs': ayahs,
+      });
 
       for (final a in ayahs) {
         final p = (a['page'] as int?) ?? 1;
@@ -107,7 +103,6 @@ class QuranLocalDataSource {
     }
 
     final List<MushafPage> pages = [];
-
     for (int p = 1; p <= 604; p++) {
       final items = pageAyahsMap[p] ?? [];
       final juzNum = items.isNotEmpty ? items.first.juz : 1;
@@ -118,7 +113,6 @@ class QuranLocalDataSource {
       final primarySurah = items.isNotEmpty ? items.first.surahName : '';
       final primarySurahNum = items.isNotEmpty ? items.first.surahNumber : 1;
 
-      // Find if this page contains a Hizb quarter mark
       String? hqText;
       final hizbAyah = items.where((a) => a.isHizbQuarterStart).firstOrNull;
       if (hizbAyah != null) {
@@ -149,6 +143,6 @@ class QuranLocalDataSource {
       );
     }
 
-    return pages;
+    return (surahList, pages);
   }
 }

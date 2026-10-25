@@ -216,15 +216,19 @@ class PrayerTaskHandler extends TaskHandler {
           : 'الصلاة القادمة: $prayerName';
       final text = '$prayerTimeStr   •   $countdownStr';
 
-      // Live update foreground notification with brand accent color and clear typography
-      FlutterForegroundTask.updateService(
-        notificationTitle: title,
-        notificationText: text,
-        notificationIcon: const NotificationIcon(
-          metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
-          backgroundColor: Color(0xFF4ECCA3),
-        ),
-      );
+      // Live update foreground notification only when text changes
+      if (_lastNotificationTitle != title || _lastNotificationText != text) {
+        _lastNotificationTitle = title;
+        _lastNotificationText = text;
+        FlutterForegroundTask.updateService(
+          notificationTitle: title,
+          notificationText: text,
+          notificationIcon: const NotificationIcon(
+            metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
+            backgroundColor: Color(0xFF4ECCA3),
+          ),
+        );
+      }
     } catch (e, st) {
       debugPrint('⏱ [PrayerTaskHandler] Error updating countdown: $e\n$st');
     }

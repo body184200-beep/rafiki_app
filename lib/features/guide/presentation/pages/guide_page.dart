@@ -106,8 +106,8 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
         destination: () => RecitersPage(),
       ),
       _CardData(
-        title: "بودكاست الصلاة",
-        subtitle: "دليلك نحو الانتظام والخشوع في الصلاة",
+        title: "بودكاست إسلامي",
+        subtitle: "سلاسل صوتية وبرامج دينية لنخبة من كبار الدعاة",
         icon: Icons.podcasts_rounded,
         accentA: const Color(0xff1A2560),
         accentB: const Color(0xff6C82FF),

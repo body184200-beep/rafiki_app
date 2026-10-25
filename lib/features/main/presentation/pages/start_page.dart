@@ -226,9 +226,9 @@ class _StartState extends State<Start>
       ),
       iosNotificationOptions: const IOSNotificationOptions(),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(1000),
+        eventAction: ForegroundTaskEventAction.repeat(5000),
         autoRunOnBoot: true,
-        allowWakeLock: true,
+        allowWakeLock: false,
         allowWifiLock: false,
       ),
     );

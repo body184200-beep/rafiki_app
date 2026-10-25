@@ -9,6 +9,7 @@ import 'package:rafiki_app/features/quran/presentation/pages/quran_details_page.
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
 import 'package:rafiki_app/features/quran/data/datasources/juz_data.dart';
+import 'package:rafiki_app/features/quran/presentation/widgets/quran_audio_view.dart';
 
 class MushafPage extends StatefulWidget {
   const MushafPage({super.key});
@@ -138,18 +139,6 @@ class _MushafPageState extends State<MushafPage>
         return true;
       }).toList();
     });
-  }
-
-  List<QuranJuz> get _filteredAjza {
-    if (_searchQuery.trim().isEmpty) return kQuranAjza;
-    final q = _searchQuery.trim();
-    return kQuranAjza.where((j) {
-      final nameMatch = j.name.contains(q);
-      final surahMatch = j.surahName.contains(q);
-      final numMatch = j.number.toString() == q;
-      final wordsMatch = j.firstWords.contains(q);
-      return nameMatch || surahMatch || numMatch || wordsMatch;
-    }).toList();
   }
 
   void _onSearch(String q) {
@@ -428,7 +417,7 @@ class _MushafPageState extends State<MushafPage>
                 ),
                 child: Center(
                   child: Text(
-                    'السور (${_surahs.isEmpty ? 114 : _surahs.length})',
+                    'المصحف (${_surahs.isEmpty ? 114 : _surahs.length} سورة)',
                     style: TextStyle(
                       color: _mainTab == 0 ? _accent : _textSec,
                       fontSize: 13,
@@ -452,20 +441,27 @@ class _MushafPageState extends State<MushafPage>
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: _mainTab == 1 ? _gold.withValues(alpha: 0.14) : Colors.transparent,
+                  color: _mainTab == 1 ? _gold.withValues(alpha: 0.16) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: _mainTab == 1 ? _gold.withValues(alpha: 0.4) : Colors.transparent,
+                    color: _mainTab == 1 ? _gold.withValues(alpha: 0.45) : Colors.transparent,
                   ),
                 ),
                 child: Center(
-                  child: Text(
-                    'الأجزاء (٣٠)',
-                    style: TextStyle(
-                      color: _mainTab == 1 ? _gold : _textSec,
-                      fontSize: 13,
-                      fontWeight: _mainTab == 1 ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.headphones_rounded, size: 15, color: _mainTab == 1 ? _gold : _textSec),
+                      const SizedBox(width: 6),
+                      Text(
+                        'المصحف الصوتي',
+                        style: TextStyle(
+                          color: _mainTab == 1 ? _gold : _textSec,
+                          fontSize: 13,
+                          fontWeight: _mainTab == 1 ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -594,109 +590,6 @@ class _MushafPageState extends State<MushafPage>
         isMeccan:   isMeccan,
         isLastRead: isLastRead,
         onTap:      () => _openSurah(surah),
-      ),
-    );
-  }
-
-  // ── Juz card ──────────────────────────────────────────────────────────
-
-  Widget _juzCard(QuranJuz juz, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _openJuz(juz),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _border, width: 0.8),
-            ),
-            child: Row(
-              children: [
-                // رقم الجزء
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _gold.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _gold.withValues(alpha: 0.3)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${juz.number}',
-                      style: const TextStyle(
-                        color: _gold,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // تفاصيل الجزء
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            juz.name,
-                            style: const TextStyle(
-                              color: _textPri,
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            juz.hizb,
-                            style: TextStyle(
-                              color: _gold.withValues(alpha: 0.85),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'يبدأ من: سورة ${juz.surahName} (آية ${juz.startAyah})',
-                        style: const TextStyle(
-                          color: _textSec,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '« ${juz.firstWords} »',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _accent.withValues(alpha: 0.9),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Icon(
-                  Icons.arrow_back_ios_rounded,
-                  color: _textSec.withValues(alpha: 0.35),
-                  size: 11,
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -835,24 +728,21 @@ class _MushafPageState extends State<MushafPage>
 
                   const SizedBox(height: 10),
 
-                  // ── Search ─────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _searchBar(),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // ── Filter (Only in Surahs tab) ────────────────────
-                  if (_mainTab == 0 && !_isLoading && !_hasError)
+                  // ── Search & Filters (Only in Mushaf tab) ───────────
+                  if (_mainTab == 0 && !_isLoading && !_hasError) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _searchBar(),
+                    ),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _filterRow(),
                     ),
-                  if (_mainTab == 0 && !_isLoading && !_hasError)
                     const SizedBox(height: 8),
+                  ],
 
-                  // ── List (Surahs or Ajza) ──────────────────────────
+                  // ── List (Mushaf Surahs or Audio View) ───────────────
                   Expanded(
                     child: _hasError
                         ? _errorState()
@@ -868,15 +758,14 @@ class _MushafPageState extends State<MushafPage>
                                 itemCount: _filteredSurahs.length,
                                 itemBuilder: (_, idx) => _surahCard(_filteredSurahs[idx], idx),
                               ))
-                        : (_filteredAjza.isEmpty
-                            ? _emptyState()
-                            : ListView.builder(
-                                controller: _scrollCtrl,
-                                physics: const BouncingScrollPhysics(),
-                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-                                itemCount: _filteredAjza.length,
-                                itemBuilder: (_, idx) => _juzCard(_filteredAjza[idx], idx),
-                              )),
+                        : QuranAudioView(
+                            surahs: _surahs,
+                            surfaceColor: _surface,
+                            accentColor: _accent,
+                            goldColor: _gold,
+                            textColor: _textPri,
+                            textMutedColor: _textSec,
+                          ),
                   ),
                 ],
               ),

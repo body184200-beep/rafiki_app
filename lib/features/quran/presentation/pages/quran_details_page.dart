@@ -87,6 +87,7 @@ class SurahDetailPage extends StatefulWidget {
 
 class _SurahDetailPageState extends State<SurahDetailPage> {
   late PageController _pageCtrl;
+  SharedPreferences? _prefs;
   List<MushafPage> _pages = [];
   bool _isLoading = true;
 
@@ -115,6 +116,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
 
   Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
     final savedTheme = prefs.getInt('mushaf_theme_index') ?? 0;
     final savedFontSize = prefs.getDouble('mushaf_font_size') ?? 20.0;
     final bmRaw = prefs.getString('mushaf_global_bookmark');
@@ -165,11 +167,11 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     });
   }
 
-  Future<void> _onPageChanged(int index) async {
+  void _onPageChanged(int index) {
+    if (_currentPageIndex == index) return;
     setState(() => _currentPageIndex = index);
     final pageNum = index + 1;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('mushaf_last_read_page', pageNum);
+    _prefs?.setInt('mushaf_last_read_page', pageNum);
   }
 
   void _jumpToPage(int pageNumber) {
@@ -182,7 +184,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
 
   Future<void> _toggleBookmark() async {
     HapticFeedback.lightImpact();
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _prefs ?? await SharedPreferences.getInstance();
     final page = _currentPage;
     if (page == null) return;
 
@@ -337,13 +339,27 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                                   width: 0.9,
                                 ),
                               ),
-                              child: Text(
-                                edition.name,
-                                style: TextStyle(
-                                  color: isSel ? (_theme.isDark ? _theme.accent : _theme.primary) : _theme.text.withValues(alpha: 0.65),
-                                  fontSize: 12,
-                                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (edition.isOffline)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        Icons.offline_pin_rounded,
+                                        size: 13,
+                                        color: isSel ? (_theme.isDark ? _theme.accent : _theme.primary) : const Color(0xFF4ECCA3),
+                                      ),
+                                    ),
+                                  Text(
+                                    edition.name,
+                                    style: TextStyle(
+                                      color: isSel ? (_theme.isDark ? _theme.accent : _theme.primary) : _theme.text.withValues(alpha: 0.65),
+                                      fontSize: 12,
+                                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -407,7 +423,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
-                                        'جارٍ جلب التفسير من الـ API...',
+                                        'جارٍ تحميل التفسير...',
                                         style: TextStyle(color: _theme.text.withValues(alpha: 0.6), fontSize: 12),
                                       ),
                                     ],
@@ -446,6 +462,31 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF4ECCA3).withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: const Color(0xFF4ECCA3).withValues(alpha: 0.3)),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.offline_pin_rounded, color: Color(0xFF4ECCA3), size: 12),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'تفسير مدمج (بدون إنترنت)',
+                                              style: TextStyle(color: Color(0xFF4ECCA3), fontSize: 10.5, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
                                   Text(
                                     tafsirText,
                                     textDirection: TextDirection.rtl,
