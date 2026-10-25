@@ -22,9 +22,6 @@ class HiveBoxes {
   /// Azkar progress and scores.
   static const String azkar = 'azkar_box';
 
-  /// Gamification state (keys, chests, rewards, collections).
-  static const String gamification = 'gamification_box';
-
   /// Score history (daily / total).
   static const String scoreHistory = 'score_history_box';
 
@@ -40,7 +37,6 @@ class HiveBoxes {
     prayer,
     notifications,
     azkar,
-    gamification,
     scoreHistory,
     backup,
     migration,

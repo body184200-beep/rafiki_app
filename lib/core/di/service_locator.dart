@@ -19,17 +19,12 @@ import 'package:rafiki_app/features/prayer/data/services/score_engine.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_streak_engine.dart';
 import 'package:rafiki_app/features/prayer/data/services/bonus_engine.dart';
 import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
-import 'package:rafiki_app/features/gamification/data/services/loot_box_engine.dart';
-import 'package:rafiki_app/features/gamification/domain/repositories/discovery_repository.dart';
-import 'package:rafiki_app/features/gamification/data/services/reward_engine.dart';
-import 'package:rafiki_app/features/gamification/presentation/controllers/reward_controller.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_rule_engine.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 import 'package:rafiki_app/features/prayer/domain/repositories/prayer_repository.dart';
 import 'package:rafiki_app/features/prayer/data/repositories/prayer_repository_impl.dart';
 import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
 import 'package:rafiki_app/features/quran/data/repositories/quran_repository_impl.dart';
-import 'package:rafiki_app/features/gamification/data/repositories/discovery_repository_impl.dart';
 import 'package:rafiki_app/features/hadith/data/datasources/hadith_local_data_source.dart';
 import 'package:rafiki_app/features/hadith/data/datasources/hadith_remote_data_source.dart';
 import 'package:rafiki_app/features/hadith/data/repositories/hadith_repository_impl.dart';
@@ -110,19 +105,6 @@ class ServiceLocator {
     final notificationEngine = NotificationEngine.instance;
     sl.registerSingleton<NotificationEngine>(notificationEngine);
     await notificationEngine.initialize();
-
-    final lootBoxEngine = LootBoxEngine.instance;
-    await lootBoxEngine.initialize();
-    sl.registerSingleton<LootBoxEngine>(lootBoxEngine);
-
-    final discoveryRepo = DiscoveryRepositoryImpl();
-    sl.registerSingleton<DiscoveryRepository>(discoveryRepo);
-
-    final rewardEngine = RewardEngine(discoveryRepo);
-    await rewardEngine.initialize();
-    sl.registerSingleton<RewardEngine>(rewardEngine);
-
-    sl.registerFactory<RewardController>(() => RewardController(sl<RewardEngine>()));
 
     _initialized = true;
     AppLogger.info('Service locator initialized', tag: 'DI');

@@ -8,8 +8,6 @@ import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/features/prophet_stories/presentation/pages/prophet_stories_page.dart';
 import 'package:rafiki_app/features/quran_radio/presentation/pages/quran_radio_page.dart';
 import 'package:rafiki_app/features/prayer/presentation/pages/prayer_schedule_page.dart';
-import 'package:rafiki_app/features/gamification/presentation/pages/companion_challenge_page.dart';
-import 'package:rafiki_app/features/gamification/presentation/pages/loot_box_page.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DESIGN TOKENS
@@ -139,15 +137,6 @@ class _MenuItem {
 /// Builds the locale-aware menu items list from [loc].
 List<_MenuItem> _buildMenuItems(AppLocalizations loc) => [
       _MenuItem(
-        title: loc.settings_menu_rewards_title,
-        subtitle: loc.settings_menu_rewards_subtitle,
-        icon: Icons.stars_rounded,
-        gradStart: const Color(0xFF281C06),
-        gradEnd: const Color(0xFF130D03),
-        accentClr: const Color(0xFFF5C052),
-        badge: loc.settings_menu_rewards_badge,
-      ),
-      _MenuItem(
         title: loc.settings_menu_quran_radio_title,
         subtitle: loc.settings_menu_quran_radio_subtitle,
         icon: Icons.graphic_eq_rounded,
@@ -163,15 +152,6 @@ List<_MenuItem> _buildMenuItems(AppLocalizations loc) => [
         gradStart: const Color(0xFF0B2135),
         gradEnd: const Color(0xFF05111C),
         accentClr: const Color(0xFF38BDF8),
-      ),
-      _MenuItem(
-        title: loc.settings_menu_challenge_title,
-        subtitle: loc.settings_menu_challenge_subtitle,
-        icon: Icons.military_tech_rounded,
-        gradStart: const Color(0xFF271A06),
-        gradEnd: const Color(0xFF130C02),
-        accentClr: const Color(0xFFFBBF24),
-        badge: loc.settings_menu_challenge_badge,
       ),
       _MenuItem(
         title: loc.settings_menu_prophets_title,
@@ -334,10 +314,8 @@ class _SettingState extends State<Setting>
   void _navigate(int index) {
     HapticFeedback.selectionClick();
     final pages = [
-      const LootBoxScreen(),
       const QuranRadioPage(),
       const PrayerSchedulePage(),
-      const Tahdey(),
       const Anbiaa(),
     ];
     Navigator.push(
