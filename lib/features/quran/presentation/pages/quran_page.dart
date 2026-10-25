@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -239,133 +239,70 @@ class _MushafPageState extends State<MushafPage>
   Widget _headerHero() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: Stack(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
         children: [
-          // Background glow
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: CustomPaint(painter: _GeometricPatternPainter()),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: _high.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _border),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_rounded,
+                color: _textSec,
+                size: 15,
+              ),
             ),
           ),
-          // Glass layer
-          _glass(
-            radius: 24,
-            borderColor: _gold.withValues(alpha: 0.3),
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+          const SizedBox(width: 14),
+          const Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Back button row
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: _high.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _border),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_rounded,
-                          color: _textSec,
-                          size: 15,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    // Dot indicators
-                    Row(
-                      children: List.generate(3, (i) => Container(
-                        margin: const EdgeInsets.only(left: 4),
-                        width: i == 1 ? 16 : 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: i == 1
-                              ? _gold.withValues(alpha: 0.8)
-                              : _gold.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      )),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                // Bismillah line
                 Text(
-                  'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    color: _gold.withValues(alpha: 0.85),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.5,
-                    height: 1.6,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                // Main title
-                const Text(
                   'المصحف الشريف',
                   textDirection: TextDirection.rtl,
                   style: TextStyle(
                     color: _textPri,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
-                    height: 1.2,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
-                // Stats pills row
-                if (!_isLoading && !_hasError)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _statsPill('١١٤', 'سورة', _accent),
-                      const SizedBox(width: 10),
-                      _statsPill('٦٢٣٦', 'آية', _gold),
-                      const SizedBox(width: 10),
-                      _statsPill('٣٠', 'جزء', _medinanClr),
-                    ],
+                SizedBox(height: 2),
+                Text(
+                  '١١٤ سورة • ٣٠ جزء • ٦٢٣٦ آية',
+                  style: TextStyle(
+                    color: _gold,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statsPill(String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(value,
-              style: TextStyle(
-                color: color, fontSize: 13, fontWeight: FontWeight.w700,
-              )),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                color: color.withValues(alpha: 0.7),
-                fontSize: 11, fontWeight: FontWeight.w500,
-              )),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _accent.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: _accent,
+              size: 20,
+            ),
+          ),
         ],
       ),
     );
@@ -392,98 +329,30 @@ class _MushafPageState extends State<MushafPage>
                 orElse: () => _surahs.first,
               );
               _openSurah(surah, initialPage: pageIndex);
-            }
+            } 
           },
-          child: _glass(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            radius: 16,
-            borderColor: _gold.withValues(alpha: 0.35),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _gold.withValues(alpha: 0.3)),
+            ),
             child: Row(
               children: [
-                // Bookmark icon badge
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: _gold.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _gold.withValues(alpha: 0.3)),
-                  ),
-                  child: const Icon(
-                    Icons.bookmark_rounded,
-                    color: _gold,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Surah & Ayah details
+                const Icon(Icons.bookmark_rounded, color: _gold, size: 20),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'متابعة القراءة',
-                            style: TextStyle(
-                              color: _gold.withValues(alpha: 0.9),
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: _accent.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Text(
-                              'صفحة ${pageIndex + 1}',
-                              style: const TextStyle(
-                                color: _accent,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'سورة $surahName • الآية $ayahNum',
-                        style: const TextStyle(
-                          color: _textPri,
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'متابعة القراءة: سورة $surahName • آية $ayahNum',
+                    style: const TextStyle(
+                      color: _textPri,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-
-                // Arrow action
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _surfaceAlt,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _border),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_rounded,
-                    color: _gold,
-                    size: 13,
-                  ),
-                ),
+                const Icon(Icons.arrow_back_ios_rounded, color: _gold, size: 12),
               ],
             ),
           ),
@@ -491,37 +360,8 @@ class _MushafPageState extends State<MushafPage>
       );
     }
 
-    // Empty state when no bookmark exists
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: _glass(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        radius: 14,
-        borderColor: _borderSoft,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.bookmark_border_rounded,
-              color: _textDim.withValues(alpha: 0.8),
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'لم تحفظ أي موضع بعد 📖',
-              style: TextStyle(
-                color: _textSec,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
-
-  // ── Search bar ────────────────────────────────────────────────────────
 
   Widget _searchBar() {
     return Container(
@@ -597,7 +437,7 @@ class _MushafPageState extends State<MushafPage>
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOutCubic,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 9),
+                          horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.12)
@@ -609,15 +449,7 @@ class _MushafPageState extends State<MushafPage>
                               : _border,
                           width: isSelected ? 1.5 : 1,
                         ),
-                        boxShadow: isSelected
-                            ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.15),
-                            blurRadius: 12,
-                            spreadRadius: 0,
-                          )
-                        ]
-                            : [],
+                        boxShadow: const [],
                       ),
                       child: Text(
                         _filterLabels[i],
@@ -959,13 +791,13 @@ class _GeometricPatternPainter extends CustomPainter {
 
 // ── Surah tile ────────────────────────────────────────────────────────────
 
-class _SurahTile extends StatefulWidget {
-  final int    number;
+class _SurahTile extends StatelessWidget {
+  final int number;
   final String name;
   final String engName;
-  final int    ayahCount;
-  final bool   isMeccan;
-  final bool   isLastRead;
+  final int ayahCount;
+  final bool isMeccan;
+  final bool isLastRead;
   final VoidCallback onTap;
 
   const _SurahTile({
@@ -978,226 +810,117 @@ class _SurahTile extends StatefulWidget {
     required this.onTap,
   });
 
-  @override
-  State<_SurahTile> createState() => _SurahTileState();
-}
-
-class _SurahTileState extends State<_SurahTile>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _press;
-  bool _isHovered = false;
-
-  static const Color _surface    = Color(0xff0F1520);
-  static const Color _surfaceAlt = Color(0xff131A28);
-  static const Color _border     = Color(0xff1C2540);
-  static const Color _accent     = Color(0xff5DD3A8);
-  static const Color _gold       = Color(0xffD4A853);
-  static const Color _textPri    = Color(0xffEDF1F8);
-  static const Color _textSec    = Color(0xff7A8599);
-  static const Color _textDim    = Color(0xff2E3A50);
-  static const Color _meccanClr  = Color(0xff4A9ECC);
-  static const Color _medinanClr = Color(0xff8B6ED4);
-
-  @override
-  void initState() {
-    super.initState();
-    _press = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 70),
-      reverseDuration: const Duration(milliseconds: 200),
-      lowerBound: 0.97,
-      upperBound: 1.0,
-      value: 1.0,
-    );
-  }
-
-  @override
-  void dispose() { _press.dispose(); super.dispose(); }
-
-  Color get _typeColor => widget.isMeccan ? _meccanClr : _medinanClr;
-  String get _typeLabel => widget.isMeccan ? 'مكية' : 'مدنية';
+  static const Color _surface = Color(0xff0F1520);
+  static const Color _border  = Color(0xff1C2540);
+  static const Color _accent  = Color(0xff5DD3A8);
+  static const Color _gold    = Color(0xffD4A853);
+  static const Color _textPri = Color(0xffEDF1F8);
+  static const Color _textSec = Color(0xff7A8599);
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _press,
-      child: GestureDetector(
-        onTapDown:   (_) { _press.reverse(); setState(() => _isHovered = true); },
-        onTapUp:     (_) { _press.forward(); setState(() => _isHovered = false); },
-        onTapCancel: ()  { _press.forward(); setState(() => _isHovered = false); },
-        onTap:       widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+    final typeLabel = isMeccan ? 'مكية' : 'مدنية';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: _isHovered ? _surfaceAlt : _surface,
-            borderRadius: BorderRadius.circular(18),
+            color: _surface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.isLastRead
-                  ? _gold.withValues(alpha: 0.35)
-                  : _isHovered
-                  ? _border.withValues(alpha: 1.5)
-                  : _border,
-              width: widget.isLastRead ? 1.5 : 1.0,
+              color: isLastRead ? _gold.withValues(alpha: 0.35) : _border,
+              width: isLastRead ? 1.2 : 0.8,
             ),
-            boxShadow: _isHovered
-                ? [
-              BoxShadow(
-                color: _accent.withValues(alpha: 0.06),
-                blurRadius: 20,
-                spreadRadius: 0,
-              )
-            ]
-                : [],
           ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // ── Left accent bar ─────────────────────────────────
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 3,
-                  decoration: BoxDecoration(
-                    color: _isHovered
-                        ? _accent.withValues(alpha: 0.7)
-                        : Colors.transparent,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
+          child: Row(
+            children: [
+              // رقم السورة بتصميم بسيط
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isLastRead
+                      ? _gold.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isLastRead
+                        ? _gold.withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.07),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '$number',
+                    style: TextStyle(
+                      color: isLastRead ? _gold : _textPri,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(width: 14),
 
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
-                    child: Row(
+              // اسم السورة
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
                       children: [
-                        // ── Number badge ───────────────────────────
-                        _OctaBadge(
-                          number: widget.number,
-                          isLastRead: widget.isLastRead,
-                        ),
-
-                        const SizedBox(width: 14),
-
-                        // ── Name block ─────────────────────────────
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      widget.name,
-                                      style: const TextStyle(
-                                        color: _textPri,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                  if (widget.isLastRead) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 7, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _gold.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                            color: _gold.withValues(alpha: 0.3)),
-                                      ),
-                                      child: const Text('آخر قراءة',
-                                          style: TextStyle(
-                                            color: _gold,
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w600,
-                                          )),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  Text(widget.engName,
-                                      style: const TextStyle(
-                                          color: _textSec, fontSize: 12)),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                      width: 1, height: 10, color: _textDim),
-                                  const SizedBox(width: 8),
-                                  // Type badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 7, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: _typeColor.withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                          color: _typeColor
-                                              .withValues(alpha: 0.2)),
-                                    ),
-                                    child: Text(
-                                      _typeLabel,
-                                      style: TextStyle(
-                                        color: _typeColor.withValues(alpha: 0.85),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            color: _textPri,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-
-                        // ── Ayah count ─────────────────────────────
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${widget.ayahCount}',
-                              style: const TextStyle(
-                                color: _accent,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const Text('آية',
-                                style: TextStyle(
-                                  color: _textDim,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                )),
-                          ],
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        Icon(
-                          Icons.arrow_back_ios_rounded,
-                          color: _isHovered ? _accent : _textDim,
-                          size: 13,
-                        ),
+                        if (isLastRead) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.bookmark_rounded, color: _gold, size: 14),
+                        ],
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$typeLabel • $ayahCount آية',
+                      style: const TextStyle(
+                        color: _textSec,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+
+              // الاسم الإنجليزي والسهم
+              Text(
+                engName,
+                style: TextStyle(
+                  color: _textSec.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.arrow_back_ios_rounded,
+                color: _textSec.withValues(alpha: 0.35),
+                size: 11,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
-
 // ── Octagonal number badge ────────────────────────────────────────────────
 
 class _OctaBadge extends StatelessWidget {

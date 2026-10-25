@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
@@ -747,127 +747,69 @@ class _SurahDetailPageState extends State<SurahDetailPage>
     );
   }
 
-  // ── Bismillah ornament ────────────────────────────────────────────────────
-  Widget _ornamentLine({bool reverse = false}) {
-    return Expanded(
-      child: Container(
-        height: 0.6,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: reverse
-                ? [_t.accent.withValues(alpha: 0.4), Colors.transparent]
-                : [Colors.transparent, _t.accent.withValues(alpha: 0.4)],
+  String _toArabicNum(int n) {
+    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return n.toString().split('').map((c) {
+      final d = int.tryParse(c);
+      return d != null ? digits[d] : c;
+    }).join();
+  }
+
+  Widget _bismillah(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.rtl,
+          style: TextStyle(
+            fontSize: _fontSize + 3,
+            color: _t.accent,
+            fontWeight: FontWeight.w700,
+            height: 1.8,
+            letterSpacing: 0.5,
           ),
         ),
       ),
     );
   }
 
-  Widget _bismillah(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-      child: Column(
-        children: [
-          // إطار زخرفي علوي
-          Row(
-            children: [
-              _ornamentLine(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Icon(Icons.stars_rounded,
-                    color: _t.accent.withValues(alpha: 0.6), size: 12),
-              ),
-              _ornamentLine(reverse: true),
-            ],
-          ),
-          const SizedBox(height: 18),
-          // نص البسملة بخط أكبر وأجمل
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-            style: TextStyle(
-              fontSize: _fontSize + 4,
-              color: _t.accent,
-              fontWeight: FontWeight.w800,
-              height: 2.0,
-              letterSpacing: 2.0,
-            ),
-          ),
-          const SizedBox(height: 18),
-          // إطار زخرفي سفلي
-          Row(
-            children: [
-              _ornamentLine(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Icon(Icons.stars_rounded,
-                    color: _t.accent.withValues(alpha: 0.6), size: 12),
-              ),
-              _ornamentLine(reverse: true),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Single ayah — شكل مصحف حقيقي ─────────────────────────────────────────
-  // الآيات في المصحف الحقيقي تكون inline مع بعضها مش كل آية في سطر لوحدها
+  // ── Single ayah — شكل مصحف بسيط وأصيل ─────────────────────────────────────
   Widget _ayahInlineText(List<String> items, bool startsWithBismillah, int pageLogical) {
-    // نبني نص الآيات كـ TextSpan واحد مترابط
     final List<InlineSpan> spans = [];
 
     for (int i = 0; i < items.length; i++) {
-      if (startsWithBismillah && i == 0) continue; // البسملة تتعرض منفردة
+      if (startsWithBismillah && i == 0) continue;
 
       final int offset = (!_isTawbah && !_isFatihah) ? 1 : 0;
       final int ayahNum = pageLogical * _ayatPerPage + i + 1 - offset;
 
-      // نص الآية
       spans.add(
         TextSpan(
           text: '${items[i]} ',
           style: TextStyle(
             fontSize: _fontSize,
             color: _t.textColor,
-            height: 2.4,
-            fontFamily: 'Scheherazade New', // أو أي خط عربي قرآني
+            height: 2.2,
           ),
         ),
       );
 
-      // رقم الآية (﴿١﴾)
       spans.add(
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(
-              color: _t.numBg.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _t.accent.withValues(alpha: 0.3),
-                width: 0.7,
-              ),
-            ),
-            child: Text(
-              '﴿$ayahNum﴾',
-              style: TextStyle(
-                color: _t.numText,
-                fontSize: _fontSize * 0.55,
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-              ),
-            ),
+        TextSpan(
+          text: ' ﴿${_toArabicNum(ayahNum)}﴾ ',
+          style: TextStyle(
+            color: _t.accent,
+            fontSize: _fontSize * 0.78,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Text.rich(
         TextSpan(children: spans),
         textAlign: TextAlign.justify,
@@ -1177,13 +1119,13 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'الجزء ${_currentPage + 1}',
+                              widget.surahName,
                               style: TextStyle(
-                                  color: _t.textSec, fontSize: 10),
+                                  color: _t.textSec, fontSize: 11, fontWeight: FontWeight.w600),
                             ),
-                            _pageIndicator(),
+                            Text('صفحة ' + _toArabicNum(_currentPage + 1) + ' من ' + _toArabicNum(_pages.length), style: TextStyle(color: _t.textSec, fontSize: 11)),
                             Text(
-                              '${widget.ayat.length} آية',
+                              _toArabicNum(widget.ayat.length) + ' آية',
                               style: TextStyle(
                                   color: _t.textSec, fontSize: 10),
                             ),

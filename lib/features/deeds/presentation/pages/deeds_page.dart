@@ -60,7 +60,6 @@ class _DeedsScreenState extends State<DeedsScreen>
   late Animation<double> _burstAnim;
   late Animation<double> _pageAnim;
 
-  double _currentBeadRotation = 0.0;
   double _targetBeadRotation = 0.0;
   final List<Spark> _sparks = [];
   Timer? _sparkTimer;
@@ -153,12 +152,8 @@ class _DeedsScreenState extends State<DeedsScreen>
     _beadRotateCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
-    )..addListener(() {
-        setState(() {
-          _currentBeadRotation = _targetBeadRotation -
-              (1.0 - _beadRotateCtrl.value) * (2 * pi / 33);
-        });
-      });
+      value: 1.0,
+    );
 
     _pageCtrl = AnimationController(
       vsync: this,
@@ -861,15 +856,22 @@ class _DeedsScreenState extends State<DeedsScreen>
             ),
 
             // 3. The 33 3D Rotating Beads Ring
-            CustomPaint(
-              size: const Size(size, size),
-              painter: MisbahaBeadRingPainter(
-                rotation: _currentBeadRotation,
-                progress: _progressPct,
-                count: _current.count,
-                theme: _theme,
-                pulse: _pulseCtrl.value,
-              ),
+            AnimatedBuilder(
+              animation: Listenable.merge([_beadRotateCtrl, _pulseCtrl]),
+              builder: (_, __) {
+                final rotation = _targetBeadRotation -
+                    (1.0 - _beadRotateCtrl.value) * (2 * pi / 33);
+                return CustomPaint(
+                  size: const Size(size, size),
+                  painter: MisbahaBeadRingPainter(
+                    rotation: rotation,
+                    progress: _progressPct,
+                    count: _current.count,
+                    theme: _theme,
+                    pulse: _pulseCtrl.value,
+                  ),
+                );
+              },
             ),
 
             // 4. Circular Progress Arc Track

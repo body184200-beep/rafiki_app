@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,11 +33,7 @@ class HomePrayerAlert extends StatelessWidget {
         key: ValueKey('alert_${prayer.name}'),
         direction: DismissDirection.horizontal,
         onDismissed: (_) => controller.dismissAlert(),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
+        child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: AppColors.accent.withValues(alpha: 0.10),
@@ -124,8 +119,6 @@ class HomePrayerAlert extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
           ),
         ),
       ),

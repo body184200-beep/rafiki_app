@@ -229,7 +229,7 @@ class _StartState extends State<Start>
         eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: true,
-        allowWifiLock: true,
+        allowWifiLock: false,
       ),
     );
   }
@@ -375,7 +375,7 @@ class _StartState extends State<Start>
                 bottom: false,
                 child: Column(
                   children: [
-                    HomeTopBar(controller: _home),
+                    RepaintBoundary(child: HomeTopBar(controller: _home)),
                     const SizedBox(height: 10),
                     if (showAlert)
                       Padding(
@@ -392,18 +392,23 @@ class _StartState extends State<Start>
                     if (!hideChrome)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: HomePrayerStrip(controller: _home),
+                        child: RepaintBoundary(child: HomePrayerStrip(controller: _home)),
                       ),
                     if (!hideChrome) const SizedBox(height: 10),
                     Expanded(
                       child: IndexedStack(
                         index: _home.tabIndex,
-                        children: _pages,
+                        children: [
+                          for (int i = 0; i < _pages.length; i++)
+                            TickerMode(
+                              enabled: i == _home.tabIndex,
+                              child: _pages[i],
+                            ),
+                        ],
                       ),
                     ),
-                    HomeNavToggle(controller: _home),
-                    HomeBottomNav(controller: _home, sizeFactor: _navAnim),
-                    SizedBox(height: MediaQuery.paddingOf(context).bottom),
+                    RepaintBoundary(child: HomeBottomNav(controller: _home, sizeFactor: _navAnim)),
+                    SizedBox(height: MediaQuery.paddingOf(context).bottom > 0 ? MediaQuery.paddingOf(context).bottom : 8),
                   ],
                 ),
               ),

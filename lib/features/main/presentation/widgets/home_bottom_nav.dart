@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/core/theme/app_colors.dart';
-import 'package:rafiki_app/core/widgets/glass_panel.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -37,20 +36,29 @@ class HomeBottomNav extends StatelessWidget {
     return SizeTransition(
       sizeFactor: sizeFactor,
       axisAlignment: 1,
-      child: GlassPanel(
-        radius: 0,
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.border.withValues(alpha: 0.6),
+            width: 0.8,
+          ),
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             for (var i = 0; i < items.length; i++)
-              _NavTab(
-                item: items[i],
-                selected: controller.tabIndex == i,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  controller.setTab(i);
-                },
+              Expanded(
+                child: _NavTab(
+                  item: items[i],
+                  selected: controller.tabIndex == i,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    controller.setTab(i);
+                  },
+                ),
               ),
           ],
         ),
@@ -72,43 +80,42 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = AppColors.accent;
+    final inactiveColor = Colors.white.withValues(alpha: 0.35);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.accentDim.withValues(alpha: 0.18)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected
-                ? AppColors.accentDim.withValues(alpha: 0.45)
-                : Colors.transparent,
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               item.icon,
-              size: 20,
-              color: selected
-                  ? AppColors.accent
-                  : Colors.white.withValues(alpha: 0.45),
+              size: 18,
+              color: selected ? activeColor : inactiveColor,
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               item.label,
               style: TextStyle(
-                color: selected
-                    ? AppColors.accent
-                    : Colors.white.withValues(alpha: 0.45),
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                color: selected ? activeColor : inactiveColor,
+                fontSize: 9,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                height: 1.1,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Container(
+              width: 3,
+              height: 3,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? activeColor : Colors.transparent,
               ),
             ),
           ],
@@ -125,28 +132,6 @@ class HomeNavToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        controller.toggleNavBar();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.only(bottom: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          controller.showNavBar
-              ? Icons.keyboard_arrow_down_rounded
-              : Icons.keyboard_arrow_up_rounded,
-          color: AppColors.textSecondary,
-          size: 18,
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }

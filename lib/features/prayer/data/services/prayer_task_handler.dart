@@ -26,6 +26,10 @@ class PrayerTaskHandler extends TaskHandler {
   List<CustomNotification>? _cachedCustomNotifications;
   DateTime? _lastCustomNotifFetch;
 
+  // Notification throttle tracking
+  String? _lastNotificationTitle;
+  String? _lastNotificationText;
+
   // Diagnostic logging tracker
   Prayer? _lastLoggedPrayer;
   String? _lastLoggedSource;

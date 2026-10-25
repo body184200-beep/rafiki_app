@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -22,22 +21,16 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: background ?? Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: borderColor ?? Colors.white.withValues(alpha: 0.08),
-            ),
-          ),
-          child: child,
+    return Container(
+      padding: padding ?? const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: background ?? Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: borderColor ?? Colors.white.withValues(alpha: 0.08),
         ),
       ),
+      child: child,
     );
   }
 }

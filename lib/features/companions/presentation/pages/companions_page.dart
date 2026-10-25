@@ -453,7 +453,7 @@ class _Background extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: CustomPaint(painter: _BgPainter()),
+      child: RepaintBoundary(child: CustomPaint(painter: _BgPainter())),
     );
   }
 }

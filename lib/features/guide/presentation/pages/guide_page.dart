@@ -52,7 +52,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
     _bgCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
-    )..repeat(reverse: true);
+    );
 
     _entryCtrl = AnimationController(
       vsync: this,
@@ -62,12 +62,12 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
     _starCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
+    );
 
     _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
 
     final rng = Random(42);
     // Three depth layers: distant (small, dim), mid, near (large, bright)
@@ -155,8 +155,23 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (TickerMode.of(context)) {
+      if (!_bgCtrl.isAnimating) _bgCtrl.repeat(reverse: true);
+      if (!_starCtrl.isAnimating) _starCtrl.repeat(reverse: true);
+      if (!_pulseCtrl.isAnimating) _pulseCtrl.repeat(reverse: true);
+    } else {
+      if (_bgCtrl.isAnimating) _bgCtrl.stop();
+      if (_starCtrl.isAnimating) _starCtrl.stop();
+      if (_pulseCtrl.isAnimating) _pulseCtrl.stop();
+    }
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      if (!TickerMode.of(context)) return;
       if (!_bgCtrl.isAnimating) _bgCtrl.repeat(reverse: true);
       if (!_starCtrl.isAnimating) _starCtrl.repeat(reverse: true);
       if (!_pulseCtrl.isAnimating) _pulseCtrl.repeat(reverse: true);
@@ -355,32 +370,34 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
             child: Row(
               children: [
                 // Gold moon badge
-                AnimatedBuilder(
-                  animation: _pulseCtrl,
-                  builder: (_, child) => Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [_gold, _goldGlow],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _gold.withValues(
-                              alpha: 0.3 + 0.2 * _pulseCtrl.value),
-                          blurRadius: 18 + 8 * _pulseCtrl.value,
-                          spreadRadius: 1,
+                RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _pulseCtrl,
+                    builder: (_, child) => Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [_gold, _goldGlow],
                         ),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: _gold.withValues(
+                                alpha: 0.3 + 0.2 * _pulseCtrl.value),
+                            blurRadius: 18 + 8 * _pulseCtrl.value,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: child,
                     ),
-                    child: child,
-                  ),
-                  child: const Center(
-                    child: Text("☽",
-                        style: TextStyle(fontSize: 24, color: Colors.black87)),
+                    child: const Center(
+                      child: Text("☽",
+                          style: TextStyle(fontSize: 24, color: Colors.black87)),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
