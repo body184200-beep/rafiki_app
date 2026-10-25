@@ -1,1030 +1,881 @@
-﻿import 'dart:convert';
-import 'dart:math';
-import 'dart:ui';
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rafiki_app/features/quran/data/datasources/quran_local_data_source.dart';
+import 'package:rafiki_app/features/quran/data/datasources/juz_data.dart';
+import 'package:rafiki_app/features/quran/data/models/mushaf_page_model.dart';
+import 'package:rafiki_app/features/quran/data/services/tafsir_service.dart';
+import 'package:rafiki_app/features/quran/presentation/widgets/mushaf_page_widget.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  THEME DATA MODEL
+//  MUSHAF THEME PROFILE
 // ══════════════════════════════════════════════════════════════════════════════
-class _AyahTheme {
+class _MushafTheme {
   final String name;
   final Color bg;
-  final Color bgGrad;
-  final Color surface;
-  final Color surfaceHigh;
-  final Color border;
-  final Color accent;
-  final Color accentDim;
-  final Color accentGlow;
-  final Color textColor;
-  final Color textSec;
-  final Color numBg;
-  final Color numText;
-  final Brightness brightness;
+  final Color primary; // Teal / Border
+  final Color accent;  // Gold / Bronze
+  final Color text;
+  final bool isDark;
 
-  const _AyahTheme({
+  const _MushafTheme({
     required this.name,
     required this.bg,
-    required this.bgGrad,
-    required this.surface,
-    required this.surfaceHigh,
-    required this.border,
+    required this.primary,
     required this.accent,
-    required this.accentDim,
-    required this.accentGlow,
-    required this.textColor,
-    required this.textSec,
-    required this.numBg,
-    required this.numText,
-    required this.brightness,
+    required this.text,
+    required this.isDark,
   });
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  THEMES
-// ══════════════════════════════════════════════════════════════════════════════
-const List<_AyahTheme> _kThemes = [
-  _AyahTheme(
-    name: 'ليلي',
-    bg: Color(0xff060A10),
-    bgGrad: Color(0xff0B1320),
-    surface: Color(0xff0F1520),
-    surfaceHigh: Color(0xff16202E),
-    border: Color(0xff1E2A3E),
-    accent: Color(0xff4ECCA3),
-    accentDim: Color(0xff1D9E75),
-    accentGlow: Color(0x334ECCA3),
-    textColor: Color(0xffEEF2F8),
-    textSec: Color(0xff8A96AA),
-    numBg: Color(0xff1D9E75),
-    numText: Color(0xffEEF2F8),
-    brightness: Brightness.dark,
+const List<_MushafTheme> _kMushafThemes = [
+  // 1. مصحف المدينة الأصيل (مطابق للمصحف المطبوع)
+  _MushafTheme(
+    name: 'مصحف المدينة',
+    bg: Color(0xFFFDFBF7),
+    primary: Color(0xFF1E5E72),
+    accent: Color(0xFFC49A45),
+    text: Color(0xFF14171A),
+    isDark: false,
   ),
-  _AyahTheme(
-    name: 'عنبري',
-    bg: Color(0xff0C0804),
-    bgGrad: Color(0xff1C1206),
-    surface: Color(0xff1C1508),
-    surfaceHigh: Color(0xff261C0C),
-    border: Color(0xff2E2210),
-    accent: Color(0xffF0C060),
-    accentDim: Color(0xffA07830),
-    accentGlow: Color(0x33F0C060),
-    textColor: Color(0xffF5ECD8),
-    textSec: Color(0xff907860),
-    numBg: Color(0xffA07830),
-    numText: Color(0xffF5ECD8),
-    brightness: Brightness.dark,
+  // 2. عنبري دافئ (مريح للعين)
+  _MushafTheme(
+    name: 'عنبري دافئ',
+    bg: Color(0xFFF5EAD4),
+    primary: Color(0xFF5D3F1D),
+    accent: Color(0xFFB57E28),
+    text: Color(0xFF221609),
+    isDark: false,
   ),
-  _AyahTheme(
-    name: 'بحري',
-    bg: Color(0xff030C18),
-    bgGrad: Color(0xff071828),
-    surface: Color(0xff0C1E30),
-    surfaceHigh: Color(0xff10283E),
-    border: Color(0xff10283C),
-    accent: Color(0xff60C8F0),
-    accentDim: Color(0xff2880A8),
-    accentGlow: Color(0x3360C8F0),
-    textColor: Color(0xffDCF0F8),
-    textSec: Color(0xff6090A8),
-    numBg: Color(0xff2880A8),
-    numText: Color(0xffDCF0F8),
-    brightness: Brightness.dark,
-  ),
-  _AyahTheme(
-    name: 'ياقوتي',
-    bg: Color(0xff100608),
-    bgGrad: Color(0xff1E0C12),
-    surface: Color(0xff200C14),
-    surfaceHigh: Color(0xff2A101C),
-    border: Color(0xff341422),
-    accent: Color(0xffF06080),
-    accentDim: Color(0xffA03050),
-    accentGlow: Color(0x33F06080),
-    textColor: Color(0xffF8E0E8),
-    textSec: Color(0xff906070),
-    numBg: Color(0xffA03050),
-    numText: Color(0xffF8E0E8),
-    brightness: Brightness.dark,
-  ),
-  _AyahTheme(
-    name: 'بنفسجي',
-    bg: Color(0xff0A0610),
-    bgGrad: Color(0xff140C20),
-    surface: Color(0xff160C22),
-    surfaceHigh: Color(0xff1E1030),
-    border: Color(0xff281440),
-    accent: Color(0xffC080F0),
-    accentDim: Color(0xff7030A0),
-    accentGlow: Color(0x33C080F0),
-    textColor: Color(0xffF0E4F8),
-    textSec: Color(0xff8060A8),
-    numBg: Color(0xff7030A0),
-    numText: Color(0xffF0E4F8),
-    brightness: Brightness.dark,
-  ),
-  _AyahTheme(
-    name: 'فيروزي',
-    bg: Color(0xff040E08),
-    bgGrad: Color(0xff081810),
-    surface: Color(0xff0A1C10),
-    surfaceHigh: Color(0xff0E2416),
-    border: Color(0xff102818),
-    accent: Color(0xff60E8B0),
-    accentDim: Color(0xff208858),
-    accentGlow: Color(0x3360E8B0),
-    textColor: Color(0xffDCF8E8),
-    textSec: Color(0xff509070),
-    numBg: Color(0xff208858),
-    numText: Color(0xffDCF8E8),
-    brightness: Brightness.dark,
-  ),
-  _AyahTheme(
-    name: 'صحفي',
-    bg: Color(0xffF7F2E8),
-    bgGrad: Color(0xffEEE5D0),
-    surface: Color(0xffFFFFFF),
-    surfaceHigh: Color(0xffF5EFE0),
-    border: Color(0xffD8CCBA),
-    accent: Color(0xff2A6A4A),
-    accentDim: Color(0xff1A4A30),
-    accentGlow: Color(0x222A6A4A),
-    textColor: Color(0xff1A1408),
-    textSec: Color(0xff706050),
-    numBg: Color(0xff2A6A4A),
-    numText: Color(0xffFFFFFF),
-    brightness: Brightness.light,
+  // 3. ليلي ملكي
+  _MushafTheme(
+    name: 'ليلي ملكي',
+    bg: Color(0xFF0D1219),
+    primary: Color(0xFF245B6E),
+    accent: Color(0xFFD4AF37),
+    text: Color(0xFFECEBE6),
+    isDark: true,
   ),
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  READ PROGRESS MODEL
-// ══════════════════════════════════════════════════════════════════════════════
-class _ReadProgress {
-  final int totalPages;
-  final int currentPage;
-
-  const _ReadProgress(this.currentPage, this.totalPages);
-
-  double get fraction => totalPages == 0 ? 0 : (currentPage + 1) / totalPages;
-  String get label => '${((fraction) * 100).round()}%';
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  MAIN PAGE
+//  SURAH DETAIL PAGE — المصحف الشريف (٦٠٤ صفحة)
 // ══════════════════════════════════════════════════════════════════════════════
 class SurahDetailPage extends StatefulWidget {
-  final String surahName;
-  final List<String> ayat;
+  final String? surahName;
+  final List<String>? ayat;
   final int surahNumber;
-  final int? initialPage;
+  final int? initialPage; // 1-based page number (1..604)
+  final List<Map<String, dynamic>>? allSurahs;
+  final int? initialSurahIndex;
 
   const SurahDetailPage({
     super.key,
-    required this.surahName,
-    required this.ayat,
-    this.surahNumber = 0,
+    this.surahName,
+    this.ayat,
+    this.surahNumber = 1,
     this.initialPage,
+    this.allSurahs,
+    this.initialSurahIndex,
   });
 
   @override
   State<SurahDetailPage> createState() => _SurahDetailPageState();
 }
 
-class _SurahDetailPageState extends State<SurahDetailPage>
-    with TickerProviderStateMixin {
-  // ── Controllers ───────────────────────────────────────────────────────────
-  late final PageController _pageCtrl;
+class _SurahDetailPageState extends State<SurahDetailPage> {
+  late PageController _pageCtrl;
+  List<MushafPage> _pages = [];
+  bool _isLoading = true;
 
-  late final AnimationController _entranceCtrl;
-  late final Animation<double> _entranceFade;
-  late final Animation<Offset> _entranceSlide;
-
-  late final AnimationController _themeCtrl;
-
-  late final AnimationController _panelCtrl;
-  late final Animation<double> _panelAnim;
-
-  late final AnimationController _flipCtrl;
-  late final Animation<double> _flipFade;
-
-  late final AnimationController _progressCtrl;
-
-  // ── State ─────────────────────────────────────────────────────────────────
-  List<List<String>> _pages = [];
-  final int _ayatPerPage = 10;
-  double _fontSize = 22;
-
-  // _currentPage = 0 → الصفحة الأولى (بداية السورة)
-  // PageView يعمل بـ LTR عادي (بدون عكس):
-  //   pageIndex 0 = الصفحة الأولى (أول السورة) على اليمين
-  //   السويب من اليمين لليسار → pageIndex يزيد → صفحة تالية ✓
-  //   السويب من اليسار لليمين → pageIndex يقل  → صفحة سابقة ✓
-  int _currentPage = 0;
-
-  Set<int> _bookmarks = {};
-  bool _showPanel = false;
+  int _currentPageIndex = 0; // 0..603 corresponds to pages 1..604
   int _themeIndex = 0;
-  Timer? _saveDebouncer;
-  int? _globalBookmarkPageIndex;
-  int? _globalBookmarkSurahNum;
+  double _fontSize = 20.0;
+  bool _showControls = true;
+  int? _bookmarkedPage;
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  _AyahTheme get _t => _kThemes[_themeIndex];
-  bool get _isDark => _t.brightness == Brightness.dark;
-  bool get _isCurrentPageGlobalBookmark =>
-      _globalBookmarkSurahNum == widget.surahNumber &&
-      _globalBookmarkPageIndex == _currentPage;
+  _MushafTheme get _theme => _kMushafThemes[_themeIndex];
+  MushafPage? get _currentPage =>
+      _pages.isNotEmpty && _currentPageIndex < _pages.length ? _pages[_currentPageIndex] : null;
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-
     _pageCtrl = PageController();
-
-    _entranceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _entranceFade = CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0, 0.7, curve: Curves.easeOut),
-    );
-    _entranceSlide = Tween<Offset>(
-      begin: const Offset(0, 0.06),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceCtrl,
-      curve: const Interval(0, 0.8, curve: Curves.easeOutCubic),
-    ));
-
-    _themeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    )..value = 1.0;
-
-    _panelCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 340),
-    );
-    _panelAnim = CurvedAnimation(
-      parent: _panelCtrl,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-
-    _flipCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 180),
-      value: 1.0,
-    );
-    _flipFade = CurvedAnimation(parent: _flipCtrl, curve: Curves.easeOut);
-
-    _progressCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _buildPages();
-    _loadData();
+    _initData();
   }
 
   @override
   void dispose() {
     _pageCtrl.dispose();
-    _entranceCtrl.dispose();
-    _themeCtrl.dispose();
-    _panelCtrl.dispose();
-    _flipCtrl.dispose();
-    _progressCtrl.dispose();
-    _saveDebouncer?.cancel();
     super.dispose();
   }
 
-  bool get _isFatihah => widget.surahNumber == 1 || widget.surahName.contains('الفاتحة');
-  bool get _isTawbah => widget.surahNumber == 9 || widget.surahName.contains('التوبة');
-
-  String _stripBasmala(String text) {
-    final regex = RegExp(
-      r'^ب[\u064B-\u065F]*سْمِ\s+[\u0600-\u06FF\s]+?(?:ٱلرَّحِيمِ|الرَّحِيمِ|الرَّحِيْمِ|الرحيم)\s*',
-    );
-    return text.replaceFirst(regex, '').trim();
-  }
-
-  // ── Pages ─────────────────────────────────────────────────────────────────
-  void _buildPages() {
-    _pages = [];
-    final full = List<String>.from(widget.ayat);
-    if (!_isTawbah && !_isFatihah) {
-      if (full.isNotEmpty) {
-        full[0] = _stripBasmala(full[0]);
-      }
-      full.insert(0, 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
-    }
-    for (int i = 0; i < full.length; i += _ayatPerPage) {
-      _pages.add(full.sublist(i, min(i + _ayatPerPage, full.length)));
-    }
-  }
-
-  // ── Persistence ───────────────────────────────────────────────────────────
-  Future<void> _loadData() async {
+  Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
-    final key = widget.surahName;
+    final savedTheme = prefs.getInt('mushaf_theme_index') ?? 0;
+    final savedFontSize = prefs.getDouble('mushaf_font_size') ?? 20.0;
+    final bmRaw = prefs.getString('mushaf_global_bookmark');
 
-    final savedPg = prefs.getInt('surah_$key');
-    final bmList = prefs.getStringList('bookmarks_$key');
-    final themeIndex = prefs.getInt('theme_$key') ?? 0;
-
-    // Load global bookmark state
-    int? globalBmSurahNum;
-    int? globalBmPageIndex;
-    try {
-      final globalBmRaw = prefs.getString('mushaf_global_bookmark');
-      if (globalBmRaw != null) {
-        final bm = jsonDecode(globalBmRaw) as Map<String, dynamic>;
-        globalBmSurahNum = bm['surahNumber'] as int?;
-        globalBmPageIndex = bm['pageIndex'] as int?;
-      }
-    } catch (_) {
-      // Ignore corrupt bookmark data
+    int? savedBmPage;
+    if (bmRaw != null) {
+      try {
+        final map = jsonDecode(bmRaw);
+        savedBmPage = map['mushafPage'] as int?;
+      } catch (_) {}
     }
+
+    final pages = await QuranLocalDataSource().getMushafPages();
 
     if (!mounted) return;
 
+    // Determine target start page (1..604)
+    int targetPage = 1;
+    if (widget.initialPage != null && widget.initialPage! >= 1 && widget.initialPage! <= 604) {
+      targetPage = widget.initialPage!;
+    } else if (widget.surahNumber > 1) {
+      // Find the page where this surah starts
+      final match = pages.firstWhere(
+        (p) => p.ayahs.any((a) => a.surahNumber == widget.surahNumber && a.isFirstInSurah),
+        orElse: () => pages.first,
+      );
+      targetPage = match.pageNumber;
+    } else {
+      final lastRead = prefs.getInt('mushaf_last_read_page') ?? 1;
+      targetPage = lastRead.clamp(1, 604);
+    }
+
+    final targetIndex = (targetPage - 1).clamp(0, pages.length - 1);
+
     setState(() {
-      _themeIndex = themeIndex.clamp(0, _kThemes.length - 1);
-      if (bmList != null) {
-        _bookmarks = bmList.map(int.parse).toSet();
+      _pages = pages;
+      _isLoading = false;
+      _themeIndex = savedTheme.clamp(0, _kMushafThemes.length - 1);
+      _fontSize = savedFontSize.clamp(14.0, 32.0);
+      _bookmarkedPage = savedBmPage;
+      _currentPageIndex = targetIndex;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageCtrl.hasClients) {
+        _pageCtrl.jumpToPage(targetIndex);
       }
-      _globalBookmarkSurahNum = globalBmSurahNum;
-      _globalBookmarkPageIndex = globalBmPageIndex;
     });
-
-    _entranceCtrl.forward();
-
-    // Priority: initialPage (from bookmark card) > per-surah saved page > 0
-    final int startPage;
-    if (widget.initialPage != null && widget.initialPage! < _pages.length) {
-      startPage = widget.initialPage!;
-    } else if (savedPg != null && savedPg < _pages.length) {
-      startPage = savedPg;
-    } else {
-      startPage = 0;
-    }
-
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) {
-      _pageCtrl.jumpToPage(startPage);
-      setState(() => _currentPage = startPage);
-    }
-    _updateProgress();
   }
 
-  Future<void> _saveData() async {
+  Future<void> _onPageChanged(int index) async {
+    setState(() => _currentPageIndex = index);
+    final pageNum = index + 1;
     final prefs = await SharedPreferences.getInstance();
-    final key = widget.surahName;
-    await Future.wait([
-      prefs.setInt('surah_$key', _currentPage),
-      prefs.setStringList(
-        'bookmarks_$key',
-        _bookmarks.map((e) => e.toString()).toList(),
-      ),
-      prefs.setInt('theme_$key', _themeIndex),
-    ]);
+    await prefs.setInt('mushaf_last_read_page', pageNum);
   }
 
-  void _scheduleSave() {
-    _saveDebouncer?.cancel();
-    _saveDebouncer = Timer(const Duration(milliseconds: 300), () {
-      _saveData();
-    });
+  void _jumpToPage(int pageNumber) {
+    final index = (pageNumber - 1).clamp(0, _pages.length - 1);
+    if (_pageCtrl.hasClients) {
+      _pageCtrl.jumpToPage(index);
+    }
+    setState(() => _currentPageIndex = index);
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
-  void _updateProgress() {
-    final target =
-    _pages.isEmpty ? 0.0 : (_currentPage + 1) / _pages.length;
-    _progressCtrl.animateTo(
-      target,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  void _toggleBookmark() {
+  Future<void> _toggleBookmark() async {
     HapticFeedback.lightImpact();
+    final prefs = await SharedPreferences.getInstance();
+    final page = _currentPage;
+    if (page == null) return;
 
-    final isCurrentlyBookmarked = _isCurrentPageGlobalBookmark;
-    final action = isCurrentlyBookmarked ? 'REMOVE' : 'ADD';
+    final isAlready = _bookmarkedPage == page.pageNumber;
 
-    debugPrint(
-      '🔖 [Bookmark] Before toggle: isBookmarked=$isCurrentlyBookmarked | Action: $action | Surah: ${widget.surahNumber} (${widget.surahName}), Page: $_currentPage',
-    );
-
-    if (isCurrentlyBookmarked) {
-      // 1. Remove bookmark
-      setState(() {
-        _globalBookmarkSurahNum = null;
-        _globalBookmarkPageIndex = null;
-        _bookmarks.remove(_currentPage);
-      });
-      _removeGlobalBookmark();
-    } else {
-      // 2. Add / Update bookmark
-      setState(() {
-        _globalBookmarkSurahNum = widget.surahNumber;
-        _globalBookmarkPageIndex = _currentPage;
-        _bookmarks.add(_currentPage);
-      });
-      _saveGlobalBookmark();
-    }
-
-    _scheduleSave();
-  }
-
-  /// Persists the global bookmark to SharedPreferences as JSON.
-  Future<void> _saveGlobalBookmark() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final offset = (!_isTawbah && !_isFatihah) ? 1 : 0;
-      // Calculate the first ayah number on this page for display purposes
-      final firstAyah = (_currentPage * _ayatPerPage + 1 - offset).clamp(1, widget.ayat.length);
-      final bookmark = {
-        'surahNumber': widget.surahNumber,
-        'surahName': widget.surahName,
-        'pageIndex': _currentPage,
-        'ayahNumber': firstAyah,
-      };
-      final success = await prefs.setString('mushaf_global_bookmark', jsonEncode(bookmark));
-      debugPrint('🔖 [Bookmark] Storage ADD result: ${success ? "SUCCESS" : "FAILED"} -> $bookmark');
-    } catch (e) {
-      debugPrint('🔖 [Bookmark] Storage ADD error: $e');
-    }
-  }
-
-  /// Removes the global bookmark from SharedPreferences.
-  Future<void> _removeGlobalBookmark() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final success = await prefs.remove('mushaf_global_bookmark');
-      debugPrint('🔖 [Bookmark] Storage REMOVE result: ${success ? "SUCCESS" : "FAILED"}');
-    } catch (e) {
-      debugPrint('🔖 [Bookmark] Storage REMOVE error: $e');
-    }
-  }
-
-  void _changeFontSize(double d) {
-    setState(() => _fontSize = (_fontSize + d).clamp(14.0, 40.0));
-    HapticFeedback.selectionClick();
-  }
-
-  void _togglePanel() {
-    HapticFeedback.selectionClick();
-    setState(() => _showPanel = !_showPanel);
-    _showPanel ? _panelCtrl.forward() : _panelCtrl.reverse();
-  }
-
-  void _selectTheme(int index) {
-    if (index == _themeIndex) {
-      _togglePanel();
-      return;
-    }
-    HapticFeedback.lightImpact();
-    _themeCtrl.reverse().then((_) {
-      if (!mounted) return;
-      setState(() {
-        _themeIndex = index;
-        _showPanel = false;
-      });
-      _panelCtrl.reverse();
-      _themeCtrl.forward();
-      _scheduleSave();
-    });
-  }
-
-  void _onPageChanged(int pageIndex) {
-    HapticFeedback.selectionClick();
-    setState(() => _currentPage = pageIndex);
-    _updateProgress();
-    _scheduleSave();
-    _flipCtrl.reverse().then((_) {
-      if (mounted) _flipCtrl.forward();
-    });
-  }
-
-  // ── التنقل بالأزرار ────────────────────────────────────────────────────────
-  // "السابقة" = رقم أقل = pageIndex أصغر (تقليب لليمين)
-  void _goPrev() {
-    if (_currentPage <= 0) return;
-    _pageCtrl.animateToPage(
-      _currentPage - 1,
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  // "التالية" = رقم أكبر = pageIndex أكبر (تقليب لليسار)
-  void _goNext() {
-    if (_currentPage >= _pages.length - 1) return;
-    _pageCtrl.animateToPage(
-      _currentPage + 1,
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _glass({
-    required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
-    double radius = 20,
-    Color? bg,
-    Border? border,
-  }) =>
-      ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: bg ?? _t.surface.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(radius),
-              border: border ?? Border.all(color: _t.border, width: 0.8),
-            ),
-            child: child,
-          ),
-        ),
-      );
-
-  Widget _iconBtn({
-    required Widget icon,
-    required VoidCallback onTap,
-    bool active = false,
-    String? tooltip,
-  }) =>
-      Tooltip(
-        message: tooltip ?? '',
-        child: GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: active ? _t.accent.withValues(alpha: 0.15) : _t.surfaceHigh,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: active ? _t.accent.withValues(alpha: 0.5) : _t.border,
-                width: 0.8,
-              ),
-            ),
-            child: Center(child: icon),
-          ),
-        ),
-      );
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  SUB-WIDGETS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _progressBar() {
-    return AnimatedBuilder(
-      animation: _progressCtrl,
-      builder: (_, __) => Stack(
-        children: [
-          Container(height: 2, color: _t.border),
-          FractionallySizedBox(
-            widthFactor: _progressCtrl.value,
-            child: Container(
-              height: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_t.accentDim, _t.accent],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _pageIndicator() {
-    if (_pages.length <= 1) return const SizedBox.shrink();
-    const int window = 9;
-    final int total = _pages.length;
-    final int cur = _currentPage;
-    final int start = (cur - window ~/ 2).clamp(0, max(0, total - window));
-    final int end = min(start + window, total);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(end - start, (i) {
-        final idx = start + i;
-        final isActive = idx == cur;
-        final dist = (idx - cur).abs();
-        final w = isActive ? 22.0 : (dist <= 1 ? 8.0 : 5.0);
-        final op = isActive ? 1.0 : (dist <= 1 ? 0.45 : 0.20);
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 240),
-          margin: const EdgeInsets.symmetric(horizontal: 2.5),
-          width: w,
-          height: isActive ? 7.0 : 5.0,
-          decoration: BoxDecoration(
-            color: _t.accent.withValues(alpha: op),
-            borderRadius: BorderRadius.circular(10),
+    if (isAlready) {
+      await prefs.remove('mushaf_global_bookmark');
+      setState(() => _bookmarkedPage = null);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تمت إزالة العلامة المرجعية'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
           ),
         );
-      }),
-    );
+      }
+    } else {
+      final firstAyah = page.ayahs.isNotEmpty ? page.ayahs.first : null;
+      final bm = {
+        'mushafPage': page.pageNumber,
+        'pageIndex': page.pageNumber,
+        'surahNumber': firstAyah?.surahNumber ?? page.primarySurahNumber,
+        'surahName': firstAyah?.surahName ?? page.primarySurahName,
+        'ayahNumber': firstAyah?.numberInSurah ?? 1,
+      };
+      await prefs.setString('mushaf_global_bookmark', jsonEncode(bm));
+      setState(() => _bookmarkedPage = page.pageNumber);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم حفظ الصفحة ${toArabicDigits(page.pageNumber)} في العلامات المرجعية'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
-  Widget _themePanel() {
-    return SizeTransition(
-      sizeFactor: _panelAnim,
-      axisAlignment: -1,
-      child: FadeTransition(
-        opacity: _panelAnim,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-          child: _glass(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 3,
-                      height: 12,
+  // ── Show Tafsir Bottom Sheet ───────────────────────────────────────────────
+  void _showAyahTafsir(MushafAyah ayah) {
+    HapticFeedback.mediumImpact();
+    String currentEdition = 'ar.muyassar';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              decoration: BoxDecoration(
+                color: _theme.isDark ? const Color(0xFF161B22) : const Color(0xFFFAF8F5),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(top: BorderSide(color: _theme.accent.withValues(alpha: 0.5), width: 1.2)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 10, bottom: 12),
+                      width: 44,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: _t.accent,
+                        color: _theme.accent.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'ثيم القراءة',
-                      style: TextStyle(
-                        color: _t.accent,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
+                  ),
+
+                  // Header with Ayah Info
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: _theme.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.auto_stories_rounded, color: _theme.primary, size: 18),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'سُورَةُ ${ayah.surahName}',
+                                  style: TextStyle(
+                                    color: _theme.isDark ? _theme.text : _theme.primary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  'الآية رقم ${toArabicDigits(ayah.numberInSurah)} • ${ayah.juz == 0 ? "" : "الجزء " + toArabicDigits(ayah.juz)}',
+                                  style: TextStyle(
+                                    color: _theme.accent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close_rounded, color: _theme.text.withValues(alpha: 0.6), size: 20),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Tafsir Edition Selector
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Row(
+                      children: kTafsirEditions.map((edition) {
+                        final isSel = edition.id == currentEdition;
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!isSel) {
+                                HapticFeedback.selectionClick();
+                                setModalState(() => currentEdition = edition.id);
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSel ? _theme.primary.withValues(alpha: 0.18) : (_theme.isDark ? const Color(0xFF21262D) : Colors.white),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSel ? _theme.accent : _theme.primary.withValues(alpha: 0.25),
+                                  width: 0.9,
+                                ),
+                              ),
+                              child: Text(
+                                edition.name,
+                                style: TextStyle(
+                                  color: isSel ? (_theme.isDark ? _theme.accent : _theme.primary) : _theme.text.withValues(alpha: 0.65),
+                                  fontSize: 12,
+                                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Ayah Text Box
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: _theme.isDark ? const Color(0xFF0D1117) : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: _theme.primary.withValues(alpha: 0.25)),
+                            ),
+                            child: Text(
+                              '« ${ayah.text} »',
+                              textAlign: TextAlign.center,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                color: _theme.text,
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w600,
+                                height: 2.0,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Live Tafsir FutureBuilder
+                          FutureBuilder<String?>(
+                            future: TafsirService.instance.getAyahTafsir(
+                              surahNumber: ayah.surahNumber,
+                              ayahNumber: ayah.numberInSurah,
+                              edition: currentEdition,
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 36),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        width: 26,
+                                        height: 26,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          color: _theme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'جارٍ جلب التفسير من الـ API...',
+                                        style: TextStyle(color: _theme.text.withValues(alpha: 0.6), fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              final tafsirText = snapshot.data;
+                              if (tafsirText == null || tafsirText.isEmpty) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 24),
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.wifi_off_rounded, color: _theme.text.withValues(alpha: 0.5), size: 28),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'تعذر جلب التفسير حالياً',
+                                        style: TextStyle(color: _theme.text, fontSize: 13, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'يرجى التأكد من اتصال الإنترنت والمحاولة ثانيةً',
+                                        style: TextStyle(color: _theme.text.withValues(alpha: 0.6), fontSize: 11),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextButton.icon(
+                                        onPressed: () => setModalState(() {}),
+                                        icon: Icon(Icons.refresh_rounded, size: 16, color: _theme.primary),
+                                        label: Text('إعادة المحاولة', style: TextStyle(color: _theme.primary, fontSize: 12)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    tafsirText,
+                                    textDirection: TextDirection.rtl,
+                                    textAlign: TextAlign.justify,
+                                    style: TextStyle(
+                                      color: _theme.text,
+                                      fontSize: 14.5,
+                                      height: 1.85,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      final copyText = '﴿${ayah.text}﴾\n\nتفسير الآية:\n$tafsirText\n[سورة ${ayah.surahName}: ${ayah.numberInSurah}]';
+                                      Clipboard.setData(ClipboardData(text: copyText));
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('تم نسخ الآية والتفسير بنجاح'),
+                                          behavior: SnackBarBehavior.floating,
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: _theme.primary,
+                                      side: BorderSide(color: _theme.accent.withValues(alpha: 0.5)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                    icon: const Icon(Icons.copy_rounded, size: 16),
+                                    label: const Text('نسخ الآية والتفسير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
+                  ),
+
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ── Quick Jump Dialog (الانتقال السريع للصفحات والسور) ─────────────────────
+  void _showJumpDialog() {
+    HapticFeedback.selectionClick();
+    int selectedPage = _currentPageIndex + 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              decoration: BoxDecoration(
+                color: _theme.isDark ? const Color(0xFF161B22) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(top: BorderSide(color: _theme.accent.withValues(alpha: 0.5), width: 1.2)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _theme.accent.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'الانتقال إلى صفحة بالمصحف',
+                        style: TextStyle(
+                          color: _theme.isDark ? _theme.text : _theme.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _theme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'صفحة ${toArabicDigits(selectedPage)} من ٦٠٤',
+                          style: TextStyle(
+                            color: _theme.isDark ? _theme.accent : _theme.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Slider
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: _theme.primary,
+                      inactiveTrackColor: _theme.primary.withValues(alpha: 0.18),
+                      thumbColor: _theme.accent,
+                      trackHeight: 4,
+                    ),
+                    child: Slider(
+                      value: selectedPage.toDouble(),
+                      min: 1,
+                      max: 604,
+                      divisions: 603,
+                      onChanged: (val) {
+                        setSheetState(() => selectedPage = val.round());
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Quick Jump Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _quickJumpChip('بداية المصحف (١)', 1, setSheetState, (p) => selectedPage = p),
+                      _quickJumpChip('الجزء ١٥ (٢٨٢)', 282, setSheetState, (p) => selectedPage = p),
+                      _quickJumpChip('سورة طه (٣١٢)', 312, setSheetState, (p) => selectedPage = p),
+                      _quickJumpChip('جزء عم (٥٨٢)', 582, setSheetState, (p) => selectedPage = p),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _theme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _jumpToPage(selectedPage);
+                      },
+                      child: const Text('انتقال الآن', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _quickJumpChip(String label, int page, StateSetter setSheetState, ValueChanged<int> onSelect) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setSheetState(() => onSelect(page));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: _theme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _theme.accent.withValues(alpha: 0.3), width: 0.7),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(color: _theme.isDark ? _theme.text : _theme.primary, fontSize: 10.5, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
+  // ── Index Modal (فهرس السور والأجزاء) ───────────────────────────────────────
+  void _showIndexModal() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DefaultTabController(
+          length: 2,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.82,
+            decoration: BoxDecoration(
+              color: _theme.isDark ? const Color(0xFF161B22) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border(top: BorderSide(color: _theme.accent.withValues(alpha: 0.5), width: 1.2)),
+            ),
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10, bottom: 8),
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: _theme.accent.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                TabBar(
+                  labelColor: _theme.isDark ? _theme.accent : _theme.primary,
+                  unselectedLabelColor: _theme.text.withValues(alpha: 0.5),
+                  indicatorColor: _theme.accent,
+                  indicatorWeight: 2.5,
+                  tabs: const [
+                    Tab(text: 'السور (١١٤)'),
+                    Tab(text: 'الأجزاء (٣٠)'),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_kThemes.length, (i) {
-                    final theme = _kThemes[i];
-                    final selected = i == _themeIndex;
-                    return GestureDetector(
-                      onTap: () => _selectTheme(i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: selected ? 44 : 38,
-                        height: selected ? 44 : 38,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [theme.bgGrad, theme.accent],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: selected ? _t.accent : _t.border,
-                            width: selected ? 2.5 : 0.8,
-                          ),
-                          boxShadow: selected
-                              ? [
-                            BoxShadow(
-                              color: theme.accent.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              spreadRadius: 1,
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Surahs List
+                      ListView.builder(
+                        itemCount: (widget.allSurahs?.length ?? 0) > 0 ? widget.allSurahs!.length : 114,
+                        itemBuilder: (_, i) {
+                          final surah = (widget.allSurahs != null && i < widget.allSurahs!.length)
+                              ? widget.allSurahs![i]
+                              : null;
+                          final sNum = surah != null ? (surah['number'] as int) : (i + 1);
+                          final sName = surah != null ? (surah['name'] as String) : 'سورة $sNum';
+                          final ayahs = surah != null ? (surah['ayahs'] as List?) : null;
+                          final startPage = (ayahs != null && ayahs.isNotEmpty) ? (ayahs.first['page'] as int) : 1;
+
+                          return ListTile(
+                            leading: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _theme.primary.withValues(alpha: 0.12),
+                                border: Border.all(color: _theme.accent.withValues(alpha: 0.6)),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  toArabicDigits(sNum),
+                                  style: TextStyle(color: _theme.isDark ? _theme.accent : _theme.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ),
-                          ]
-                              : [],
-                        ),
-                        child: selected
-                            ? Icon(Icons.check_rounded,
-                            color: theme.numText, size: 16)
-                            : null,
+                            title: Text(
+                              sName,
+                              style: TextStyle(color: _theme.text, fontSize: 14, fontWeight: FontWeight.w700),
+                            ),
+                            trailing: Text(
+                              'صفحة ${toArabicDigits(startPage)}',
+                              style: TextStyle(color: _theme.accent, fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _jumpToPage(startPage);
+                            },
+                          );
+                        },
                       ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_kThemes.length, (i) {
-                    return Text(
-                      _kThemes[i].name,
-                      style: TextStyle(
-                        color: i == _themeIndex ? _t.accent : _t.textSec,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
+
+                      // Ajza List
+                      ListView.builder(
+                        itemCount: kQuranAjza.length,
+                        itemBuilder: (_, i) {
+                          final juz = kQuranAjza[i];
+                          return ListTile(
+                            leading: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _theme.accent.withValues(alpha: 0.15),
+                                border: Border.all(color: _theme.accent),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  toArabicDigits(juz.number),
+                                  style: TextStyle(color: _theme.accent, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              juz.name,
+                              style: TextStyle(color: _theme.text, fontSize: 14, fontWeight: FontWeight.w700),
+                            ),
+                            subtitle: Text(
+                              '${juz.surahName} • آية ${toArabicDigits(juz.startAyah)}',
+                              style: TextStyle(color: _theme.text.withValues(alpha: 0.6), fontSize: 11),
+                            ),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              // Match juz page
+                              final matchPage = _pages.firstWhere(
+                                (p) => p.juzNumber == juz.number,
+                                orElse: () => _pages.first,
+                              );
+                              _jumpToPage(matchPage.pageNumber);
+                            },
+                          );
+                        },
                       ),
-                    );
-                  }),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  String _toArabicNum(int n) {
-    const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return n.toString().split('').map((c) {
-      final d = int.tryParse(c);
-      return d != null ? digits[d] : c;
-    }).join();
-  }
-
-  Widget _bismillah(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-      child: Center(
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          style: TextStyle(
-            fontSize: _fontSize + 3,
-            color: _t.accent,
-            fontWeight: FontWeight.w700,
-            height: 1.8,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Single ayah — شكل مصحف بسيط وأصيل ─────────────────────────────────────
-  Widget _ayahInlineText(List<String> items, bool startsWithBismillah, int pageLogical) {
-    final List<InlineSpan> spans = [];
-
-    for (int i = 0; i < items.length; i++) {
-      if (startsWithBismillah && i == 0) continue;
-
-      final int offset = (!_isTawbah && !_isFatihah) ? 1 : 0;
-      final int ayahNum = pageLogical * _ayatPerPage + i + 1 - offset;
-
-      spans.add(
-        TextSpan(
-          text: '${items[i]} ',
-          style: TextStyle(
-            fontSize: _fontSize,
-            color: _t.textColor,
-            height: 2.2,
-          ),
-        ),
-      );
-
-      spans.add(
-        TextSpan(
-          text: ' ﴿${_toArabicNum(ayahNum)}﴾ ',
-          style: TextStyle(
-            color: _t.accent,
-            fontSize: _fontSize * 0.78,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Text.rich(
-        TextSpan(children: spans),
-        textAlign: TextAlign.justify,
-        textDirection: TextDirection.rtl,
-      ),
-    );
-  }
-
-  // ── Page content ──────────────────────────────────────────────────────────
-  Widget _pageContent(int logicalIndex) {
-    final items = _pages[logicalIndex];
-    final startsWithBismillah =
-        logicalIndex == 0 && !_isTawbah && !_isFatihah;
-
-    return FadeTransition(
-      opacity: _flipFade,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 12,
-        ),
-        child: Column(
-          children: [
-            // البسملة منفردة في الأعلى
-            if (startsWithBismillah) _bismillah(items[0]),
-
-            // باقي الآيات كنص مترابط كالمصحف
-            if (items.length > (startsWithBismillah ? 1 : 0))
-              _ayahInlineText(items, startsWithBismillah, logicalIndex),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── AppBar ────────────────────────────────────────────────────────────────
-  Widget _appBarActions() {
-    final isBookmarked = _isCurrentPageGlobalBookmark;
-    return Padding(
-      padding: const EdgeInsets.only(left: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _iconBtn(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: Icon(
-                isBookmarked
-                    ? Icons.bookmark_rounded
-                    : Icons.bookmark_border_rounded,
-                key: ValueKey(isBookmarked),
-                color: isBookmarked ? _t.accent : _t.textSec,
-                size: 18,
-              ),
-            ),
-            onTap: _toggleBookmark,
-            active: isBookmarked,
-            tooltip: isBookmarked ? 'تم حفظ الموضع' : 'حفظ الموضع',
-          ),
-          const SizedBox(width: 7),
-          _iconBtn(
-            icon: Icon(Icons.text_decrease_rounded,
-                color: _t.textSec, size: 16),
-            onTap: () => _changeFontSize(-2),
-            tooltip: 'تصغير',
-          ),
-          const SizedBox(width: 7),
-          _iconBtn(
-            icon: Icon(Icons.text_increase_rounded,
-                color: _t.textSec, size: 16),
-            onTap: () => _changeFontSize(2),
-            tooltip: 'تكبير',
-          ),
-          const SizedBox(width: 7),
-          _iconBtn(
-            icon: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [_t.bg, _t.accent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            onTap: _togglePanel,
-            active: _showPanel,
-            tooltip: 'تغيير الثيم',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Footer ────────────────────────────────────────────────────────────────
-  Widget _footerBtn({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-    bool iconFirst = true,
-  }) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedOpacity(
-        opacity: enabled ? 1.0 : 0.22,
-        duration: const Duration(milliseconds: 200),
-        child: Container(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+  // ── Theme Selector Bottom Sheet ────────────────────────────────────────────
+  void _showThemeSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _t.surfaceHigh,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: _t.border, width: 0.8),
+            color: _theme.isDark ? const Color(0xFF161B22) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(top: BorderSide(color: _theme.accent.withValues(alpha: 0.5), width: 1.2)),
           ),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: iconFirst
-                ? [
-              Icon(icon, color: _t.accent, size: 13),
-              const SizedBox(width: 6),
-              Text(label,
-                  style: TextStyle(
-                      color: _t.accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-            ]
-                : [
-              Text(label,
-                  style: TextStyle(
-                      color: _t.accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(width: 6),
-              Icon(icon, color: _t.accent, size: 13),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _footer() {
-    final progress = _ReadProgress(_currentPage, _pages.length);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _progressBar(),
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
-          decoration: BoxDecoration(
-            color: _t.surface.withValues(alpha: 0.95),
-            border: Border(top: BorderSide(color: _t.border, width: 0.8)),
-          ),
-          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── السابقة: تقليب لليمين = صفحة أصغر رقماً ──────────────────
-              _footerBtn(
-                icon: Icons.arrow_forward_ios_rounded,
-                label: 'السابقة',
-                enabled: _currentPage > 0,
-                onTap: _goPrev,
-                iconFirst: true,
+              Text(
+                'لون وهيئة المصحف',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _theme.text, fontSize: 15, fontWeight: FontWeight.w800),
               ),
-
-              // center
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${_currentPage + 1} / ${_pages.length}',
-                      style: TextStyle(
-                        color: _t.accent,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(_kMushafThemes.length, (i) {
+                  final t = _kMushafThemes[i];
+                  final isSel = i == _themeIndex;
+                  return GestureDetector(
+                    onTap: () async {
+                      HapticFeedback.selectionClick();
+                      setState(() => _themeIndex = i);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setInt('mushaf_theme_index', i);
+                      if (context.mounted) Navigator.pop(ctx);
+                    },
+                    child: Column(
                       children: [
-                        if (_isCurrentPageGlobalBookmark)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Icon(Icons.bookmark_rounded,
-                                color: _t.accent, size: 10),
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: t.bg,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSel ? t.accent : t.primary.withValues(alpha: 0.3),
+                              width: isSel ? 2.5 : 1,
+                            ),
+                            boxShadow: isSel
+                                ? [BoxShadow(color: t.accent.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 1)]
+                                : [],
                           ),
+                          child: isSel ? Icon(Icons.check_rounded, color: t.primary, size: 20) : null,
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          'قرأت ${progress.label}',
-                          style:
-                          TextStyle(color: _t.textSec, fontSize: 10),
+                          t.name,
+                          style: TextStyle(
+                            color: isSel ? _theme.accent : _theme.text.withValues(alpha: 0.7),
+                            fontSize: 11,
+                            fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                }),
               ),
+              const SizedBox(height: 20),
 
-              // ── التالية: تقليب لليسار = صفحة أكبر رقماً ─────────────────
-              _footerBtn(
-                icon: Icons.arrow_back_ios_rounded,
-                label: 'التالية',
-                enabled: _currentPage < _pages.length - 1,
-                onTap: _goNext,
-                iconFirst: false,
+              // Font Size Slider
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('حجم الخط', style: TextStyle(color: _theme.text, fontSize: 13, fontWeight: FontWeight.w700)),
+                  Text(toArabicDigits(_fontSize.round()), style: TextStyle(color: _theme.accent, fontSize: 13, fontWeight: FontWeight.w700)),
+                ],
+              ),
+              Slider(
+                value: _fontSize,
+                min: 15.0,
+                max: 30.0,
+                activeColor: _theme.primary,
+                inactiveColor: _theme.primary.withValues(alpha: 0.2),
+                onChanged: (val) async {
+                  setState(() => _fontSize = val);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setDouble('mushaf_font_size', val);
+                },
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -1033,138 +884,89 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   // ═══════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: _theme.bg,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: _theme.primary, strokeWidth: 2.5),
+              const SizedBox(height: 16),
+              Text(
+                'جارٍ فتح المصحف الشريف...',
+                style: TextStyle(color: _theme.primary, fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final isBookmarked = _currentPage != null && _bookmarkedPage == _currentPage!.pageNumber;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-          _isDark ? Brightness.light : Brightness.dark,
-          systemNavigationBarColor: _t.surface,
-          systemNavigationBarIconBrightness:
-          _isDark ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness: _theme.isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarColor: _theme.bg,
+          systemNavigationBarIconBrightness: _theme.isDark ? Brightness.light : Brightness.dark,
         ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 380),
-          curve: Curves.easeInOut,
-          color: _t.bg,
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              backgroundColor: _t.bg,
-              elevation: 0,
-              centerTitle: true,
-              iconTheme: IconThemeData(color: _t.textSec, size: 20),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.surahName,
-                    style: TextStyle(
-                      color: _t.textColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
+        child: Scaffold(
+          backgroundColor: _theme.bg,
+          appBar: _showControls
+              ? AppBar(
+                  backgroundColor: _theme.bg,
+                  elevation: 0,
+                  iconTheme: IconThemeData(color: _theme.primary),
+                  title: Text(
+                    _currentPage != null ? 'سُورَةُ ${_currentPage!.primarySurahName}' : 'المصحف الشريف',
+                    style: TextStyle(color: _theme.isDark ? _theme.text : _theme.primary, fontSize: 16, fontWeight: FontWeight.w800),
                   ),
-                  if (_isCurrentPageGlobalBookmark)
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 220),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.bookmark_rounded,
-                              color: _t.accent, size: 9),
-                          const SizedBox(width: 4),
-                          Text(
-                            'تم حفظ الموضع',
-                            style: TextStyle(
-                                color: _t.accent,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ],
+                  centerTitle: true,
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                        color: isBookmarked ? _theme.accent : _theme.primary,
+                        size: 20,
                       ),
+                      tooltip: isBookmarked ? 'إزالة الفاصل' : 'حفظ موضع القراءة',
+                      onPressed: _toggleBookmark,
                     ),
-                ],
-              ),
-              actions: [_appBarActions()],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(0),
-                child: Container(height: 0.8, color: _t.border),
-              ),
-            ),
-            body: FadeTransition(
-              opacity: _entranceFade,
-              child: SlideTransition(
-                position: _entranceSlide,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 380),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [_t.bg, _t.bgGrad],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0, 0.7],
+                    IconButton(
+                      icon: Icon(Icons.palette_outlined, color: _theme.primary, size: 20),
+                      tooltip: 'تغيير هيئة وثيم المصحف',
+                      onPressed: _showThemeSelector,
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      _themePanel(),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              widget.surahName,
-                              style: TextStyle(
-                                  color: _t.textSec, fontSize: 11, fontWeight: FontWeight.w600),
-                            ),
-                            Text('صفحة ' + _toArabicNum(_currentPage + 1) + ' من ' + _toArabicNum(_pages.length), style: TextStyle(color: _t.textSec, fontSize: 11)),
-                            Text(
-                              _toArabicNum(widget.ayat.length) + ' آية',
-                              style: TextStyle(
-                                  color: _t.textSec, fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // ══════════════════════════════════════════════════════
-                      //  PageView — RTL مباشر (تمرير من اليمين لليسار)
-                      //
-                      //  الفكرة:
-                      //  • الـ PageView يعمل بـ RTL (مع Directionality RTL)
-                      //  • pageIndex 0 = الصفحة الأولى (أول السورة) على اليمين
-                      //  • السويب من اليسار لليمين → صفحة تالية ✓
-                      //  • السويب من اليمين لليسار → صفحة سابقة ✓
-                      // ══════════════════════════════════════════════════════
-                      Expanded(
-                        child: Directionality(
-                          // RTL للـ PageView عشان السويب يكون من اليمين لليسار
-                          textDirection: TextDirection.rtl,
-                          child: PageView.builder(
-                            controller: _pageCtrl,
-                            physics: const BouncingScrollPhysics(),
-                            onPageChanged: _onPageChanged,
-                            itemCount: _pages.length,
-                            itemBuilder: (_, pageIndex) {
-                              return _pageContent(pageIndex);
-                            },
-                          ),
-                        ),
-                      ),
-
-                      _footer(),
-                      SizedBox(
-                          height: MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
-                ),
-              ),
+                  ],
+                )
+              : null,
+          body: GestureDetector(
+            onDoubleTap: () => setState(() => _showControls = !_showControls),
+            child: PageView.builder(
+              controller: _pageCtrl,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: _onPageChanged,
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                final page = _pages[index];
+                return MushafPageWidget(
+                  page: page,
+                  fontSize: _fontSize,
+                  textColor: _theme.text,
+                  primaryColor: _theme.primary,
+                  accentColor: _theme.accent,
+                  bgColor: _theme.bg,
+                  isDark: _theme.isDark,
+                  onAyahTap: _showAyahTafsir,
+                  onSearchTap: _showJumpDialog,
+                  onIndexTap: _showIndexModal,
+                  onPageNumberTap: _showJumpDialog,
+                );
+              },
             ),
           ),
         ),

@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/features/quran/presentation/pages/quran_details_page.dart';
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
+import 'package:rafiki_app/features/quran/data/datasources/juz_data.dart';
 
 class MushafPage extends StatefulWidget {
   const MushafPage({super.key});
@@ -28,9 +29,9 @@ class _MushafPageState extends State<MushafPage>
   static const Color _high       = Color(0xff192035);
   static const Color _border     = Color(0xff1C2540);
   static const Color _borderSoft = Color(0xff141C2E);
-  static const Color _accent     = Color(0xff5DD3A8);   // teal
+  static const Color _accent     = Color(0xff5DD3A8);
   static const Color _accentDim  = Color(0xff1F9E72);
-  static const Color _gold       = Color(0xffD4A853);   // Islamic gold
+  static const Color _gold       = Color(0xffD4A853);
   static const Color _textPri    = Color(0xffEDF1F8);
   static const Color _textSec    = Color(0xff7A8599);
   static const Color _textDim    = Color(0xff2E3A50);
@@ -43,7 +44,8 @@ class _MushafPageState extends State<MushafPage>
   bool   _isLoading   = true;
   bool   _hasError    = false;
   String _searchQuery = '';
-  int    _filterIndex = 0;
+  int    _filterIndex = 0; // 0: الكل, 1: مكية, 2: مدنية
+  int    _mainTab     = 0; // 0: السور, 1: الأجزاء
   int?   _lastReadSurah;
   Map<String, dynamic>? _savedBookmark;
 
@@ -88,22 +90,18 @@ class _MushafPageState extends State<MushafPage>
       final prefs = await SharedPreferences.getInstance();
       final lastRead = prefs.getInt('quran_last_read_surah');
 
-      // Load global bookmark
       Map<String, dynamic>? bookmark;
       try {
         final raw = prefs.getString('mushaf_global_bookmark');
         if (raw != null) {
           final parsed = jsonDecode(raw) as Map<String, dynamic>;
-          // Validate required fields exist and are reasonable
           if (parsed['surahNumber'] is int &&
               parsed['surahName'] is String &&
               parsed['pageIndex'] is int) {
             bookmark = parsed;
           }
         }
-      } catch (_) {
-        // Ignore corrupt bookmark data — treat as no bookmark
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       if (list.isNotEmpty) {
@@ -142,7 +140,22 @@ class _MushafPageState extends State<MushafPage>
     });
   }
 
-  void _onSearch(String q) { _searchQuery = q; _applyFilters(); }
+  List<QuranJuz> get _filteredAjza {
+    if (_searchQuery.trim().isEmpty) return kQuranAjza;
+    final q = _searchQuery.trim();
+    return kQuranAjza.where((j) {
+      final nameMatch = j.name.contains(q);
+      final surahMatch = j.surahName.contains(q);
+      final numMatch = j.number.toString() == q;
+      final wordsMatch = j.firstWords.contains(q);
+      return nameMatch || surahMatch || numMatch || wordsMatch;
+    }).toList();
+  }
+
+  void _onSearch(String q) {
+    _searchQuery = q;
+    _applyFilters();
+  }
 
   void _onFilterTap(int i) {
     HapticFeedback.selectionClick();
@@ -159,17 +172,23 @@ class _MushafPageState extends State<MushafPage>
       await prefs.setInt('quran_last_read_surah', surahNum);
     } catch (_) {}
     if (!mounted) return;
+
+    final ayahs = surah['ayahs'] as List?;
+    final int startMushafPage = initialPage ?? (ayahs != null && ayahs.isNotEmpty ? (ayahs[0]['page'] as int) : 1);
+
     Navigator.push(
       context,
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (_, __, ___) => SurahDetailPage(
+          allSurahs: _surahs,
+          initialSurahIndex: _surahs.indexWhere((s) => s['number'] == surahNum),
           surahName: surah['name'] as String,
           surahNumber: surah['number'] as int,
           ayat: List<String>.from(
             (surah['ayahs'] as List).map((a) => a['text']),
           ),
-          initialPage: initialPage,
+          initialPage: startMushafPage,
         ),
         transitionsBuilder: (_, anim, __, child) {
           return FadeTransition(
@@ -187,7 +206,21 @@ class _MushafPageState extends State<MushafPage>
     ).then((_) => _refreshBookmark());
   }
 
-  /// Reloads the global bookmark from SharedPreferences after returning from the reader.
+  void _openJuz(QuranJuz juz) {
+    if (_surahs.isEmpty) return;
+    final surah = _surahs.firstWhere(
+      (s) => s['number'] == juz.surahNumber,
+      orElse: () => _surahs.first,
+    );
+    final ayahs = (surah['ayahs'] as List?) ?? [];
+    final matchingAyah = ayahs.firstWhere(
+      (a) => a['numberInSurah'] == juz.startAyah,
+      orElse: () => ayahs.isNotEmpty ? ayahs.first : {'page': 1},
+    );
+    final int pageNumber = (matchingAyah['page'] as int?) ?? 1;
+    _openSurah(surah, initialPage: pageNumber);
+  }
+
   Future<void> _refreshBookmark() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -204,12 +237,8 @@ class _MushafPageState extends State<MushafPage>
       if (mounted) {
         setState(() => _savedBookmark = bookmark);
       }
-    } catch (_) {
-      // Non-critical — silently handle
-    }
+    } catch (_) {}
   }
-
-  // ── Glass helper ──────────────────────────────────────────────────────
 
   Widget _glass({
     required Widget child,
@@ -224,9 +253,12 @@ class _MushafPageState extends State<MushafPage>
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: _surface.withValues(alpha: 0.88),
+            color: _surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: borderColor ?? _border),
+            border: Border.all(
+              color: borderColor ?? _border,
+              width: 1,
+            ),
           ),
           child: child,
         ),
@@ -316,7 +348,7 @@ class _MushafPageState extends State<MushafPage>
     if (_savedBookmark != null) {
       final surahNum = _savedBookmark!['surahNumber'] as int?;
       final surahName = _savedBookmark!['surahName'] as String? ?? '';
-      final pageIndex = _savedBookmark!['pageIndex'] as int? ?? 0;
+      final mushafPage = (_savedBookmark!['mushafPage'] as int?) ?? (_savedBookmark!['pageIndex'] as int? ?? 1);
       final ayahNum = _savedBookmark!['ayahNumber'] as int? ?? 1;
 
       return Container(
@@ -328,7 +360,7 @@ class _MushafPageState extends State<MushafPage>
                 (s) => s['number'] == surahNum,
                 orElse: () => _surahs.first,
               );
-              _openSurah(surah, initialPage: pageIndex);
+              _openSurah(surah, initialPage: mushafPage);
             } 
           },
           child: Container(
@@ -363,68 +395,142 @@ class _MushafPageState extends State<MushafPage>
     return const SizedBox.shrink();
   }
 
-  Widget _searchBar() {
+  // ── Main Tab Switch (السور / الأجزاء) ──────────────────────────────────
+
+  Widget _tabSwitch() {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _accent.withValues(alpha: 0.04),
-            blurRadius: 20,
-            spreadRadius: 0,
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_mainTab != 0) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _mainTab = 0);
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _mainTab == 0 ? _accent.withValues(alpha: 0.14) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _mainTab == 0 ? _accent.withValues(alpha: 0.4) : Colors.transparent,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    'السور (${_surahs.isEmpty ? 114 : _surahs.length})',
+                    style: TextStyle(
+                      color: _mainTab == 0 ? _accent : _textSec,
+                      fontSize: 13,
+                      fontWeight: _mainTab == 0 ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_mainTab != 1) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _mainTab = 1);
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _mainTab == 1 ? _gold.withValues(alpha: 0.14) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _mainTab == 1 ? _gold.withValues(alpha: 0.4) : Colors.transparent,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    'الأجزاء (٣٠)',
+                    style: TextStyle(
+                      color: _mainTab == 1 ? _gold : _textSec,
+                      fontSize: 13,
+                      fontWeight: _mainTab == 1 ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      child: _glass(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        radius: 16,
-        child: TextField(
-          controller: _searchCtrl,
-          onChanged: _onSearch,
-          textDirection: TextDirection.rtl,
-          style: const TextStyle(
-            color: _textPri, fontSize: 15, fontWeight: FontWeight.w400,
-          ),
-          cursorColor: _accent,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12, vertical: 12,
+    );
+  }
+
+  // ── Search bar ────────────────────────────────────────────────────────
+
+  Widget _searchBar() {
+    final hint = _mainTab == 0
+        ? 'ابحث باسم السورة أو رقمها...'
+        : 'ابحث برقم الجزء، السورة، أو مطلع الآية...';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: TextField(
+        controller: _searchCtrl,
+        onChanged: _onSearch,
+        textDirection: TextDirection.rtl,
+        style: const TextStyle(
+          color: _textPri, fontSize: 14, fontWeight: FontWeight.w400,
+        ),
+        cursorColor: _accent,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          hintText: hint,
+          hintStyle: const TextStyle(color: _textDim, fontSize: 13),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Icon(
+              Icons.search_rounded,
+              color: _searchQuery.isNotEmpty ? _accent : _textDim,
+              size: 20,
             ),
-            hintText: 'ابحث باسم السورة أو رقمها...',
-            hintStyle: const TextStyle(color: _textDim, fontSize: 14),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(
-                Icons.search_rounded,
-                color: _searchQuery.isNotEmpty ? _accent : _textDim,
-                size: 20,
-              ),
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-              icon: const Icon(Icons.close_rounded,
-                  color: _textSec, size: 18),
-              onPressed: () { _searchCtrl.clear(); _onSearch(''); },
-            )
-                : null,
           ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+            icon: const Icon(Icons.close_rounded, color: _textSec, size: 18),
+            onPressed: () { _searchCtrl.clear(); _onSearch(''); },
+          )
+              : null,
         ),
       ),
     );
   }
 
-  // ── Filter chips ──────────────────────────────────────────────────────
+  // ── Filter chips (Surahs only) ────────────────────────────────────────
 
   Widget _filterRow() {
     return Row(
       children: [
-        // Filter chips
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            reverse: true, // RTL scroll
+            reverse: true,
             child: Row(
               children: List.generate(_filterLabels.length, (i) {
                 final isSelected = _filterIndex == i;
@@ -434,31 +540,22 @@ class _MushafPageState extends State<MushafPage>
                   child: GestureDetector(
                     onTap: () => _onFilterTap(i),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withValues(alpha: 0.12)
-                            : _surfaceAlt,
-                        borderRadius: BorderRadius.circular(30),
+                        color: isSelected ? color.withValues(alpha: 0.12) : _surfaceAlt,
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected
-                              ? color.withValues(alpha: 0.5)
-                              : _border,
-                          width: isSelected ? 1.5 : 1,
+                          color: isSelected ? color.withValues(alpha: 0.5) : _border,
+                          width: isSelected ? 1.2 : 0.8,
                         ),
-                        boxShadow: const [],
                       ),
                       child: Text(
                         _filterLabels[i],
                         style: TextStyle(
                           color: isSelected ? color : _textSec,
-                          fontSize: 12.5,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w400,
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
                     ),
@@ -468,47 +565,14 @@ class _MushafPageState extends State<MushafPage>
             ),
           ),
         ),
-        // Result count
         Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Text(
-              key: ValueKey(_filteredSurahs.length),
-              '${_filteredSurahs.length} سورة',
-              style: const TextStyle(color: _textDim, fontSize: 11.5),
-            ),
+          padding: const EdgeInsets.only(right: 8),
+          child: Text(
+            '${_filteredSurahs.length} سورة',
+            style: const TextStyle(color: _textDim, fontSize: 11),
           ),
         ),
       ],
-    );
-  }
-
-  // ── Section divider ───────────────────────────────────────────────────
-
-  Widget _divider(String label) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(height: 1, color: _borderSoft),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: _textDim, fontSize: 11,
-                fontWeight: FontWeight.w600, letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(height: 1, color: _borderSoft),
-          ),
-        ],
-      ),
     );
   }
 
@@ -520,28 +584,118 @@ class _MushafPageState extends State<MushafPage>
     final isMeccan = revType.toLowerCase() == 'meccan';
     final isLastRead = _lastReadSurah == num;
 
-    final delay = (listIndex * 0.025).clamp(0.0, 0.75);
-    final end   = (delay + 0.35).clamp(0.0, 1.0);
-    final anim  = CurvedAnimation(
-      parent: _listAnim,
-      curve: Interval(delay, end, curve: Curves.easeOutCubic),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: _SurahTile(
+        number:     num,
+        name:       surah['name']        as String,
+        engName:    surah['englishName'] as String,
+        ayahCount:  surah['numberOfAyahs'] as int,
+        isMeccan:   isMeccan,
+        isLastRead: isLastRead,
+        onTap:      () => _openSurah(surah),
+      ),
     );
+  }
 
-    return FadeTransition(
-      opacity: anim,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.0, 0.06),
-          end: Offset.zero,
-        ).animate(anim),
-        child: _SurahTile(
-          number:     num,
-          name:       surah['name']        as String,
-          engName:    surah['englishName'] as String,
-          ayahCount:  surah['numberOfAyahs'] as int,
-          isMeccan:   isMeccan,
-          isLastRead: isLastRead,
-          onTap:      () => _openSurah(surah),
+  // ── Juz card ──────────────────────────────────────────────────────────
+
+  Widget _juzCard(QuranJuz juz, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openJuz(juz),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _border, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                // رقم الجزء
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _gold.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _gold.withValues(alpha: 0.3)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${juz.number}',
+                      style: const TextStyle(
+                        color: _gold,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // تفاصيل الجزء
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            juz.name,
+                            style: const TextStyle(
+                              color: _textPri,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            juz.hizb,
+                            style: TextStyle(
+                              color: _gold.withValues(alpha: 0.85),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'يبدأ من: سورة ${juz.surahName} (آية ${juz.startAyah})',
+                        style: const TextStyle(
+                          color: _textSec,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '« ${juz.firstWords} »',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _accent.withValues(alpha: 0.9),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: _textSec.withValues(alpha: 0.35),
+                  size: 11,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -605,7 +759,7 @@ class _MushafPageState extends State<MushafPage>
               textDirection: TextDirection.rtl,
               style: const TextStyle(color: _textSec, fontSize: 15)),
           const SizedBox(height: 6),
-          const Text('جرّب كلمة أخرى أو رقم السورة',
+          const Text('جرّب كلمة أخرى أو رقماً آخر',
               style: TextStyle(color: _textDim, fontSize: 12)),
         ],
       ),
@@ -665,17 +819,21 @@ class _MushafPageState extends State<MushafPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-
                   // ── Hero Header ────────────────────────────────────
                   const SizedBox(height: 8),
                   _headerHero(),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  // ── Bookmark Card (Continue Reading / Empty) ───────
+                  // ── Bookmark Card ──────────────────────────────────
                   _bookmarkCard(),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
+
+                  // ── Main Tab Switch (السور / الأجزاء) ───────────────
+                  _tabSwitch(),
+
+                  const SizedBox(height: 10),
 
                   // ── Search ─────────────────────────────────────────
                   Padding(
@@ -683,47 +841,42 @@ class _MushafPageState extends State<MushafPage>
                     child: _searchBar(),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  // ── Filter + count ─────────────────────────────────
-                  if (!_isLoading && !_hasError)
+                  // ── Filter (Only in Surahs tab) ────────────────────
+                  if (_mainTab == 0 && !_isLoading && !_hasError)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _filterRow(),
                     ),
+                  if (_mainTab == 0 && !_isLoading && !_hasError)
+                    const SizedBox(height: 8),
 
-                  const SizedBox(height: 8),
-
-                  // ── List ───────────────────────────────────────────
+                  // ── List (Surahs or Ajza) ──────────────────────────
                   Expanded(
                     child: _hasError
                         ? _errorState()
                         : _isLoading
                         ? _loadingState()
-                        : _filteredSurahs.isEmpty
-                        ? _emptyState()
-                        : ListView.builder(
-                      controller: _scrollCtrl,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(
-                          16, 4, 16, 32),
-                      itemCount: _filteredSurahs.length + 1,
-                      itemBuilder: (_, i) {
-                        // Juz dividers (simplified: surah 1, 2, 10, 18...)
-                        // Just one divider example at top for aesthetics
-                        if (i == 0) {
-                          return _searchQuery.isEmpty && _filterIndex == 0
-                              ? _divider('السور القرآنية الكريمة')
-                              : const SizedBox(height: 4);
-                        }
-                        final idx = i - 1;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _surahCard(
-                              _filteredSurahs[idx], idx),
-                        );
-                      },
-                    ),
+                        : _mainTab == 0
+                        ? (_filteredSurahs.isEmpty
+                            ? _emptyState()
+                            : ListView.builder(
+                                controller: _scrollCtrl,
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                                itemCount: _filteredSurahs.length,
+                                itemBuilder: (_, idx) => _surahCard(_filteredSurahs[idx], idx),
+                              ))
+                        : (_filteredAjza.isEmpty
+                            ? _emptyState()
+                            : ListView.builder(
+                                controller: _scrollCtrl,
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                                itemCount: _filteredAjza.length,
+                                itemBuilder: (_, idx) => _juzCard(_filteredAjza[idx], idx),
+                              )),
                   ),
                 ],
               ),
@@ -733,60 +886,6 @@ class _MushafPageState extends State<MushafPage>
       ),
     );
   }
-}
-
-// ── Geometric pattern painter (Islamic art motif) ─────────────────────────
-
-class _GeometricPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Radial glow behind header
-    final glowPaint = Paint()
-      ..shader = RadialGradient(
-        center: Alignment.topCenter,
-        radius: 1.2,
-        colors: [
-          const Color(0xff5DD3A8).withValues(alpha: 0.07),
-          const Color(0xffD4A853).withValues(alpha: 0.04),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.4, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height), glowPaint);
-
-    // Subtle geometric octagon pattern in corners
-    final patPaint = Paint()
-      ..color = const Color(0xffD4A853).withValues(alpha: 0.06)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-
-    void drawOctagon(Offset center, double r) {
-      final path = Path();
-      for (int i = 0; i < 8; i++) {
-        final angle = math.pi / 8 + i * math.pi / 4;
-        final x = center.dx + r * math.cos(angle);
-        final y = center.dy + r * math.sin(angle);
-        i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-      }
-      path.close();
-      canvas.drawPath(path, patPaint);
-    }
-
-    // Draw layered octagons in top-left and bottom-right corners
-    for (int layer = 1; layer <= 3; layer++) {
-      drawOctagon(Offset(-10, -10), layer * 28.0);
-      drawOctagon(Offset(size.width + 10, size.height + 10), layer * 28.0);
-    }
-    // Small stars top-right
-    for (int layer = 1; layer <= 2; layer++) {
-      drawOctagon(Offset(size.width + 10, -10), layer * 22.0);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ── Surah tile ────────────────────────────────────────────────────────────
@@ -921,77 +1020,6 @@ class _SurahTile extends StatelessWidget {
     );
   }
 }
-// ── Octagonal number badge ────────────────────────────────────────────────
-
-class _OctaBadge extends StatelessWidget {
-  final int  number;
-  final bool isLastRead;
-
-  const _OctaBadge({required this.number, required this.isLastRead});
-
-  static const Color _accent    = Color(0xff5DD3A8);
-  static const Color _gold      = Color(0xffD4A853);
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isLastRead ? _gold : _accent;
-    return SizedBox(
-      width: 48,
-      height: 48,
-      child: CustomPaint(
-        painter: _OctaPainter(color: color, isLastRead: isLastRead),
-        child: Center(
-          child: Text(
-            '$number',
-            style: TextStyle(
-              color: color,
-              fontSize: number > 99 ? 11 : 13,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OctaPainter extends CustomPainter {
-  final Color color;
-  final bool isLastRead;
-  const _OctaPainter({required this.color, required this.isLastRead});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r  = size.width / 2 - 2;
-
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: 0.08)
-      ..style = PaintingStyle.fill;
-
-    final strokePaint = Paint()
-      ..color = color.withValues(alpha: 0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      final angle = math.pi / 8 + i * math.pi / 4;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    path.close();
-
-    canvas.drawPath(path, fillPaint);
-    canvas.drawPath(path, strokePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _OctaPainter old) =>
-      old.color != color || old.isLastRead != isLastRead;
-}
 
 // ── Shimmer card ──────────────────────────────────────────────────────────
 
@@ -1043,12 +1071,12 @@ class _ShimmerCardState extends State<_ShimmerCard>
           ),
           child: Row(
             children: [
-              // Octagon placeholder
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: CustomPaint(
-                  painter: _ShimmerOctaPainter(t: t),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _high.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               const SizedBox(width: 14),
@@ -1092,34 +1120,4 @@ class _ShimmerCardState extends State<_ShimmerCard>
       ),
     );
   }
-}
-
-class _ShimmerOctaPainter extends CustomPainter {
-  final double t;
-  const _ShimmerOctaPainter({required this.t});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r  = size.width / 2 - 3;
-    final opacity = 0.15 + t * 0.2;
-
-    final paint = Paint()
-      ..color = const Color(0xff192035).withValues(alpha: opacity)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      final angle = math.pi / 8 + i * math.pi / 4;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ShimmerOctaPainter old) => old.t != t;
 }
