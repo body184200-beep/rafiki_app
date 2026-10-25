@@ -8,6 +8,7 @@ import 'package:rafiki_app/features/hadith/presentation/pages/hadith_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/podcast_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/reciters_page.dart';
 import 'package:rafiki_app/features/guide/presentation/pages/sunnah_page.dart';
+import 'package:rafiki_app/features/prophet_stories/presentation/pages/prophet_stories_page.dart';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,6 +141,15 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
         accentB: const Color(0xff2ECC71),
         arabicLabel: "دعاء",
         destination: () => AdeiaPage(),
+      ),
+      _CardData(
+        title: "قصص الأنبياء",
+        subtitle: "سير وعبر ورسائل ٢٥ نبياً ورسولاً كاملة",
+        icon: Icons.auto_stories_rounded,
+        accentA: const Color(0xff5C420A),
+        accentB: const Color(0xffD4AF37),
+        arabicLabel: "أنبياء",
+        destination: () => const Anbiaa(),
       ),
     ];
   }

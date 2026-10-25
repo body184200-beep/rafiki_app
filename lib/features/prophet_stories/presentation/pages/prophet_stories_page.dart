@@ -1,5 +1,8 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../data/models/prophet_story_model.dart';
 
 class Anbiaa extends StatefulWidget {
   const Anbiaa({super.key});
@@ -9,727 +12,151 @@ class Anbiaa extends StatefulWidget {
 }
 
 class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
-  final TextEditingController searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   late AnimationController _headerController;
   late Animation<double> _headerFade;
 
-  // ألوان الثيم
+  // ألوان الثيم الإسلامي الفاخر
   static const Color kGold = Color(0xFFc9a84c);
   static const Color kGoldLight = Color(0xFFe8cc7a);
   static const Color kGoldDim = Color(0xFF8a6f30);
   static const Color kInk = Color(0xFF0e0c18);
   static const Color kParchment = Color(0xFFf5edd6);
 
-  final List<Map<String, String>> prophets = [
-    {
-      "name": "آدم عليه السلام",
-      "icon": "🌍",
-      "story": """🌍 1. الإعلان الإلهي وقلق الملائكة
-قبل خلق آدم، أعلن الله تعالى للملائكة عن مخلوق جديد: ﴿إِنِّي جَاعِلٌ فِي الْأَرْضِ خَلِيفَةً﴾
-فقالت الملائكة: ﴿أَتَجْعَلُ فِيهَا مَن يُفْسِدُ فِيهَا وَيَسْفِكُ الدِّمَاءَ﴾
-فجاء الرد القاطع: ﴿إِنِّي أَعْلَمُ مَا لَا تَعْلَمُونَ﴾
-
-🧱 2. مراحل الخلق
-مرّ خلق آدم بخمس مراحل: التراب، الطين اللازب، الحمأ المسنون، الصلصال كالفخار، ثم نفخ الروح.
-بقي جسدًا طينيًا أربعين عامًا، وكان إبليس يطوف به يتحسسه.
-
-💫 3. بثّ الروح وأولى الكلمات
-حين بدأت الروح تسري في جسد آدم عطس، فألهمه الله: "الحمد لله"
-فقال الله: "رحمك ربك يا آدم".
-ثم علّمه الله أسماء كل شيء وفضّله بالعلم على الملائكة.
-
-👑 4. السجود وكبر إبليس
-أمر الله الملائكة وإبليس بالسجود لآدم. فسجدت الملائكة فورًا.
-لكن إبليس تكبر: ﴿أَنَا خَيْرٌ مِّنْهُ خَلَقْتَنِي مِن نَّارٍ وَخَلَقْتَهُ مِن طِينٍ﴾
-فطرده الله من رحمته.
-
-🌿 5. الجنة وحيلة إبليس
-وسوس لهما إبليس حتى أكلا من الشجرة المنهي عنها.
-فتابا: ﴿رَبَّنَا ظَلَمْنَا أَنفُسَنَا﴾ فقبل الله توبتهما وأهبطهما إلى الأرض.
-
-⚔️ 6. قابيل وهابيل وأول جريمة
-قتل قابيل أخاه هابيل فكانت أول جريمة قتل. تعلّم الدفن من الغراب وندم شديدًا.
-
-☁️ 7. الوفاة والجنازة الأولى
-غسّلته الملائكة وكفّنته وصلّت عليه ودفنته — أول وفاة وأول جنازة في تاريخ البشر."""
-    },
-    {
-      "name": "إدريس عليه السلام",
-      "icon": "✍️",
-      "story": """📜 1. نسبه وألقابه
-هو إدريس بن يارد، وينتهي نسبه إلى شيث بن آدم.
-سُمّي "إدريس" من "الدراسة" لكثرة اشتغاله بالعلم.
-
-🌍 2. الرسالة والهجرة
-بعد وفاة شيث ظهر الفساد، فآتاه الله النبوة وأنزل عليه ثلاثين صحيفة.
-هاجر إلى مصر ورأى النيل فقال: "منف" أي الأرض الممتعة.
-
-✨ 3. أولوياته الحضارية
-• أول من خطّ بالقلم ودوّن العلوم
-• أول من خاط الثياب من الصوف والقطن
-• أول من نظّم القتال في سبيل الله
-• علّمه الله أسرار النجوم والحساب
-• بنى أتباعه أكثر من مائة مدينة
-
-☁️ 4. الرفع إلى السماء الرابعة
-﴿وَرَفَعْنَاهُ مَكَانًا عَلِيًّا﴾
-رفعه ملاك بين جناحيه، وفي السماء الرابعة قُبضت روحه.
-
-🤝 5. شهادة النبي ﷺ
-في ليلة الإسراء والمعراج وجد النبيُّ ﷺ إدريسَ في السماء الرابعة.
-فقال إدريس: "مرحبًا بالأخ الصالح والنبي الصالح"."""
-    },
-    {
-      "name": "نوح عليه السلام",
-      "icon": "🌊",
-      "story": """🌊 1. بداية الشرك
-بعد موت خمسة رجال صالحين صنع الناس لهم تماثيل بوسوسة الشيطان فعبدوها — أول شرك في تاريخ البشرية.
-
-⚔️ 2. الدعوة والصبر (٩٥٠ سنة)
-لبث نوح في قومه ألف سنة إلا خمسين عامًا. دعاهم ليلًا ونهارًا سرًا وعلانية.
-كانوا يضعون أصابعهم في آذانهم ولم يؤمن معه إلا عدد قليل.
-
-🚢 3. بناء السفينة في الصحراء
-أمر الله نوحًا ببناء السفينة في صحراء لا ماء فيها.
-سخر منه قومه: "أصبحت نجارًا بعد أن كنت نبيًا؟!"
-
-🌧️ 4. الطوفان العظيم
-فتح الله السماء وفجّر الأرض عيونًا حتى غطى الماء الجبال.
-غرق الابن العاصي والزوجة الكافرة مع القوم.
-
-🏔️ 5. نهاية الطوفان
-﴿يَا أَرْضُ ابْلَعِي مَاءَكِ وَيَا سَمَاءُ أَقْلِعِي﴾
-ورست السفينة على جبل الجودي.
-نسل نوح (سام، حام، يافث) هم أصل البشرية الثانية."""
-    },
-    {
-      "name": "هود عليه السلام",
-      "icon": "🏛️",
-      "story": """🌍 1. قوم عاد وقوتهم
-عاشوا في الأحقاف — عمالقة شداد بنوا القصور وقالوا: ﴿مَنْ أَشَدُّ مِنَّا قُوَّةً﴾
-﴿إِرَمَ ذَاتِ الْعِمَادِ * الَّتِي لَمْ يُخْلَقْ مِثْلُهَا فِي الْبِلَادِ﴾
-
-🪨 2. دعوة هود وعناد القوم
-قالوا: ﴿إِنَّا لَنَرَاكَ فِي سَفَاهَةٍ﴾
-فرد: ﴿يَا قَوْمِ لَيْسَ بِي سَفَاهَةٌ وَلَٰكِنِّي رَسُولٌ مِّن رَّبِّ الْعَالَمِينَ﴾
-
-🌵 3. القحط والوفد
-ثلاث سنوات قحط. أرسلوا وفدًا للاستسقاء فاختاروا السحابة السوداء ظنًا أنها الخير.
-
-🌪️ 4. الريح العقيم
-﴿رِيحٌ فِيهَا عَذَابٌ أَلِيمٌ﴾
-سبع ليالٍ وثمانية أيام. تقتلع العمالقة كجذوع نخل خاوية.
-نجا هود والمؤمنون وهاجر إلى حضرموت."""
-    },
-    {
-      "name": "صالح عليه السلام",
-      "icon": "🐪",
-      "story": """🌍 1. قوم ثمود والحضارة الصخرية
-عاشوا في الحجر ينحتون من الجبال بيوتًا.
-﴿وَتَنْحِتُونَ مِنَ الْجِبَالِ بُيُوتًا فَارِهِينَ﴾
-
-🐪 2. ناقة الله آية ومعجزة
-خرجت الناقة من صخرة صمّاء معجزة من الله.
-حذّرهم صالح: ﴿هَٰذِهِ نَاقَةُ اللَّهِ لَكُمْ آيَةً﴾
-
-⚔️ 3. عقر الناقة
-تجرأ أشقياء القوم فعقروا الناقة.
-فأنذرهم: "تمتعوا ثلاثة أيام ثم يأتيكم العذاب."
-
-🌩️ 4. الصيحة والهلاك
-في اليوم الرابع جاءتهم صيحة رهيبة فأهلكتهم.
-نجا صالح والمؤمنون معه ورحلوا إلى فلسطين."""
-    },
-    {
-      "name": "إبراهيم عليه السلام",
-      "icon": "🔥",
-      "story": """🌍 1. النشأة في بيت الأصنام
-وُلد في بابل في عهد الطاغية النمرود. أبوه آزر كان نحات الأصنام الرسمي.
-
-🧠 2. يقظة الفطرة
-ناظر عبّاد الكواكب بعقله قبل الوحي:
-﴿لَا أُحِبُّ الْآفِلِينَ﴾ ← ﴿إِنِّي وَجَّهْتُ وَجْهِيَ لِلَّذِي فَطَرَ السَّمَاوَاتِ وَالْأَرْضَ حَنِيفًا﴾
-
-🪓 3. تحطيم الأصنام
-حطّم الأصنام بالفأس وترك الكبير. قال للمُستجوبين:
-﴿بَلْ فَعَلَهُ كَبِيرُهُمْ هَٰذَا فَاسْأَلُوهُمْ إِن كَانُوا يَنطِقُونَ﴾
-
-🔥 4. النار كانت بردًا وسلامًا
-قال في الهواء: "حسبي الله ونعم الوكيل."
-﴿يَا نَارُ كُونِي بَرْدًا وَسَلَامًا عَلَىٰ إِبْرَاهِيمَ﴾
-
-💧 5. زمزم والذبح والكعبة
-معجزة زمزم في مكة القاحلة.
-الذبح العظيم: ﴿وَفَدَيْنَاهُ بِذِبْحٍ عَظِيمٍ﴾
-ثم بنى الكعبة مع إسماعيل: ﴿رَبَّنَا تَقَبَّلْ مِنَّا﴾"""
-    },
-    {
-      "name": "لوط عليه السلام",
-      "icon": "🏙️",
-      "story": """🧬 1. النسب والهجرة
-ابن أخ إبراهيم. آمن به وهاجر معه إلى الشام.
-ثم استقر في سدوم بغور الأردن.
-
-⚠️ 2. فساد قوم لوط
-﴿أَتَأْتُونَ الْفَاحِشَةَ مَا سَبَقَكُم بِهَا مِنْ أَحَدٍ مِّنَ الْعَالَمِينَ﴾
-ردّوا دعوته بالسخرية والتهديد والطرد.
-
-👼 3. الملائكة والحصار
-جاءت الملائكة في هيئة شباب حسان. زوجته الخائنة أخبرت القوم فحاصروا البيت.
-
-⚡ 4. إعمى القوم والنجاة
-ضرب جبريل وجوههم فعموا فورًا.
-أُمر لوط بالخروج ليلًا. التفتت زوجته فهلكت.
-
-🌋 5. الخسف والتدمير
-رفع جبريل المدن وقلبها. ثم أمطار حجارة سجيل.
-تحوّلت ديارهم إلى البحر الميت الذي لا يعيش فيه كائن حتى اليوم."""
-    },
-    {
-      "name": "إسماعيل عليه السلام",
-      "icon": "🕋",
-      "story": """🌿 1. الميلاد والبشارة
-ولد لإبراهيم وهاجر بعد سنين من انتظار الذرية.
-﴿فَبَشَّرْنَاهُ بِغُلَامٍ حَلِيمٍ﴾
-
-💧 2. معجزة زمزم
-تركهما إبراهيم في وادٍ قاحل بمكة. سعت هاجر بين الصفا والمروة سبعة أشواط.
-انبجس ماء زمزم فسكنت قبيلة جرهم حوله.
-نشأ إسماعيل بينهم وتعلّم العربية الفصحى.
-
-🔪 3. الذبح العظيم
-رأى إبراهيم في المنام ذبح ابنه.
-فقال إسماعيل: ﴿يَا أَبَتِ افْعَلْ مَا تُؤْمَرُ﴾
-فدى الله إسماعيل بكبشٍ من الجنة — أصل عيد الأضحى.
-
-🕋 4. بناء الكعبة
-إسماعيل ينقل الحجارة وإبراهيم يبني يقولان: ﴿رَبَّنَا تَقَبَّلْ مِنَّا﴾
-من نسله جاء النبي محمد ﷺ.
-توفي بمكة عن 137 عامًا ودُفن في حِجر إسماعيل."""
-    },
-    {
-      "name": "إسحاق عليه السلام",
-      "icon": "⭐",
-      "story": """😲 1. البشارة المعجزة
-بشّرت الملائكة سارة بإسحاق وهي عجوز تسعينية عاقرة.
-قالت بدهشة: "أألد وأنا عجوز؟!" — ﴿أَتَعْجَبِينَ مِنْ أَمْرِ اللَّهِ﴾
-
-👶 2. الولادة والنشأة
-وُلد وإبراهيم في المئة من عمره.
-﴿وَبَشَّرُوهُ بِغُلَامٍ عَلِيمٍ﴾
-نشأ في بيت النبوة وتعلّم التوحيد والحكمة.
-
-👶👶 3. التوأم التاريخي
-تزوج من رِفقة ودعا الله فرزقه توأمًا:
-- العيص: من نسله شعوب الروم
-- يعقوب (إسرائيل): أصل بني إسرائيل وخط الأنبياء الكبار
-
-⚰️ 4. الوفاة
-عاش 180 سنة وتوفي في الخليل بفلسطين.
-دُفن في مغارة المكفيلة بجوار إبراهيم وسارة."""
-    },
-    {
-      "name": "يعقوب عليه السلام",
-      "icon": "🌙",
-      "story": """👶 1. الميلاد واللقب
-وُلد توأمًا مع العيص خارجًا ممسكًا بعقب أخيه — فسُمي "يعقوب".
-لقبه الآخر "إسرائيل" أي صفوة الله.
-
-💍 2. سنوات حرّان والزوجات
-خدم خاله لابان أربعة عشر عامًا للزواج من ليئة وراحيل مع جاريتيهما.
-أنجب اثني عشر ولدًا هم أصل بني إسرائيل.
-
-🌑 3. المحنة الكبرى: فراق يوسف
-ألقى الإخوة يوسف في البئر وأتوا أباهم بقميصه الملطخ بالدم.
-قال يعقوب: ﴿فَصَبْرٌ جَمِيلٌ﴾ وبكى سنوات حتى ابيضّت عيناه.
-
-👕 4. معجزة القميص والفرج
-شمّ ريح يوسف من بعيد. ووُضع قميصه على وجهه فعاد بصيرًا فورًا.
-دخل مصر مع 72 شخصًا واستقبله يوسف ملكًا.
-عاش 147 سنة ودُفن في الخليل."""
-    },
-    {
-      "name": "يوسف عليه السلام",
-      "icon": "👑",
-      "story": """🌌 1. الرؤيا الكونية
-رأى وهو طفل أحد عشر كوكبًا والشمس والقمر يسجدون له.
-حذّره أبوه: ﴿يَا بُنَيَّ لَا تَقْصُصْ رُؤْيَاكَ عَلَىٰ إِخْوَتِكَ﴾
-
-😡 2. مؤامرة الإخوة
-ألقوه في البئر وباعوه بثمن بخس. وأتوا أباهم بقميصه الملطخ بدم كذب.
-
-🏛️ 3. الفتنة والسجن
-راودته امرأة العزيز فأبى: ﴿مَعَاذَ اللَّهِ﴾
-فسجن مظلومًا. فسّر رؤيا الساقي والخباز وكلاهما تحقق.
-
-👑 4. تفسير رؤيا الملك
-سبع بقرات سمان وسبع عجاف — سبع سنين خير ثم سبع مجاعة.
-فجعله الملك على خزائن مصر.
-
-💔 5. اللقاء الكبير
-جاء إخوته لشراء الطعام فعرفهم. فكشف عن هويته:
-﴿أَنَا يُوسُفُ وَهَٰذَا أَخِي﴾ وعفا: ﴿لَا تَثْرِيبَ عَلَيْكُمُ الْيَوْمَ﴾
-
-🌟 6. أحسن القصص
-تحقق تأويل الرؤيا بعد عشرين عامًا.
-سمّاها الله: ﴿أَحْسَنَ الْقَصَصِ﴾"""
-    },
-    {
-      "name": "شعيب عليه السلام",
-      "icon": "⚖️",
-      "story": """🕋 1. النسب وأرض مدين
-من ذرية إبراهيم. بُعث في مدين مدينة تجارية كبرى.
-لُقّب بـ"خطيب الأنبياء" لبلاغته.
-
-💰 2. فساد قوم مدين
-عبدوا شجرة الأيكة. والأخطر: الغش الاقتصادي المنظّم.
-ينقصون الكيل والميزان ويأخذون أموال الناس بالباطل.
-
-📢 3. الدعوة الاقتصادية
-﴿أَوْفُوا الْكَيْلَ وَالْمِيزَانَ وَلَا تَبْخَسُوا النَّاسَ أَشْيَاءَهُمْ﴾
-"الربح الحلال القليل خير من الأموال الحرام الكثيرة."
-
-🐑 4. لقاء موسى
-استقبل موسى الهارب من مصر. زوّجه ابنته مقابل ثماني سنوات رعي.
-
-⚡ 5. عذاب يوم الظُلّة
-سبعة أيام حرٍّ قاتل. ظهرت سحابة فاجتمعوا تحتها ظنًا أنها رحمة.
-فأمطرت نارًا وجاءت صيحة وزلزال فهلكوا."""
-    },
-    {
-      "name": "أيوب عليه السلام",
-      "icon": "🌿",
-      "story": """🏡 1. النعمة الكاملة
-من نسل إبراهيم. عاش في حوران بالشام بأموال وأبناء وصحة.
-كان رحيمًا بالفقراء شاكرًا لله في كل حال.
-
-⚡ 2. الابتلاء الثلاثي
-جفّت أراضيه وهلكت مواشيه. ثم ماتت أبناؤه دفعةً واحدة.
-ثم أُصيب بمرض شديد استمر ثمانية عشر عامًا.
-
-👩 3. وفاء زوجته "رحمة"
-تركت الراحة وخدمته طوال سنوات المرض. باعت ضفيرتيها مقابل طعامه.
-
-🤲 4. الدعاء العظيم
-﴿أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ﴾
-
-💦 5. معجزة الشفاء
-﴿ارْكُضْ بِرِجْلِكَ﴾ فتفجّر نبع ماء بارد. اغتسل منه فاختفى المرض.
-جاءت زوجته فلم تعرفه — فابتسم: "أنا أيوب."
-
-🌧️ 6. الجائزة الإلهية
-أعاد الله له أمواله وأرزقه أبناءً جُددًا.
-﴿إِنَّا وَجَدْنَاهُ صَابِرًا ۚ نِّعْمَ الْعَبْدُ﴾"""
-    },
-    {
-      "name": "ذو الكفل عليه السلام",
-      "icon": "🌙",
-      "story": """🌿 1. من هو؟
-بشر بن أيوب. سُمّي "ذا الكفل" لأنه تكفّل بعهدٍ عسير ووفى به.
-
-📜 2. الشروط الثلاثة
-تكفّل بثلاثة شروط لا يطيقها إلا قليل:
-• صيام النهار دائمًا
-• قيام الليل دائمًا
-• ألا يغضب أبدًا
-وعيّنه النبي اليسع خليفةً.
-
-👹 3. مكر إبليس
-أرسل إبليس شيطانًا يطرق بابه ثلاث ليالٍ وقت راحته بشكاوى كاذبة.
-حتى تسلّق الجدار ودخل من نافذة صغيرة.
-
-✨ 4. الانتصار الهادئ
-قال له بابتسامة: "أأنت عدو الله إبليس؟"
-فقال الشيطان: "نعم... لم أستطع إغضابك!"
-
-🌟 5. الثناء الإلهي
-﴿وَإِسْمَاعِيلَ وَإِدْرِيسَ وَذَا الْكِفْلِ ۖ كُلٌّ مِّنَ الصَّابِرِينَ﴾
-﴿وَكُلٌّ مِّنَ الْأَخْيَارِ﴾"""
-    },
-    {
-      "name": "موسى عليه السلام",
-      "icon": "⚡",
-      "story": """🍼 1. الطفل الذي تربّى في بيت عدوه
-وُلد في زمن ذبح فرعون الأبناء. ألقته أمه في النيل في صندوق.
-وصل القصر فاحتضنته آسية زوجة فرعون — وأرضعته أمه الحقيقية فيه.
-
-💥 2. الحادثة والهروب
-قتل رجلًا قبطيًا خطأً فهرب إلى مدين.
-ساعد ابنتَي شعيب فتزوج إحداهما ومكث عشر سنوات.
-
-🔥 3. ليلة الوادي المقدس
-رأى نارًا فوق جبل الطور. فسمع: "يا موسى... إني أنا ربك."
-معجزة العصا والثعبان، واليد تضيء كالقمر.
-التكليف: "اذهب إلى فرعون."
-
-⚡ 4. مواجهة فرعون والسحرة
-ابتلعت عصاه كل سحر السحرة. فسجدوا مؤمنين.
-فرعون أعدمهم.
-
-🌊 5. شقّ البحر والغرق
-ضرب موسى البحر فانشق. عبر المؤمنون بسلام.
-غرق فرعون وقال: "آمنت!" — ﴿الْيَوْمَ نُنَجِّيكَ بِبَدَنِكَ﴾"""
-    },
-    {
-      "name": "هارون عليه السلام",
-      "icon": "🎙️",
-      "story": """👶 1. النشأة والفارق
-أخو موسى الأكبر بثلاث سنوات. وُلد في سنة العفو.
-كان هادئًا فصيح اللسان محبوبًا بين الناس.
-
-🤝 2. نبيّ بدعاء أخيه
-طلب موسى: ﴿وَأَخِي هَارُونُ هُوَ أَفْصَحُ مِنِّي لِسَانًا﴾
-فأوحى الله إلى هارون بالنبوة أيضًا.
-
-🐄 3. محنة العجل الذهبي
-لما صعد موسى للطور صنع السامري عجلًا ذهبيًا.
-وقف هارون يرفض وينذر لكنهم هددوه بالقتل.
-قال لأخيه: "أنا خفت يحصل انقسام بين الناس."
-
-⛰️ 4. الوفاة فوق الجبل
-صعدا معًا إلى جبل عالٍ. وجد هارون سريرًا فنام عليه ثم قبضت روحه.
-توفي قبل موسى بثلاث سنوات.
-مقامه اليوم في منطقة البتراء بالأردن."""
-    },
-    {
-      "name": "داوود عليه السلام",
-      "icon": "🎶",
-      "story": """🐑 1. الراعي الذي هزم العملاق
-شاب بسيط من بيت لحم. وحده تجرأ ومشى نحو العملاق جالوت بمقلاع وثلاثة أحجار.
-الحجرة الأولى اخترقت خوذته — فسقط جالوت ميتًا.
-
-👑 2. الملك النبي
-جمع الله له: المُلك، النبوة، القوة، العبادة.
-الحديد يلين في يده كالعجين. كان يصنع الدروع ويأكل من عمل يده.
-
-🎶 3. صوت الكون
-أنزل الله عليه الزبور. إذا قرأه تجمعت الطيور وردّدت الجبال التسبيح معه.
-﴿وَسَخَّرْنَا مَعَ دَاوُدَ الْجِبَالَ يُسَبِّحْنَ وَالطَّيْرَ﴾
-
-🌙 4. عبادته
-يصوم يومًا ويفطر يومًا.
-قال النبي ﷺ: "أحب الصيام إلى الله صيام داود."
-
-☠️ 5. الوفاة
-وجد رجلًا داخل القصر فقال: "من أنت؟"
-قال: "أنا الذي لا تمنعه الأبواب."
-فعرف داود وقال: "مرحبًا بأمر الله." ودُفن في القدس."""
-    },
-    {
-      "name": "سليمان عليه السلام",
-      "icon": "🧞",
-      "story": """🧒 1. حكمة الصبي
-ابن داود. وهو صغير حكم في نزاع الشاتين على الرضيع بحكمة ذهلت أباه.
-
-👑 2. الملك المعجز
-الريح تسمع أمره — مسيرة شهر في ساعات.
-الجن يبنون القصور ويغوصون في البحار.
-يفهم لغة الطيور والحيوانات.
-
-🐜 3. النملة الصغيرة
-سمع نملة تحذر زميلاتها فأوقف جيشه كله حتى تدخل النمل بيوتها بأمان.
-
-🐦 4. الهدهد وبلقيس
-أخبره الهدهد عن ملكة اليمن التي تعبد الشمس.
-أرسل إليها فجاءت. حضر عرشها في طرفة عين. ورأت قصره الزجاجي.
-فأسلمت: ﴿رَبِّ إِنِّي ظَلَمْتُ نَفْسِي وَأَسْلَمْتُ مَعَ سُلَيْمَانَ لِلَّهِ﴾
-
-🪵 5. الوفاة العجيبة
-توفي واقفًا متكئًا على عصاه يصلي. جاءت دودة وأكلت العصا فانكسرت وسقط.
-ظل الجن يعملون شهورًا يظنونه حيًا — فتبيّن: الجن لا يعلمون الغيب."""
-    },
-    {
-      "name": "إلياس عليه السلام",
-      "icon": "🔥",
-      "story": """🏛️ 1. المدينة الوثنية
-من ذرية هارون. بُعث في بعلبك حيث عبد القومُ صنمًا ذهبيًا يُسمى "بعل".
-الملك الجائر وزوجته فرضا السجود للصنم وقتلا كل من يوحّد.
-
-📢 2. الشجاعة والاختباء
-وقف إلياس في المدينة: "كيف تتركون الله وتعبدون بعل؟!"
-فهدده الملك بالقتل. فأمره الله بالاختباء في الجبال.
-كانت الطيور تأتيه يوميًا بالخبز واللحم.
-
-🌧️ 3. ثلاث سنوات جفاف
-حبس الله المطر ثلاث سنوات. لكن الصنم لم ينفعهم.
-
-🔥 4. معجزة النار والإيمان
-تحدى كهنة الصنم — دعوا يومًا كاملًا فلم تأتِ نار.
-دعا إلياس لحظةً فنزلت نار من السماء فسجد الحاضرون مؤمنين.
-
-🌌 5. الرفع الغامض
-نزلت مركبة نورية فصعد فيها إلياس واختفى.
-ترك رداءه لليسع — إشارة انتقال الرسالة."""
-    },
-    {
-      "name": "اليسع عليه السلام",
-      "icon": "🌊",
-      "story": """🛌 1. المرض والشفاء
-من نسل يوسف بن يعقوب. أصابه مرض خطير.
-فمرّ به إلياس ودعا له فشفاه الله فورًا.
-
-🤝 2. التلميذ الوفي
-آمن بإلياس وأصبح تلميذه الملازم في الجبال والعبادة والدعوة.
-
-🌌 3. انتقال الرسالة
-حين رُفع إلياس سقط رداؤه إلى اليسع.
-فتولى قيادة بني إسرائيل بعده.
-
-💧 4. المعجزات الثلاث
-• نبع ماء مالح تحول إلى عذب
-• زيت قليل لامرأة فقيرة ملأ كل الأواني
-• طفل ميت أعاده الله للحياة بدعائه
-
-⚖️ 5. اختيار الخليفة
-أراد خليفةً فوضع الشروط الصعبة (صيام، قيام الليل، لا غضب).
-فتقدم الشاب الصالح ذو الكفل ووفّى بها.
-﴿وَكُلًّا فَضَّلْنَا عَلَى الْعَالَمِينَ﴾"""
-    },
-    {
-      "name": "يونس عليه السلام",
-      "icon": "🐋",
-      "story": """📜 1. نينوى والدعوة الصعبة
-بُعث في نينوى بالعراق لأكثر من مائة ألف نسمة.
-سنوات من الدعوة وهم يرفضون.
-
-⚠️ 2. الرحيل الغاضب
-قال لهم: "العذاب آتٍ خلال ثلاثة أيام!" ثم خرج مغاضبًا قبل إذن الله.
-
-😱 3. توبة أهل نينوى
-اسودّ السماء وبدأ العذاب يظهر. فخرج الناس كلهم إلى الصحراء يبكون مع حيواناتهم.
-فاستجاب الله لهم ورفع العذاب.
-
-🌊 4. بطن الحوت
-في البحر جاءت عاصفة فأُلقي في الماء فابتلعه حوت ضخم.
-في ظلمات ثلاث دعا:
-﴿لَا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ﴾
-
-🌿 5. النجاة والعودة
-قذفه الحوت على الشاطئ ضعيفًا. فأنبت الله له شجرة اليقطين.
-ثم عاد لنينوى فوجد قومه كلهم قد آمنوا."""
-    },
-    {
-      "name": "زكريا عليه السلام",
-      "icon": "🕌",
-      "story": """👴 1. الحبر النجّار
-نبيّ وإمام أهل زمانه. كان نجّارًا يأكل من عمل يده.
-وكفل السيدة مريم في المحراب.
-
-🍇 2. رزق مريم العجيب
-كان يزورها فيجد فواكه في غير أوانها.
-فسألها: "أنّى لكِ هذا؟" فقالت: "هو من عند الله."
-
-🤲 3. الدعاء السري
-﴿رَبِّ إِنِّي وَهَنَ الْعَظْمُ مِنِّي وَاشْتَعَلَ الرَّأْسُ شَيْبًا...﴾
-يطلب وليًا يرث النبوة — وهو في الكِبَر وزوجته عاقر.
-
-👼 4. البشارة بيحيى
-نادته الملائكة وهو قائم يصلي:
-يحيى — ﴿لَمْ نَجْعَل لَهُ مِن قَبْلُ سَمِيًّا﴾
-
-🤫 5. آية الصمت
-طلب علامة فجُعل آيته ألا يتكلم مع الناس ثلاثة أيام إلا إشارة.
-فخرج يسبّح ويشير للناس أن يذكروا الله."""
-    },
-    {
-      "name": "يحيى عليه السلام",
-      "icon": "🕊️",
-      "story": """👶 1. المعجزة والاسم الإلهي
-وُلد لوالدين كبيرين بمعجزة.
-وأُعطي اسمًا لم يُسمَّ به أحد قبله.
-﴿وَآتَيْنَاهُ الْحُكْمَ صَبِيًّا﴾ — حكمة الأنبياء وهو طفل.
-
-🌿 2. الزهد الكامل
-كان يأكل من نبات الأرض ويلبس الخشن.
-لم يلعب كالأطفال. رحيم حتى بالحيوانات.
-
-🌸 3. الصفات الإلهية
-﴿وَحَنَانًا مِّن لَّدُنَّا وَزَكَاةً﴾
-﴿وَبَرًّا بِوَالِدَيْهِ وَلَمْ يَكُن جَبَّارًا عَصِيًّا﴾
-﴿وَسَيِّدًا وَحَصُورًا﴾
-
-🤝 4. اللقاء مع عيسى
-التقى بعيسى ابن مريم وكانا متحابَين في الحق.
-يتعاونان في دعوة التوحيد.
-
-⚖️ 5. الشهادة
-وقف ضد زواج محرم أراده الملك الجائر.
-قال كلمة الحق فاستشهد ظلمًا.
-﴿وَسَلَامٌ عَلَيْهِ يَوْمَ وُلِدَ وَيَوْمَ يَمُوتُ وَيَوْمَ يُبْعَثُ حَيًّا﴾"""
-    },
-    {
-      "name": "عيسى عليه السلام",
-      "icon": "🌟",
-      "story": """🕊️ 1. الميلاد المعجز
-أمه مريم الطاهرة العفيفة. بشّرها جبريل في هيئة بشر.
-حملت بغير أب بإذن الله — "كن فيكون".
-وضعت تحت نخلة بالتوجيه الإلهي.
-
-👶 2. النطق في المهد
-اتّهمها قومها فأشارت إليه فتكلم طفلًا:
-"إني عبدُ الله آتاني الكتاب وجعلني نبيًا."
-
-🌍 3. المعجزات بإذن الله
-• إحياء الموتى
-• إبراء الأكمه والأبرص
-• خلق طير من الطين فيه الروح بإذن الله
-• نزول المائدة السماوية
-
-⚡ 4. الرفع إلى السماء
-سعى اليهود لقتله. فرفعه الله إليه ونجّاه.
-﴿وَمَا قَتَلُوهُ وَمَا صَلَبُوهُ وَلَٰكِن شُبِّهَ لَهُمْ﴾
-
-🌍 5. العودة في آخر الزمان
-سيعود عيسى ابن مريم في آخر الزمان.
-يكسر الصليب، يقتل المسيح الدجال، ويملأ الأرض عدلًا وسلامًا."""
-    },
-    {
-      "name": "محمد ﷺ",
-      "icon": "🌙",
-      "story": """🌟 1. الميلاد في عام الفيل
-من بني هاشم ونسبه يصل لإسماعيل بن إبراهيم.
-وُلد يتيم الأب في مكة عام الفيل.
-
-🌿 2. الطفولة المباركة
-أُرسل إلى البادية مع حليمة السعدية فحلّت البركة في بيتها.
-شُق صدره الشريف وطُهّر قلبه.
-فقد أمه ثم جده ثم عمه أبا طالب.
-
-📖 3. ليلة اقرأ
-في غار حراء نزل جبريل: "اقرأ."
-عاد يرتجف فثبّتته خديجة. وبشّره ورقة بالنبوة.
-
-🔥 4. سنوات الأذى
-الدعوة السرية ثم الجهرية. تعذيب المستضعفين.
-الهجرة إلى الحبشة. حصار الشِّعب ثلاث سنوات.
-عام الحزن: وفاة أبي طالب وخديجة.
-
-🚀 5. الإسراء والمعراج
-رحلة إلى القدس ثم السماوات. لقاء الأنبياء. وفُرضت الصلاة.
-
-🏙️ 6. بناء الدولة
-الهجرة إلى المدينة. المؤاخاة. وثيقة المدينة.
-انتصار بدر، ابتلاء أحد، تخطيط الخندق.
-
-🕋 7. فتح مكة
-دخل فاتحًا: "اذهبوا فأنتم الطلقاء."
-تحطمت الأصنام وأشرقت مكة بالتوحيد.
-
-🕊️ 8. الوداع والوفاة
-﴿الْيَوْمَ أَكْمَلْتُ لَكُمْ دِينَكُمْ﴾
-توفي ﷺ عن 63 عامًا ودُفن في المدينة المنورة.
-وبقيت رسالته نورًا وهداية للعالمين."""
-    },
-  ];
-
-  List<Map<String, String>> filtered = [];
+  List<ProphetStory> _allProphets = [];
+  List<ProphetStory> _filteredProphets = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    filtered = List.from(prophets);
-
     _headerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
     );
-    _headerFade = CurvedAnimation(parent: _headerController, curve: Curves.easeOut);
+    _headerFade = CurvedAnimation(
+      parent: _headerController,
+      curve: Curves.easeOut,
+    );
     _headerController.forward();
 
-    searchController.addListener(() {
-      final q = searchController.text.trim().toLowerCase();
-      setState(() {
-        filtered = q.isEmpty
-            ? List.from(prophets)
-            : prophets.where((p) =>
-        p["name"]!.toLowerCase().contains(q) ||
-            p["story"]!.toLowerCase().contains(q)).toList();
-      });
+    _loadStories();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  Future<void> _loadStories() async {
+    try {
+      final jsonStr = await rootBundle.loadString('assets/prophets_stories.json');
+      final List<dynamic> data = json.decode(jsonStr);
+      final list = data.map((item) => ProphetStory.fromJson(item as Map<String, dynamic>)).toList();
+      if (mounted) {
+        setState(() {
+          _allProphets = list;
+          _filteredProphets = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading prophets stories: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim().toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredProphets = _allProphets;
+      } else {
+        _filteredProphets = _allProphets.where((p) {
+          return p.name.toLowerCase().contains(query) ||
+              p.title.toLowerCase().contains(query) ||
+              p.summary.toLowerCase().contains(query);
+        }).toList();
+      }
     });
   }
 
   @override
   void dispose() {
-    searchController.dispose();
+    _searchController.dispose();
     _headerController.dispose();
     super.dispose();
   }
 
-  void _openStory(Map<String, String> prophet) {
+  void _openStory(ProphetStory prophet) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _StorySheet(prophet: prophet),
+      builder: (_) => _StoryReaderSheet(prophet: prophet),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: kInk,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF12103a), Color(0xFF0e0c18), Color(0xFF0a0814)],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // ───── HEADER ─────
-                FadeTransition(
-                  opacity: _headerFade,
-                  child: _buildHeader(),
-                ),
-
-                // ───── SEARCH ─────
-                _buildSearch(),
-
-                // ───── COUNTER ─────
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8, right: 20),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '${filtered.length} من ${prophets.length} نبي',
+    return Scaffold(
+      backgroundColor: kInk,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _headerFade,
+          child: Column(
+            children: [
+              _buildHeader(),
+              _buildSearch(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'المجموع: ${_allProphets.length} نبياً ورسولاً',
                       style: TextStyle(
-                        color: kGoldDim.withValues(alpha: 0.7),
+                        color: kGoldDim.withValues(alpha: 0.8),
                         fontSize: 12,
-                        fontFamily: 'sans-serif',
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ),
-
-                // ───── GRID ─────
-                Expanded(
-                  child: filtered.isEmpty
-                      ? _buildEmpty()
-                      : GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: 0.80,
+                    Text(
+                      'قصص كاملة ومفصلة بالآيات والعبر',
+                      style: TextStyle(
+                        color: kGold.withValues(alpha: 0.5),
+                        fontSize: 11,
+                      ),
                     ),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      return _ProphetCard(
-                        prophet: filtered[index],
-                        index: index,
-                        onTap: () => _openStory(filtered[index]),
-                      );
-                    },
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 6),
+              Expanded(
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: kGold),
+                      )
+                    : _filteredProphets.isEmpty
+                        ? _buildEmpty()
+                        : GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 0.74,
+                            ),
+                            itemCount: _filteredProphets.length,
+                            itemBuilder: (context, index) {
+                              return _ProphetCard(
+                                prophet: _filteredProphets[index],
+                                index: index,
+                                onTap: () => _openStory(_filteredProphets[index]),
+                              );
+                            },
+                          ),
+              ),
+            ],
           ),
         ),
       ),
@@ -752,12 +179,13 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: kGold.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kGold.withValues(alpha: 0.25), width: 0.8),
+                    border: Border.all(
+                        color: kGold.withValues(alpha: 0.25), width: 0.8),
                   ),
                   child: const Icon(
                     Icons.arrow_back_ios_new_rounded,
@@ -766,7 +194,6 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              // ornament
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -774,43 +201,45 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                     width: 40,
                     height: 1,
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(colors: [Colors.transparent, kGoldDim]),
+                      gradient:
+                          LinearGradient(colors: [Colors.transparent, kGoldDim]),
                     ),
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('✦', style: TextStyle(color: kGoldDim, fontSize: 14)),
+                    child:
+                        Text('✦', style: TextStyle(color: kGoldDim, fontSize: 14)),
                   ),
                   Container(
                     width: 40,
                     height: 1,
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(colors: [kGoldDim, Colors.transparent]),
+                      gradient:
+                          LinearGradient(colors: [kGoldDim, Colors.transparent]),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 36),
+              const SizedBox(width: 38),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'قِصَصُ الأَنْبِيَاء',
             style: TextStyle(
               color: kGoldLight,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
               fontFamily: 'serif',
-              letterSpacing: 1,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Stories of the Prophets',
+            'قصص ورسائل أولي العزم والأنبياء كاملة وموثقة',
             style: TextStyle(
-              color: kGold.withValues(alpha: 0.45),
+              color: kGold.withValues(alpha: 0.6),
               fontSize: 12,
-              letterSpacing: 2,
             ),
           ),
         ],
@@ -820,7 +249,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
 
   Widget _buildSearch() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Container(
         decoration: BoxDecoration(
           color: kGold.withValues(alpha: 0.06),
@@ -828,17 +257,25 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           border: Border.all(color: kGold.withValues(alpha: 0.2)),
         ),
         child: TextField(
-          controller: searchController,
+          controller: _searchController,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: kParchment, fontSize: 15),
+          style: const TextStyle(color: kParchment, fontSize: 14),
           cursorColor: kGold,
           decoration: InputDecoration(
-            hintText: 'ابحث عن نبي...',
-            hintStyle: TextStyle(color: kGold.withValues(alpha: 0.35), fontSize: 14),
-            prefixIcon: Icon(Icons.search_rounded, color: kGoldDim, size: 20),
+            hintText: 'ابحث عن اسم نبي، لقب، أو حدث...',
+            hintStyle:
+                TextStyle(color: kGold.withValues(alpha: 0.35), fontSize: 13),
+            prefixIcon: const Icon(Icons.search_rounded, color: kGoldDim, size: 20),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear_rounded, color: kGoldDim, size: 18),
+                    onPressed: () => _searchController.clear(),
+                  )
+                : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           ),
         ),
       ),
@@ -850,11 +287,11 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('🔍', style: TextStyle(fontSize: 40)),
+          const Text('🔍', style: TextStyle(fontSize: 40)),
           const SizedBox(height: 12),
           Text(
-            'لم يُعثر على نبي بهذا الاسم',
-            style: TextStyle(color: kGold.withValues(alpha: 0.4), fontSize: 16),
+            'لم يُعثر على نبي مطابق للبحث',
+            style: TextStyle(color: kGold.withValues(alpha: 0.5), fontSize: 15),
           ),
         ],
       ),
@@ -866,7 +303,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
 // PROPHET CARD WIDGET
 // ─────────────────────────────────────────
 class _ProphetCard extends StatefulWidget {
-  final Map<String, String> prophet;
+  final ProphetStory prophet;
   final int index;
   final VoidCallback onTap;
 
@@ -894,10 +331,10 @@ class _ProphetCardState extends State<_ProphetCard>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
     _fadeSlide = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    Future.delayed(Duration(milliseconds: 60 * widget.index), () {
+    Future.delayed(Duration(milliseconds: 35 * (widget.index % 12)), () {
       if (mounted) _ctrl.forward();
     });
   }
@@ -913,7 +350,7 @@ class _ProphetCardState extends State<_ProphetCard>
     return FadeTransition(
       opacity: _fadeSlide,
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
             .animate(_fadeSlide),
         child: GestureDetector(
           onTapDown: (_) => setState(() => _pressed = true),
@@ -924,16 +361,17 @@ class _ProphetCardState extends State<_ProphetCard>
           onTapCancel: () => setState(() => _pressed = false),
           child: AnimatedScale(
             scale: _pressed ? 0.96 : 1.0,
-            duration: const Duration(milliseconds: 120),
+            duration: const Duration(milliseconds: 100),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 color: kGold.withValues(alpha: 0.05),
-                border: Border.all(color: kGold.withValues(alpha: 0.18), width: 1),
+                border: Border.all(
+                    color: kGold.withValues(alpha: 0.18), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 12,
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -942,17 +380,16 @@ class _ProphetCardState extends State<_ProphetCard>
                 borderRadius: BorderRadius.circular(18),
                 child: Stack(
                   children: [
-                    // subtle top shine
                     Positioned(
-                      top: -30,
+                      top: -20,
                       left: 0,
                       right: 0,
                       child: Container(
-                        height: 80,
+                        height: 60,
                         decoration: BoxDecoration(
                           gradient: RadialGradient(
                             colors: [
-                              kGold.withValues(alpha: 0.06),
+                              kGold.withValues(alpha: 0.08),
                               Colors.transparent,
                             ],
                           ),
@@ -960,69 +397,93 @@ class _ProphetCardState extends State<_ProphetCard>
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // icon circle
+                          Column(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: kGold.withValues(alpha: 0.1),
+                                  border: Border.all(
+                                      color: kGold.withValues(alpha: 0.25),
+                                      width: 1),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    widget.prophet.icon,
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.prophet.name,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: kGoldLight,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if (widget.prophet.period.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: kGold.withValues(alpha: 0.08),
+                                  ),
+                                  child: Text(
+                                    widget.prophet.period,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: kGold.withValues(alpha: 0.65),
+                                      fontSize: 9.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 5),
+                              Text(
+                                widget.prophet.summary,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.55),
+                                  fontSize: 10,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 5),
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: kGold.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(50),
+                              color: kGold.withValues(alpha: 0.12),
                               border: Border.all(
-                                  color: kGold.withValues(alpha: 0.25), width: 1),
+                                  color: kGold.withValues(alpha: 0.3),
+                                  width: 0.8),
                             ),
                             child: Center(
                               child: Text(
-                                widget.prophet["icon"]!,
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.prophet["name"]!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: kGoldLight,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              height: 1.35,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.prophet["story"]!
-                                .replaceAll(RegExp(r'[\n\r]'), ' ')
-                                .substring(0,
-                                min(60, widget.prophet["story"]!.length)) +
-                                '...',
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: kGold.withValues(alpha: 0.4),
-                              fontSize: 10.5,
-                              height: 1.45,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: kGold.withValues(alpha: 0.1),
-                              border: Border.all(
-                                  color: kGold.withValues(alpha: 0.2), width: 0.8),
-                            ),
-                            child: Text(
-                              'اقرأ القصة',
-                              style: TextStyle(
-                                color: kGold.withValues(alpha: 0.7),
-                                fontSize: 10,
+                                'اقرأ القصة الكاملة',
+                                style: TextStyle(
+                                  color: kGoldLight.withValues(alpha: 0.9),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -1041,130 +502,192 @@ class _ProphetCardState extends State<_ProphetCard>
 }
 
 // ─────────────────────────────────────────
-// STORY BOTTOM SHEET
+// RICH STORY READER SHEET
 // ─────────────────────────────────────────
-class _StorySheet extends StatelessWidget {
-  final Map<String, String> prophet;
+class _StoryReaderSheet extends StatefulWidget {
+  final ProphetStory prophet;
 
-  const _StorySheet({required this.prophet});
+  const _StoryReaderSheet({required this.prophet});
+
+  @override
+  State<_StoryReaderSheet> createState() => _StoryReaderSheetState();
+}
+
+class _StoryReaderSheetState extends State<_StoryReaderSheet> {
+  double _fontSize = 15.5;
 
   static const Color kGold = Color(0xFFc9a84c);
   static const Color kGoldLight = Color(0xFFe8cc7a);
   static const Color kGoldDim = Color(0xFF8a6f30);
-  static const Color kInkMid = Color(0xFF1a1628);
+  static const Color kInkMid = Color(0xFF141122);
   static const Color kParchment = Color(0xFFf5edd6);
+
+  void _copyStory() {
+    Clipboard.setData(ClipboardData(
+      text: '${widget.prophet.name}\n${widget.prophet.title}\n\n${widget.prophet.fullStory}',
+    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'تم نسخ قصة ${widget.prophet.name} إلى الحافظة بنجاح ✨',
+          textDirection: TextDirection.rtl,
+        ),
+        backgroundColor: kGoldDim,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _shareStory() {
+    Share.share(
+      '📖 قصة ${widget.prophet.name} - ${widget.prophet.title}\n\n${widget.prophet.fullStory}\n\nتمت المشاركة من تطبيق رفيقي',
+      subject: 'قصة ${widget.prophet.name}',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.88,
+        height: MediaQuery.of(context).size.height * 0.92,
         decoration: BoxDecoration(
           color: kInkMid,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: kGold.withValues(alpha: 0.2), width: 1),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          border: Border.all(color: kGold.withValues(alpha: 0.25), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.7),
+              blurRadius: 25,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            // drag handle
+            // Drag handle
             Container(
               margin: const EdgeInsets.only(top: 10),
-              width: 40,
-              height: 4,
+              width: 44,
+              height: 4.5,
               decoration: BoxDecoration(
-                color: kGold.withValues(alpha: 0.3),
+                color: kGold.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
 
-            // header
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: kGold.withValues(alpha: 0.15)),
-                ),
-              ),
-              child: Column(
+            // Header bar with actions
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: kGold.withValues(alpha: 0.12),
-                      border: Border.all(color: kGold.withValues(alpha: 0.3), width: 1),
+                      border: Border.all(
+                          color: kGold.withValues(alpha: 0.35), width: 1),
                     ),
                     child: Center(
                       child: Text(
-                        prophet["icon"]!,
-                        style: const TextStyle(fontSize: 28),
+                        widget.prophet.icon,
+                        style: const TextStyle(fontSize: 24),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    prophet["name"]!,
-                    style: const TextStyle(
-                      color: kGoldLight,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.prophet.name,
+                          style: const TextStyle(
+                            color: kGoldLight,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (widget.prophet.title.isNotEmpty)
+                          Text(
+                            widget.prophet.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: kGold.withValues(alpha: 0.7),
+                              fontSize: 11.5,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  // ornament
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                              colors: [Colors.transparent, kGoldDim]),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('✦',
-                            style: TextStyle(color: kGoldDim, fontSize: 12)),
-                      ),
-                      Container(
-                        width: 60,
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                              colors: [kGoldDim, Colors.transparent]),
-                        ),
-                      ),
-                    ],
+                  // Font size controls
+                  IconButton(
+                    icon: const Icon(Icons.text_decrease_rounded,
+                        color: kGoldLight, size: 20),
+                    tooltip: 'تصغير الخط',
+                    onPressed: () {
+                      if (_fontSize > 13) setState(() => _fontSize -= 1.5);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.text_increase_rounded,
+                        color: kGoldLight, size: 20),
+                    tooltip: 'تكبير الخط',
+                    onPressed: () {
+                      if (_fontSize < 24) setState(() => _fontSize += 1.5);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded,
+                        color: kGoldLight, size: 20),
+                    tooltip: 'نسخ القصة',
+                    onPressed: _copyStory,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.share_rounded,
+                        color: kGoldLight, size: 20),
+                    tooltip: 'مشاركة',
+                    onPressed: _shareStory,
                   ),
                 ],
               ),
             ),
 
-            // scrollable story
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                child: Text(
-                  prophet["story"]!,
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: kParchment.withValues(alpha: 0.85),
-                    fontSize: 15,
-                    height: 2.0,
-                    fontFamily: 'serif',
-                  ),
+            // Metadata Chips
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: kGold.withValues(alpha: 0.1)),
+                  bottom: BorderSide(color: kGold.withValues(alpha: 0.1)),
                 ),
+              ),
+              child: Row(
+                children: [
+                  if (widget.prophet.period.isNotEmpty)
+                    _buildMetaChip(Icons.access_time_rounded, widget.prophet.period),
+                  const SizedBox(width: 8),
+                  if (widget.prophet.quranMentions.isNotEmpty)
+                    _buildMetaChip(
+                        Icons.menu_book_rounded, widget.prophet.quranMentions),
+                ],
               ),
             ),
 
-            // close button
+            // Story Body with Formatted Chapters
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: _buildStoryContent(widget.prophet.fullStory),
+              ),
+            ),
+
+            // Bottom Close Bar
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(color: kGold.withValues(alpha: 0.1)),
@@ -1175,10 +698,10 @@ class _StorySheet extends StatelessWidget {
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
-                    backgroundColor: kGold.withValues(alpha: 0.1),
+                    backgroundColor: kGold.withValues(alpha: 0.12),
                     foregroundColor: kGoldLight,
                     side: BorderSide(color: kGold.withValues(alpha: 0.3)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50),
                     ),
@@ -1193,6 +716,166 @@ class _StorySheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMetaChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: kGold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kGold.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: kGoldLight),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(
+              color: kGoldLight.withValues(alpha: 0.85),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStoryContent(String text) {
+    final lines = text.split('\n');
+    final widgets = <Widget>[];
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) {
+        widgets.add(const SizedBox(height: 8));
+        continue;
+      }
+
+      if (line.startsWith('### ')) {
+        final title = line.substring(4);
+        final isLessons = title.contains('الدروس المستفادة') || title.contains('العبر');
+        widgets.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLessons
+                    ? [
+                        const Color(0xFF1E3A2F),
+                        kInkMid,
+                      ]
+                    : [
+                        kGold.withValues(alpha: 0.18),
+                        kGold.withValues(alpha: 0.04),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isLessons
+                    ? const Color(0xFF2ECC71).withValues(alpha: 0.4)
+                    : kGold.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isLessons ? Icons.lightbulb_rounded : Icons.bookmark_added_rounded,
+                  color: isLessons ? const Color(0xFF2ECC71) : kGoldLight,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: isLessons ? const Color(0xFF2ECC71) : kGoldLight,
+                      fontSize: _fontSize + 1.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else if (line.contains('﴿') && line.contains('﴾')) {
+        // Quranic Verse styled block
+        widgets.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: kGold.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(12),
+              border: Border(
+                right: BorderSide(color: kGoldLight, width: 3),
+              ),
+            ),
+            child: Text(
+              line,
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: kGoldLight,
+                fontSize: _fontSize + 1.5,
+                height: 2.1,
+                fontFamily: 'serif',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('- ') || line.startsWith('• ')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('✦ ', style: TextStyle(color: kGoldLight, fontSize: _fontSize)),
+                Expanded(
+                  child: Text(
+                    line.substring(2),
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: kParchment.withValues(alpha: 0.9),
+                      fontSize: _fontSize,
+                      height: 1.85,
+                      fontFamily: 'serif',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        widgets.add(
+          Text(
+            line,
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: kParchment.withValues(alpha: 0.88),
+              fontSize: _fontSize,
+              height: 2.0,
+              fontFamily: 'serif',
+            ),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: widgets,
     );
   }
 }
