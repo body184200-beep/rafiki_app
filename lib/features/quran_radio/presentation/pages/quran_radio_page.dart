@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'dart:async';
@@ -91,34 +92,35 @@ class RadioController {
 
 class _C {
   const _C._();
+  static bool get _l => ThemeProvider.instance.isLight;
 
   // Backgrounds
-  static const Color bg         = Color(0xFF03060E);
-  static const Color surface    = Color(0xFF0A1220);
+  static Color get bg         => _l ? const Color(0xFFF8F6F0) : const Color(0xFF03060E);
+  static Color get surface    => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0A1220);
 
   // Gold
-  static const Color gold       = Color(0xFFD4A843);
-  static const Color goldLight  = Color(0xFFEDD27A);
-  static const Color goldBright = Color(0xFFFAE5A0);
-  static const Color goldDim    = Color(0xFF8A6B28);
-  static const Color goldGlow   = Color(0xFFB8892A);
+  static Color get gold       => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A843);
+  static Color get goldLight  => _l ? const Color(0xFFB48216) : const Color(0xFFEDD27A);
+  static Color get goldBright => _l ? const Color(0xFFD4A843) : const Color(0xFFFAE5A0);
+  static Color get goldDim    => _l ? const Color(0xFF8D5B18) : const Color(0xFF8A6B28);
+  static Color get goldGlow   => _l ? const Color(0xFFB48216) : const Color(0xFFB8892A);
 
   // Teal / Emerald
-  static const Color teal       = Color(0xFF22D4BC);
-  static const Color tealLight  = Color(0xFF50EBD6);
-  static const Color tealDim    = Color(0xFF0B8A7A);
-  static const Color tealDeep   = Color(0xFF044D45);
-  static const Color tealGlow   = Color(0xFF0ECCA8);
+  static Color get teal       => _l ? const Color(0xFF0F4A39) : const Color(0xFF22D4BC);
+  static Color get tealLight  => _l ? const Color(0xFF1D5A46) : const Color(0xFF50EBD6);
+  static Color get tealDim    => _l ? const Color(0xFF0B4633) : const Color(0xFF0B8A7A);
+  static Color get tealDeep   => _l ? const Color(0xFF042B23) : const Color(0xFF044D45);
+  static Color get tealGlow   => _l ? const Color(0xFF1D5A46) : const Color(0xFF0ECCA8);
 
   // Text
-  static const Color onBg       = Color(0xFFF0E8D0);
-  static const Color onBgDim    = Color(0xFFBAAD8A);
-  static const Color onBgMuted  = Color(0xFF7A6F58);
+  static Color get onBg       => _l ? const Color(0xFF111827) : const Color(0xFFF0E8D0);
+  static Color get onBgDim    => _l ? const Color(0xFF4B5563) : const Color(0xFFBAAD8A);
+  static Color get onBgMuted  => _l ? const Color(0xFF6B7280) : const Color(0xFF7A6F58);
 
   // UI
-  static const Color muted      = Color(0xFF2E4455);
-  static const Color mutedLight = Color(0xFF4A6070);
-  static const Color border     = Color(0xFF1A2E45);
+  static Color get muted      => _l ? const Color(0xFFE5E7EB) : const Color(0xFF2E4455);
+  static Color get mutedLight => _l ? const Color(0xFF9CA3AF) : const Color(0xFF4A6070);
+  static Color get border     => _l ? const Color(0xFFE5E7EB) : const Color(0xFF1A2E45);
 }
 
 // ─── PAGE ────────────────────────────────────────────────────────────────────
@@ -172,8 +174,8 @@ class _QuranRadioPageState extends State<QuranRadioPage>
     WidgetsBinding.instance.addObserver(this);
     _initAnimations();
     _staggerCtrl.forward();
-    _geomRotCtrl.repeat();
-    _shimmerCtrl.repeat();
+    // _geomRotCtrl.repeat(); (optimized for performance)
+    // _shimmerCtrl.repeat(); (optimized for performance)
 
     // React to player state changes so UI always reflects real playback state.
     _playerSub = _radio.playerStateStream.listen((state) {
@@ -318,7 +320,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
     if (!shouldPause && !success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
+          content: Text(
             'تعذر تشغيل إذاعة القرآن الكريم، يرجى التحقق من اتصال الإنترنت والمحاولة مجدداً.',
             textDirection: TextDirection.rtl,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -366,7 +368,9 @@ class _QuranRadioPageState extends State<QuranRadioPage>
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) => Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _C.bg,
@@ -387,6 +391,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -410,50 +415,26 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: _C.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _C.border, width: 0.8),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: _C.goldLight,
-                            size: 16,
+                      _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
+                      SizedBox(width: 10),
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: [_C.goldLight, _C.onBg],
+                        ).createShader(bounds),
+                        child: Text(
+                          'إذاعة القرآن الكريم',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
-                            const SizedBox(width: 10),
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [_C.goldLight, _C.onBg],
-                              ).createShader(bounds),
-                              child: const Text(
-                                'إذاعة القرآن الكريم',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 36),
+                      SizedBox(width: 10),
+                      _IslamicStar(size: 14, color: _C.gold.withValues(alpha: 0.6)),
                     ],
                   ),
                 ),
@@ -473,7 +454,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             // Orb
             FadeTransition(
               opacity: _fadeOrb,
@@ -482,13 +463,13 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                 child: _buildOrb(),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             // Ticker
             FadeTransition(
               opacity: _fadeTicker,
               child: _buildNowPlayingTicker(),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             // Title
             FadeTransition(
               opacity: _fadeTitle,
@@ -497,7 +478,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                 child: _buildTitle(),
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             // Play Button
             FadeTransition(
               opacity: _fadeButton,
@@ -506,24 +487,24 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                 child: _buildPlayButton(),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             // Status Badge
             FadeTransition(
               opacity: _fadeBadge,
               child: _buildStatusBadge(),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18),
             // Info Row
             FadeTransition(
               opacity: _fadeInfo,
               child: _buildInfoRow(),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             FadeTransition(
               opacity: _fadeInfo,
               child: _buildBottomOrnament(),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
           ],
         ),
       ),
@@ -589,7 +570,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
             animation: _rotateCtrl,
             builder: (_, __) => Transform.rotate(
               angle: _rotateCtrl.value * 2 * math.pi,
-              child: const CustomPaint(
+              child: CustomPaint(
                 size: Size(196, 196),
                 painter: _ArcPainter(color: _C.gold, segments: 16, opacity: 0.22),
               ),
@@ -601,7 +582,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
             animation: _rotateCtrl,
             builder: (_, __) => Transform.rotate(
               angle: -_rotateCtrl.value * 2 * math.pi * 0.38,
-              child: const CustomPaint(
+              child: CustomPaint(
                 size: Size(216, 216),
                 painter: _ArcPainter(color: _C.teal, segments: 8, opacity: 0.14),
               ),
@@ -646,7 +627,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                     _C.tealDeep,
                     const Color(0xFF011510),
                   ],
-                  stops: const [0.0, 0.28, 0.58, 0.82, 1.0],
+                  stops: [0.0, 0.28, 0.58, 0.82, 1.0],
                 ),
               ),
               child: Center(
@@ -762,15 +743,15 @@ class _QuranRadioPageState extends State<QuranRadioPage>
     return Column(
       children: [
         const _OrnamentalDivider(),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
             colors: [_C.goldBright, _C.goldLight, _C.onBg],
-            stops: const [0.0, 0.45, 1.0],
+            stops: [0.0, 0.45, 1.0],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(bounds),
-          child: const Text(
+          child: Text(
             'إذاعة القرآن الكريم',
             textDirection: TextDirection.rtl,
             style: TextStyle(
@@ -782,7 +763,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 500),
           switchInCurve: Curves.easeOutCubic,
@@ -805,13 +786,13 @@ class _QuranRadioPageState extends State<QuranRadioPage>
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _C.tealLight,
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'يتم بث القرآن الكريم الآن',
                 textDirection: TextDirection.rtl,
                 style: TextStyle(
@@ -869,8 +850,8 @@ class _QuranRadioPageState extends State<QuranRadioPage>
                   ? [_C.tealLight, _C.teal, _C.tealDim]
                   : [_C.goldBright, _C.gold, _C.goldGlow, _C.goldDim],
               stops: playing
-                  ? const [0.0, 0.5, 1.0]
-                  : const [0.0, 0.35, 0.7, 1.0],
+                  ? [0.0, 0.5, 1.0]
+                  : [0.0, 0.35, 0.7, 1.0],
             ),
             boxShadow: [
               BoxShadow(
@@ -887,7 +868,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
           ),
           child: Center(
             child: _isLoading && !_isPlaying
-                ? const SizedBox(
+                ? SizedBox(
               width: 30,
               height: 30,
               child: CircularProgressIndicator(
@@ -940,7 +921,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
         mainAxisSize: MainAxisSize.min,
         children: [
           _LiveDot(isLive: live),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             child: Text(
@@ -962,7 +943,7 @@ class _QuranRadioPageState extends State<QuranRadioPage>
   // ── INFO ROW ──────────────────────────────────────────────────────────────
 
   Widget _buildInfoRow() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _InfoChip(icon: Icons.radio_rounded, label: 'بث مباشر'),
@@ -1032,7 +1013,7 @@ class _ScrollingTicker extends StatelessWidget {
                   children: [
                     Icon(Icons.graphic_eq_rounded, size: 11,
                         color: _C.teal.withValues(alpha: 0.85)),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       text,
                       textDirection: TextDirection.rtl,
@@ -1060,52 +1041,13 @@ class _ScrollingTicker extends StatelessWidget {
 
 class _ShimmerOverlay extends StatelessWidget {
   final Animation<double> shimmer;
-
   const _ShimmerOverlay({required this.shimmer});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: shimmer,
-      builder: (_, __) => Positioned.fill(
-        child: IgnorePointer(
-          child: CustomPaint(
-            painter: _ShimmerPainter(progress: shimmer.value),
-          ),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
-
-class _ShimmerPainter extends CustomPainter {
-  final double progress;
-  const _ShimmerPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final x = size.width * ((progress + 2) / 4);
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.transparent,
-          const Color(0xFFCFA84C).withValues(alpha: 0.015),
-          const Color(0xFF26C6B0).withValues(alpha: 0.01),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.45, 0.55, 1.0],
-      ).createShader(Rect.fromLTWH(x - 80, 0, 160, size.height));
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ShimmerPainter old) => old.progress != progress;
-}
-
-// ─── ORNAMENTAL DIVIDER ───────────────────────────────────────────────────────
 
 class _OrnamentalDivider extends StatelessWidget {
   const _OrnamentalDivider();
@@ -1121,9 +1063,9 @@ class _OrnamentalDivider extends StatelessWidget {
           child: Column(
             children: [
               _IslamicStar(size: 10, color: _C.gold.withValues(alpha: 0.4)),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               _IslamicStar(size: 18, color: _C.gold.withValues(alpha: 0.85)),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               _IslamicStar(size: 10, color: _C.gold.withValues(alpha: 0.4)),
             ],
           ),
@@ -1256,7 +1198,7 @@ class _LiveDotState extends State<_LiveDot> with SingleTickerProviderStateMixin 
       return Container(
         width: 8,
         height: 8,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: _C.muted),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: _C.muted),
       );
     }
     return AnimatedBuilder(
@@ -1350,10 +1292,10 @@ class _InfoChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: _C.gold.withValues(alpha: 0.8)),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: _C.onBgDim,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -1418,35 +1360,31 @@ class _WaveBars extends StatefulWidget {
   State<_WaveBars> createState() => _WaveBarsState();
 }
 
-class _WaveBarsState extends State<_WaveBars> with TickerProviderStateMixin {
+class _WaveBarsState extends State<_WaveBars> with SingleTickerProviderStateMixin {
   static const int _count = 11;
-
-  final List<AnimationController> _ctrls = [];
-  final List<Animation<double>> _anims = [];
+  late final AnimationController _ctrl;
+  late final List<Animation<double>> _anims;
 
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < _count; i++) {
-      final ctrl = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: 420 + i * 65),
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+
+    _anims = List.generate(_count, (i) {
+      final start = (i * 0.05).clamp(0.0, 0.4);
+      final end = (0.6 + (10 - i) * 0.04).clamp(0.6, 1.0);
+      return Tween<double>(begin: 6, end: 36).animate(
+        CurvedAnimation(parent: _ctrl, curve: Interval(start, end, curve: Curves.easeInOut)),
       );
-      _ctrls.add(ctrl);
-      _anims.add(
-        Tween<double>(begin: 5, end: 38).animate(
-          CurvedAnimation(parent: ctrl, curve: Curves.easeInOut),
-        ),
-      );
-      Future.delayed(Duration(milliseconds: i * 55), () {
-        if (mounted) ctrl.repeat(reverse: true);
-      });
-    }
+    });
   }
 
   @override
   void dispose() {
-    for (final c in _ctrls) c.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
@@ -1601,10 +1539,9 @@ class _BackgroundPainterWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: AnimatedBuilder(
-        animation: rotateCtrl,
-        builder: (_, __) => CustomPaint(
-          painter: _BgPainter(geomAngle: rotateCtrl.value * 2 * math.pi),
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: const _BgPainter(geomAngle: 0.0),
         ),
       ),
     );
@@ -1637,12 +1574,12 @@ class _BgPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: const [
+          colors: [
             Color(0xFF070E1C),
             Color(0xFF03060E),
             Color(0xFF020408),
           ],
-          stops: const [0.0, 0.5, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ).createShader(rect),
     );
 
@@ -1658,7 +1595,7 @@ class _BgPainter extends CustomPainter {
             const Color(0xFFD4A843).withValues(alpha: 0.02),
             Colors.transparent,
           ],
-          stops: const [0.0, 0.4, 1.0],
+          stops: [0.0, 0.4, 1.0],
         ).createShader(rect),
     );
 
@@ -1674,7 +1611,7 @@ class _BgPainter extends CustomPainter {
             const Color(0xFF22D4BC).withValues(alpha: 0.015),
             Colors.transparent,
           ],
-          stops: const [0.0, 0.35, 1.0],
+          stops: [0.0, 0.35, 1.0],
         ).createShader(rect),
     );
 
@@ -1692,12 +1629,10 @@ class _BgPainter extends CustomPainter {
         ).createShader(rect),
     );
 
-    // Stars — two layers: faint background and brighter foreground
+    // Stars
     final starPaint = Paint()..style = PaintingStyle.fill;
     for (final s in _stars) {
-      final twinkle = (math.sin(geomAngle * 0.5 + s.x * 8.0) * 0.15 + 0.85)
-          .clamp(0.0, 1.0);
-      starPaint.color = Colors.white.withValues(alpha: s.o * twinkle);
+      starPaint.color = Colors.white.withValues(alpha: s.o * 0.9);
       canvas.drawCircle(
         Offset(s.x * size.width, s.y * size.height),
         s.r,
@@ -1707,14 +1642,13 @@ class _BgPainter extends CustomPainter {
 
     // Corner Islamic geometry motifs
     final geomPaint = Paint()
-      ..color = _C.gold.withValues(alpha: 0.03)
+      ..color = _C.gold.withValues(alpha: 0.035)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
     void drawGeomAt(Offset center, double r) {
       canvas.save();
       canvas.translate(center.dx, center.dy);
-      canvas.rotate(geomAngle * 0.08);
 
       const int n = 8;
       final pts = List.generate(n, (i) {
@@ -1742,6 +1676,5 @@ class _BgPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BgPainter old) =>
-      old.geomAngle != geomAngle;
+  bool shouldRepaint(covariant _BgPainter old) => false;
 }

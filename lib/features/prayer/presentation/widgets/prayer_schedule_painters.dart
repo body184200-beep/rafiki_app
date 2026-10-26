@@ -77,23 +77,29 @@ class BgPainter extends CustomPainter {
         ).createShader(
             Rect.fromLTWH(0, 0, size.width, size.height)),
     );
+    final c1 = Offset(size.width * 0.85, size.height * 0.08 + sin(t * 2 * pi) * 25);
     canvas.drawCircle(
-      Offset(size.width * 0.85,
-          size.height * 0.08 + sin(t * 2 * pi) * 25),
+      c1,
       200,
       Paint()
-        ..color = const Color(0xFF2EC4A0).withValues(alpha: 0.05)
-        ..maskFilter =
-        const MaskFilter.blur(BlurStyle.normal, 100),
+        ..shader = RadialGradient(
+          colors: [
+            const Color(0xFF2EC4A0).withValues(alpha: 0.06),
+            Colors.transparent,
+          ],
+        ).createShader(Rect.fromCircle(center: c1, radius: 200)),
     );
+    final c2 = Offset(size.width * 0.1, size.height * 0.85 + cos(t * 2 * pi) * 20);
     canvas.drawCircle(
-      Offset(size.width * 0.1,
-          size.height * 0.85 + cos(t * 2 * pi) * 20),
+      c2,
       180,
       Paint()
-        ..color = const Color(0xFFD4A030).withValues(alpha: 0.04)
-        ..maskFilter =
-        const MaskFilter.blur(BlurStyle.normal, 100),
+        ..shader = RadialGradient(
+          colors: [
+            const Color(0xFFD4A030).withValues(alpha: 0.05),
+            Colors.transparent,
+          ],
+        ).createShader(Rect.fromCircle(center: c2, radius: 180)),
     );
     final dot =
     Paint()..color = Colors.white.withValues(alpha: 0.02);

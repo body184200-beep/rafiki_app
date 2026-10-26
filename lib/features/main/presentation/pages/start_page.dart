@@ -6,13 +6,13 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/core/theme/app_colors.dart';
 import 'package:rafiki_app/core/theme/app_theme.dart';
-import 'package:rafiki_app/features/battles/presentation/pages/battles_page.dart';
-import 'package:rafiki_app/features/companions/presentation/pages/companions_page.dart';
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/features/deeds/presentation/pages/deeds_page.dart';
-import 'package:rafiki_app/features/guide/presentation/pages/guide_page.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_task_handler.dart';
 import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
 import 'package:rafiki_app/features/prophet/presentation/pages/prophet_page.dart';
+import 'package:rafiki_app/features/quran/presentation/pages/quran_page.dart';
+import 'package:rafiki_app/features/quran_radio/presentation/pages/quran_radio_page.dart';
 
 import 'package:adhan/adhan.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -20,6 +20,7 @@ import 'package:rafiki_app/core/utils/time_format.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_bottom_nav.dart';
+import '../widgets/home_dashboard_view.dart';
 import '../widgets/home_prayer_alert.dart';
 import '../widgets/home_prayer_strip.dart';
 import '../widgets/home_top_bar.dart';
@@ -43,20 +44,12 @@ class _StartState extends State<Start>
   late final AnimationController _navCtrl;
   late final Animation<double> _navAnim;
 
-  static const _pages = <Widget>[
-    CompanionsPage(),
-    BattlesPage(),
-    ProphetPage(),
-    GuidePage(),
-    DeedsPage(),
-  ];
-
-  static const _gradients = <List<Color>>[
-    [Color(0xFF080C12), Color(0xFF0F1923)],
-    [Color(0xFF080C12), Color(0xFF101520)],
-    [Color(0xFF080C12), Color(0xFF111520)],
-    [Color(0xFF0A0C14), Color(0xFF0D1320)],
-    [Color(0xFF080C12), Color(0xFF0C1518)],
+  late final List<Widget> _pages = [
+    HomeDashboardView(controller: _home),
+    const ProphetPage(),
+    const DeedsPage(),
+    const MushafPage(),
+    const QuranRadioPage(),
   ];
 
   @override
@@ -226,7 +219,7 @@ class _StartState extends State<Start>
       ),
       iosNotificationOptions: const IOSNotificationOptions(),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(5000),
+        eventAction: ForegroundTaskEventAction.repeat(1000),
         autoRunOnBoot: true,
         allowWakeLock: false,
         allowWifiLock: false,
@@ -303,9 +296,6 @@ class _StartState extends State<Start>
   }
 
   /// Central, idempotent method to ensure the prayer foreground service is running.
-  /// 1. Checks if notifications are permitted.
-  /// 2. Checks if service is already running (returns true without duplicating).
-  /// 3. Starts service if stopped.
   Future<bool> ensureForegroundServiceRunning() async {
     if (kIsWeb) return false;
     try {
@@ -345,7 +335,7 @@ class _StartState extends State<Start>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: _home,
+      listenable: Listenable.merge([_home, ThemeProvider.instance]),
       builder: (context, _) {
         _home.bindLocalizations(AppLocalizations.of(context)!);
         final hideChrome = _home.hidePrayerChrome;
@@ -355,62 +345,47 @@ class _StartState extends State<Start>
             !_home.showPrayerAlert &&
             !_home.alertDismissedByUser &&
             !hideChrome;
-
+        final isLight = ThemeProvider.instance.isLight;
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: AppTheme.systemUi,
+          value: isLight ? AppTheme.systemUiLight : AppTheme.systemUi,
           child: Scaffold(
             extendBody: true,
-            backgroundColor: AppColors.bg,
-            body: AnimatedContainer(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: _gradients[_home.tabIndex],
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Column(
-                  children: [
-                    RepaintBoundary(child: HomeTopBar(controller: _home)),
-                    const SizedBox(height: 10),
-                    if (showAlert)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: HomePrayerAlert(controller: _home),
-                      ),
-                    if (showAlert) const SizedBox(height: 8),
-                    if (showFajr)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: HomeFajrBanner(controller: _home),
-                      ),
-                    if (showFajr) const SizedBox(height: 8),
-                    if (!hideChrome)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: RepaintBoundary(child: HomePrayerStrip(controller: _home)),
-                      ),
-                    if (!hideChrome) const SizedBox(height: 10),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _home.tabIndex,
-                        children: [
-                          for (int i = 0; i < _pages.length; i++)
-                            TickerMode(
-                              enabled: i == _home.tabIndex,
-                              child: _pages[i],
-                            ),
-                        ],
-                      ),
+            backgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xFF070B14),
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  if (showAlert && _home.tabIndex == 0)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      child: HomePrayerAlert(controller: _home),
                     ),
-                    RepaintBoundary(child: HomeBottomNav(controller: _home, sizeFactor: _navAnim)),
-                    SizedBox(height: MediaQuery.paddingOf(context).bottom > 0 ? MediaQuery.paddingOf(context).bottom : 8),
-                  ],
-                ),
+                  if (showFajr && _home.tabIndex == 0)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      child: HomeFajrBanner(controller: _home),
+                    ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _home.tabIndex,
+                      children: [
+                        for (int i = 0; i < _pages.length; i++)
+                          TickerMode(
+                            enabled: i == _home.tabIndex,
+                            child: _pages[i],
+                          ),
+                      ],
+                    ),
+                  ),
+                  RepaintBoundary(
+                    child: HomeBottomNav(controller: _home, sizeFactor: _navAnim),
+                  ),
+                  SizedBox(
+                    height: MediaQuery.paddingOf(context).bottom > 0
+                        ? MediaQuery.paddingOf(context).bottom
+                        : 0,
+                  ),
+                ],
               ),
             ),
           ),

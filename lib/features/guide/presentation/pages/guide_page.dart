@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -30,13 +31,14 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
   late final AnimationController _pulseCtrl;
 
   // ── Palette ──────────────────────────────────────────────────────────────────
-  static const Color _bgDeep    = Color(0xff020A12);
-  static const Color _bgMid     = Color(0xff071829);
-  static const Color _gold      = Color(0xffC9A84C);
-  static const Color _goldGlow  = Color(0xffF5D882);
-  static const Color _goldDark  = Color(0xff8B6914);
-  static const Color _textMain  = Color(0xffEEE8D5);
-  static const Color _textSub   = Color(0xff7A9AAD);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bgDeep    => _l ? const Color(0xFFF8F6F0) : const Color(0xff020A12);
+  static Color get _bgMid     => _l ? const Color(0xFFF0EBE1) : const Color(0xff071829);
+  static Color get _gold      => _l ? const Color(0xFF8D5B18) : const Color(0xffC9A84C);
+  static Color get _goldGlow  => _l ? const Color(0xFFB48216) : const Color(0xffF5D882);
+  static Color get _goldDark  => _l ? const Color(0xFF8D5B18) : const Color(0xff8B6914);
+  static Color get _textMain  => _l ? const Color(0xFF111827) : const Color(0xffEEE8D5);
+  static Color get _textSub   => _l ? const Color(0xFF6B7280) : const Color(0xff7A9AAD);
 
 
   // ── Stars ─────────────────────────────────────────────────────────────────────
@@ -206,11 +208,11 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
           systemOverlayStyle: SystemUiOverlayStyle.light,
           centerTitle: true,
           title: ShaderMask(
-            shaderCallback: (r) => const LinearGradient(
+            shaderCallback: (r) => LinearGradient(
               colors: [_goldDark, _gold, _goldGlow, _gold],
               stops: [0, 0.3, 0.6, 1],
             ).createShader(r),
-            child: const Text(
+            child: Text(
               "✦  رفيقي  ✦",
               style: TextStyle(
                 color: Colors.white,
@@ -235,12 +237,12 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                         -0.6 + _bgCtrl.value * 0.4,
                       ),
                       radius: 1.6,
-                      colors: const [
+                      colors: [
                         Color(0xff0A2035),
                         Color(0xff041018),
                         _bgDeep,
                       ],
-                      stops: const [0, 0.5, 1],
+                      stops: [0, 0.5, 1],
                     ),
                   ),
                 ),
@@ -306,13 +308,13 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         _buildHeader(),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14),
                         _buildAyahBanner(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildSectionLabel("استكشف المحتوى"),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                       ]),
                     ),
                   ),
@@ -388,7 +390,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                       height: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [_gold, _goldGlow],
@@ -404,18 +406,18 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                       ),
                       child: child,
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text("☽",
                           style: TextStyle(fontSize: 24, color: Colors.black87)),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "أهلاً وسهلاً ❤️",
                         style: TextStyle(
                           color: _textMain,
@@ -424,8 +426,8 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
+                      SizedBox(height: 6),
+                      Text(
                         "رحلتك الإسلامية التفاعلية تبدأ هنا ✨",
                         style: TextStyle(
                           color: _textSub,
@@ -476,7 +478,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                     border:
                     Border.all(color: _gold.withValues(alpha: 0.35)),
                   ),
-                  child: const Text(
+                  child: Text(
                     "آية اليوم",
                     style: TextStyle(
                       color: _goldGlow,
@@ -488,8 +490,8 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               "﴿ إِنَّ مَعَ الْعُسْرِ يُسْرًا ﴾",
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -500,8 +502,8 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                 letterSpacing: 0.8,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
+            SizedBox(height: 6),
+            Text(
               "سورة الشرح — الآية ٦",
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -526,7 +528,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
             width: 4,
             height: 20,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [_gold, _goldDark],
@@ -534,10 +536,10 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: _textMain,
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -547,7 +549,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
           const Spacer(),
           Text(
             "${_cards.length} أقسام",
-            style: const TextStyle(
+            style: TextStyle(
               color: _textSub,
               fontSize: 11.5,
             ),
@@ -658,7 +660,7 @@ class _ContentCardState extends State<_ContentCard>
                     Colors.white.withValues(alpha: 0.04),
                     d.accentB.withValues(alpha: 0.06),
                   ],
-                  stops: const [0, 0.5, 1],
+                  stops: [0, 0.5, 1],
                 ),
                 border: Border.all(color: d.accentB.withValues(alpha: 0.25), width: 1),
                 boxShadow: [
@@ -686,7 +688,7 @@ class _ContentCardState extends State<_ContentCard>
                           d.accentB.withValues(alpha: 0.5),
                           Colors.transparent,
                         ],
-                        stops: const [0, 0.2, 0.5, 0.8, 1],
+                        stops: [0, 0.2, 0.5, 0.8, 1],
                       ),
                     ),
                   ),
@@ -751,7 +753,7 @@ class _ContentCardState extends State<_ContentCard>
                           ],
                         ),
 
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16),
 
                         // ── Text ──────────────────────────────────────────────
                         Expanded(
@@ -776,20 +778,20 @@ class _ContentCardState extends State<_ContentCard>
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              SizedBox(height: 6),
                               Text(
                                 d.title,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Color(0xffEEE8D5),
                                   fontSize: 16.5,
                                   fontWeight: FontWeight.w800,
                                   height: 1.2,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text(
                                 d.subtitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Color(0xff7A9AAD),
                                   fontSize: 11.5,
                                   height: 1.45,
@@ -799,7 +801,7 @@ class _ContentCardState extends State<_ContentCard>
                           ),
                         ),
 
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10),
 
                         // ── Arrow badge (RTL: pointing left) ─────────────────
                         Container(
@@ -816,7 +818,7 @@ class _ContentCardState extends State<_ContentCard>
                             border: Border.all(
                                 color: d.accentB.withValues(alpha: 0.35)),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.arrow_back_ios_new_rounded, // ← RTL correct
                             color: Colors.white70,
                             size: 15,

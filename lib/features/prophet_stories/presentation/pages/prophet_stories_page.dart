@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,11 +18,12 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
   late Animation<double> _headerFade;
 
   // ألوان الثيم الإسلامي الفاخر
-  static const Color kGold = Color(0xFFc9a84c);
-  static const Color kGoldLight = Color(0xFFe8cc7a);
-  static const Color kGoldDim = Color(0xFF8a6f30);
-  static const Color kInk = Color(0xFF0e0c18);
-  static const Color kParchment = Color(0xFFf5edd6);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get kGold => _l ? const Color(0xFF8D5B18) : const Color(0xFFc9a84c);
+  static Color get kGoldLight => _l ? const Color(0xFFB48216) : const Color(0xFFe8cc7a);
+  static Color get kGoldDim => _l ? const Color(0xFF8D5B18) : const Color(0xFF8a6f30);
+  static Color get kInk => _l ? const Color(0xFFF8F6F0) : const Color(0xFF0e0c18);
+  static Color get kParchment => _l ? const Color(0xFF111827) : const Color(0xFFf5edd6);
 
   List<ProphetStory> _allProphets = [];
   List<ProphetStory> _filteredProphets = [];
@@ -97,7 +99,9 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) => Scaffold(
       backgroundColor: kInk,
       body: SafeArea(
         child: FadeTransition(
@@ -129,10 +133,10 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Expanded(
                 child: _isLoading
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(color: kGold),
                       )
                     : _filteredProphets.isEmpty
@@ -160,6 +164,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -187,7 +192,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                     border: Border.all(
                         color: kGold.withValues(alpha: 0.25), width: 0.8),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     color: kGoldLight,
                     size: 16,
@@ -200,12 +205,12 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                   Container(
                     width: 40,
                     height: 1,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient:
                           LinearGradient(colors: [Colors.transparent, kGoldDim]),
                     ),
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8),
                     child:
                         Text('✦', style: TextStyle(color: kGoldDim, fontSize: 14)),
@@ -213,18 +218,18 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
                   Container(
                     width: 40,
                     height: 1,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient:
                           LinearGradient(colors: [kGoldDim, Colors.transparent]),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 38),
+              SizedBox(width: 38),
             ],
           ),
-          const SizedBox(height: 6),
-          const Text(
+          SizedBox(height: 6),
+          Text(
             'قِصَصُ الأَنْبِيَاء',
             style: TextStyle(
               color: kGoldLight,
@@ -234,7 +239,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'قصص ورسائل أولي العزم والأنبياء كاملة وموثقة',
             style: TextStyle(
@@ -260,16 +265,16 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
           controller: _searchController,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: kParchment, fontSize: 14),
+          style: TextStyle(color: kParchment, fontSize: 14),
           cursorColor: kGold,
           decoration: InputDecoration(
             hintText: 'ابحث عن اسم نبي، لقب، أو حدث...',
             hintStyle:
                 TextStyle(color: kGold.withValues(alpha: 0.35), fontSize: 13),
-            prefixIcon: const Icon(Icons.search_rounded, color: kGoldDim, size: 20),
+            prefixIcon: Icon(Icons.search_rounded, color: kGoldDim, size: 20),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded, color: kGoldDim, size: 18),
+                    icon: Icon(Icons.clear_rounded, color: kGoldDim, size: 18),
                     onPressed: () => _searchController.clear(),
                   )
                 : null,
@@ -287,8 +292,8 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🔍', style: TextStyle(fontSize: 40)),
-          const SizedBox(height: 12),
+          Text('🔍', style: TextStyle(fontSize: 40)),
+          SizedBox(height: 12),
           Text(
             'لم يُعثر على نبي مطابق للبحث',
             style: TextStyle(color: kGold.withValues(alpha: 0.5), fontSize: 15),
@@ -365,9 +370,9 @@ class _ProphetCardState extends State<_ProphetCard>
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color: kGold.withValues(alpha: 0.05),
+                color: ThemeProvider.instance.isLight ? const Color(0xFFFFFFFF) : kGold.withValues(alpha: 0.05),
                 border: Border.all(
-                    color: kGold.withValues(alpha: 0.18), width: 1),
+                    color: ThemeProvider.instance.isLight ? const Color(0xFFE5E7EB) : kGold.withValues(alpha: 0.18), width: 1),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.35),
@@ -417,22 +422,22 @@ class _ProphetCardState extends State<_ProphetCard>
                                 child: Center(
                                   child: Text(
                                     widget.prophet.icon,
-                                    style: const TextStyle(fontSize: 22),
+                                    style: TextStyle(fontSize: 22),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              SizedBox(height: 6),
                               Text(
                                 widget.prophet.name,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: kGoldLight,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               if (widget.prophet.period.isNotEmpty) ...[
-                                const SizedBox(height: 2),
+                                SizedBox(height: 2),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
@@ -451,7 +456,7 @@ class _ProphetCardState extends State<_ProphetCard>
                                   ),
                                 ),
                               ],
-                              const SizedBox(height: 5),
+                              SizedBox(height: 5),
                               Text(
                                 widget.prophet.summary,
                                 textAlign: TextAlign.center,
@@ -593,18 +598,18 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                     child: Center(
                       child: Text(
                         widget.prophet.icon,
-                        style: const TextStyle(fontSize: 24),
+                        style: TextStyle(fontSize: 24),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           widget.prophet.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: kGoldLight,
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -625,7 +630,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                   ),
                   // Font size controls
                   IconButton(
-                    icon: const Icon(Icons.text_decrease_rounded,
+                    icon: Icon(Icons.text_decrease_rounded,
                         color: kGoldLight, size: 20),
                     tooltip: 'تصغير الخط',
                     onPressed: () {
@@ -633,7 +638,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.text_increase_rounded,
+                    icon: Icon(Icons.text_increase_rounded,
                         color: kGoldLight, size: 20),
                     tooltip: 'تكبير الخط',
                     onPressed: () {
@@ -641,13 +646,13 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded,
+                    icon: Icon(Icons.copy_rounded,
                         color: kGoldLight, size: 20),
                     tooltip: 'نسخ القصة',
                     onPressed: _copyStory,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.share_rounded,
+                    icon: Icon(Icons.share_rounded,
                         color: kGoldLight, size: 20),
                     tooltip: 'مشاركة',
                     onPressed: _shareStory,
@@ -669,7 +674,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                 children: [
                   if (widget.prophet.period.isNotEmpty)
                     _buildMetaChip(Icons.access_time_rounded, widget.prophet.period),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   if (widget.prophet.quranMentions.isNotEmpty)
                     _buildMetaChip(
                         Icons.menu_book_rounded, widget.prophet.quranMentions),
@@ -706,7 +711,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                       borderRadius: BorderRadius.circular(50),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'إغلاق القصة',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
@@ -731,7 +736,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: kGoldLight),
-          const SizedBox(width: 5),
+          SizedBox(width: 5),
           Text(
             text,
             style: TextStyle(
@@ -751,7 +756,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
       if (line.isEmpty) {
-        widgets.add(const SizedBox(height: 8));
+        widgets.add(SizedBox(height: 8));
         continue;
       }
 
@@ -789,7 +794,7 @@ class _StoryReaderSheetState extends State<_StoryReaderSheet> {
                   color: isLessons ? const Color(0xFF2ECC71) : kGoldLight,
                   size: 18,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     title,

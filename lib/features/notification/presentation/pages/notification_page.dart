@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,18 +12,19 @@ import 'package:rafiki_app/features/notification/data/models/notification_model.
 //  Design Tokens
 // ─────────────────────────────────────────────────────────────────────────────
 class _T {
-  static const bg       = Color(0xff06080D);
-  static const surf     = Color(0xff0D1117);
-  static const surf2    = Color(0xff131A24);
-  static const surf3    = Color(0xff1B2332);
-  static const acc      = Color(0xff4ECBA8);
-  static const acc2     = Color(0xff2E9E7A);
-  static const acc3     = Color(0xff1B6B53);
-  static const txt      = Color(0xffECF0F8);
-  static const txt2     = Color(0xff8896AB);
-  static const txt3     = Color(0xff4D5A6C);
-  static const border   = Color(0xff1E2A38);
-  static const border2  = Color(0xff253040);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get bg       => _l ? const Color(0xFFF8F6F0) : const Color(0xff06080D);
+  static Color get surf     => _l ? const Color(0xFFFFFFFF) : const Color(0xff0D1117);
+  static Color get surf2    => _l ? const Color(0xFFF3F4F6) : const Color(0xff131A24);
+  static Color get surf3    => _l ? const Color(0xFFE5E7EB) : const Color(0xff1B2332);
+  static Color get acc      => _l ? const Color(0xFF0F4A39) : const Color(0xff4ECBA8);
+  static Color get acc2     => _l ? const Color(0xFF1D5A46) : const Color(0xff2E9E7A);
+  static Color get acc3     => _l ? const Color(0xFF0B4633) : const Color(0xff1B6B53);
+  static Color get txt      => _l ? const Color(0xFF111827) : const Color(0xffECF0F8);
+  static Color get txt2     => _l ? const Color(0xFF6B7280) : const Color(0xff8896AB);
+  static Color get txt3     => _l ? const Color(0xFF9CA3AF) : const Color(0xff4D5A6C);
+  static Color get border   => _l ? const Color(0xFFE5E7EB) : const Color(0xff1E2A38);
+  static Color get border2  => _l ? const Color(0xFFE5E7EB) : const Color(0xff253040);
   static const errorBg  = Color(0xff1E0808);
   static const errorAcc = Color(0xffE24B4A);
 }
@@ -98,7 +100,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         systemNavigationBarColor: _T.bg,
@@ -114,7 +116,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
             backgroundColor: _T.acc,
             foregroundColor: _T.bg,
             onPressed: () => _showForm(),
-            child: const Icon(Icons.add_rounded),
+            child: Icon(Icons.add_rounded),
           ),
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -135,7 +137,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                         final loc = AppLocalizations.of(ctx)!;
                         return Text(
                           loc.notif_title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: _T.txt,
                             fontWeight: FontWeight.w900,
                             fontSize: 20,
@@ -158,7 +160,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                               final loc = AppLocalizations.of(ctx)!;
                               return Text(
                                 loc.notif_subtitle,
-                                style: const TextStyle(color: _T.txt2, fontSize: 13.5),
+                                style: TextStyle(color: _T.txt2, fontSize: 13.5),
                               );
                             },
                           ),
@@ -190,12 +192,12 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.warning_amber_rounded, color: _T.errorAcc),
-                          const SizedBox(width: 12),
+                          Icon(Icons.warning_amber_rounded, color: _T.errorAcc),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               loc.notif_permission_disabled,
-                              style: const TextStyle(color: _T.txt, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(color: _T.txt, fontSize: 13, fontWeight: FontWeight.w500),
                             ),
                           ),
                           TextButton(
@@ -204,7 +206,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                             },
                             child: Text(
                               loc.notif_enable_button,
-                              style: const TextStyle(color: _T.acc, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: _T.acc, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -225,7 +227,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
                       child: Center(
                         child: Text(
                           loc.notif_empty,
-                          style: const TextStyle(color: _T.txt3, fontSize: 16),
+                          style: TextStyle(color: _T.txt3, fontSize: 16),
                         ),
                       ),
                     );
@@ -259,7 +261,7 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
         color: _T.surf,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _T.border),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xff0D1117), Color(0xff0A0F18)],
@@ -291,11 +293,11 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
               Icon(Icons.access_time_rounded, size: 16, color: n.enabled ? _T.acc : _T.txt3),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 n.time.format(context),
                 style: TextStyle(
@@ -306,21 +308,21 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
               ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.edit_rounded, color: _T.txt2, size: 20),
+                icon: Icon(Icons.edit_rounded, color: _T.txt2, size: 20),
                 onPressed: () => _showForm(n),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: _T.errorAcc, size: 20),
+                icon: Icon(Icons.delete_outline_rounded, color: _T.errorAcc, size: 20),
                 onPressed: () => _deleteNotif(n.id),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             n.days.join(' • '),
             style: TextStyle(color: _T.txt3, fontSize: 11),
@@ -431,7 +433,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text(msg, style: const TextStyle(fontFamily: 'Tajawal')),
+          content: Text(msg, style: TextStyle(fontFamily: 'Tajawal')),
           backgroundColor: isError ? _T.errorBg : _T.surf3,
         ),
       );
@@ -443,7 +445,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
       initialTime: _selectedTime,
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
+          colorScheme: ColorScheme.dark(
             primary: _T.acc,
             onPrimary: _T.bg,
             surface: _T.surf3,
@@ -540,7 +542,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
     padding: const EdgeInsets.only(bottom: 12),
     child: Text(
       text,
-      style: const TextStyle(color: _T.txt3, fontSize: 11, fontWeight: FontWeight.w700),
+      style: TextStyle(color: _T.txt3, fontSize: 11, fontWeight: FontWeight.w700),
     ),
   );
 
@@ -569,14 +571,14 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
           : TextDirection.ltr,
       child: Container(
         height: MediaQuery.of(context).size.height * 0.88,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: _T.bg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           children: [
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Container(
               width: 40,
               height: 4,
@@ -585,12 +587,12 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               widget.existing != null ? loc.notif_edit_title : 'تحديد ذكر للتذكير اليومي',
-              style: const TextStyle(color: _T.txt, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: _T.txt, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -609,7 +611,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: _T.acc2.withValues(alpha: 0.5)),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
                             Icon(Icons.menu_book_rounded, color: _T.acc, size: 22),
                             SizedBox(width: 12),
@@ -671,29 +673,29 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                             );
                           }).toList(),
                         ),
-                        const SizedBox(height: 18),
+                        SizedBox(height: 18),
                         _label('عنوان التنبيه (اختياري):'),
                         TextField(
                           controller: _titleController,
-                          style: const TextStyle(color: _T.txt, fontSize: 14),
+                          style: TextStyle(color: _T.txt, fontSize: 14),
                           decoration: InputDecoration(
                             hintText: 'مثال: أذكار الصباح، ورد الاستغفار، الصلاة على النبي',
-                            hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
+                            hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
                             filled: true,
                             fillColor: _T.surf2,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         _label('نص الذكر المطلوب التذكير به:'),
                         TextField(
                           controller: _zekrController,
                           maxLines: 3,
-                          style: const TextStyle(color: _T.txt, fontSize: 14, height: 1.5),
+                          style: TextStyle(color: _T.txt, fontSize: 14, height: 1.5),
                           decoration: InputDecoration(
                             hintText: loc.notif_zekr_hint,
-                            hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
+                            hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
                             filled: true,
                             fillColor: _T.surf2,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -703,7 +705,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   // Time
                   _card(
@@ -717,16 +719,16 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                             color: _T.acc3.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.access_time_rounded, color: _T.acc, size: 22),
+                          child: Icon(Icons.access_time_rounded, color: _T.acc, size: 22),
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _label(loc.notif_time_label),
                             Text(
                               _selectedTime.format(context),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: _T.txt,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -737,7 +739,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
 
                   // Days
                   _card(
@@ -780,7 +782,7 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Save button
                   SizedBox(
@@ -794,14 +796,14 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
                       child: _isSaving
-                          ? const CircularProgressIndicator(color: _T.bg)
+                          ? CircularProgressIndicator(color: _T.bg)
                           : Text(
                               loc.notif_save,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                 ],
               ),
             ),
@@ -859,13 +861,13 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
           : TextDirection.ltr,
       child: Container(
         height: MediaQuery.of(context).size.height * 0.85,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: _T.bg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           children: [
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Container(
               width: 40,
               height: 4,
@@ -874,8 +876,8 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 14),
-            const Text(
+            SizedBox(height: 14),
+            Text(
               'اختر ذكراً لضبط التذكير',
               style: TextStyle(
                 color: _T.txt,
@@ -883,7 +885,7 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Search Bar
             Padding(
@@ -891,14 +893,14 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
               child: TextField(
                 controller: _searchCtrl,
                 onChanged: (val) => setState(() => _searchQuery = val),
-                style: const TextStyle(color: _T.txt, fontSize: 14),
+                style: TextStyle(color: _T.txt, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'ابحث في الأذكار...',
-                  hintStyle: const TextStyle(color: _T.txt3, fontSize: 13),
-                  prefixIcon: const Icon(Icons.search_rounded, color: _T.acc, size: 20),
+                  hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
+                  prefixIcon: Icon(Icons.search_rounded, color: _T.acc, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, color: _T.txt3, size: 18),
+                          icon: Icon(Icons.clear_rounded, color: _T.txt3, size: 18),
                           onPressed: () => setState(() {
                             _searchCtrl.clear();
                             _searchQuery = '';
@@ -910,16 +912,16 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: _T.border),
+                    borderSide: BorderSide(color: _T.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: _T.border),
+                    borderSide: BorderSide(color: _T.border),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Tabs
             TabBar(
@@ -927,14 +929,14 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
               indicatorColor: _T.acc,
               labelColor: _T.acc,
               unselectedLabelColor: _T.txt3,
-              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              tabs: const [
+              labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              tabs: [
                 Tab(text: 'أذكار الصباح ☀️'),
                 Tab(text: 'أذكار المساء 🌙'),
                 Tab(text: 'جوامع الأذكار 📿'),
               ],
             ),
-            const Divider(height: 1, color: _T.border),
+            Divider(height: 1, color: _T.border),
 
             // Tab contents
             Expanded(
@@ -955,7 +957,7 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
 
   Widget _buildList(List<String> items, String category) {
     if (items.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'لا توجد أذكار مطابقة للبحث',
           style: TextStyle(color: _T.txt3, fontSize: 13),
@@ -965,7 +967,7 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => SizedBox(height: 8),
       itemBuilder: (ctx, i) {
         final text = items[i];
         return InkWell(
@@ -990,13 +992,13 @@ class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
                     shape: BoxShape.circle,
                     color: _T.acc3.withValues(alpha: 0.22),
                   ),
-                  child: const Icon(Icons.add_rounded, color: _T.acc, size: 16),
+                  child: Icon(Icons.add_rounded, color: _T.acc, size: 16),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     text,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _T.txt,
                       fontSize: 14,
                       height: 1.6,

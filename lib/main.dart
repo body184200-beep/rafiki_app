@@ -7,6 +7,7 @@ import 'package:rafiki_app/core/logging/app_logger.dart';
 
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/core/theme/app_theme.dart';
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/core/widgets/app_error_view.dart';
 import 'package:provider/provider.dart';
 import 'package:rafiki_app/core/locale_provider.dart';
@@ -18,11 +19,13 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final localeProvider = LocaleProvider()..initFromPrefs(prefs);
+  await ThemeProvider.instance.initFromPrefs(prefs);
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
+        ChangeNotifierProvider<ThemeProvider>.value(value: ThemeProvider.instance),
       ],
       child: const MyApp(),
     ),
@@ -40,12 +43,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
       title: 'رفيقي',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeProvider.isLight ? ThemeMode.light : ThemeMode.dark,
       // If user has a saved preference use it; otherwise fall back to device locale.
       // Passing null lets Flutter pick from supportedLocales automatically.
       locale: localeProvider.locale,
@@ -120,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF05211B), // Rich dark emerald green to blend with the splash screen
+      backgroundColor: const Color(0xFF070E1B), // Dark midnight blue matching the splash screen
       body: SizedBox.expand(
         child: Image.asset(
           'assets/rafiki.png',

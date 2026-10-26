@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:rafiki_app/features/prophet/data/datasources/prophet_data.dart';
@@ -6,14 +7,15 @@ import 'package:rafiki_app/features/prophet/data/datasources/prophet_data.dart';
 // ─── COLOUR TOKENS ────────────────────────────────────────────────────────────
 
 class _C {
-  static const bg         = Color(0xFF07090F);
-  static const surface    = Color(0xFF0D1018);
-  static const surfaceAlt = Color(0xFF111520);
-  static const gold       = Color(0xFFD4A843);
-  static const goldLight  = Color(0xFFF0C870);
-  static const onCard     = Color(0xFFF5EDD8);
-  static const muted      = Color(0xFF4A5568);
-  static const textBody   = Color(0xFFCBD5E1);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get bg         => _l ? const Color(0xFFF8F6F0) : const Color(0xFF07090F);
+  static Color get surface    => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0D1018);
+  static Color get surfaceAlt => _l ? const Color(0xFFF3F4F6) : const Color(0xFF111520);
+  static Color get gold       => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A843);
+  static Color get goldLight  => _l ? const Color(0xFF8D5B18) : const Color(0xFFF0C870);
+  static Color get onCard     => _l ? const Color(0xFF111827) : const Color(0xFFF5EDD8);
+  static Color get muted      => _l ? const Color(0xFF6B7280) : const Color(0xFF4A5568);
+  static Color get textBody   => _l ? const Color(0xFF374151) : const Color(0xFFCBD5E1);
 }
 
 // ─── SECTION DATA ─────────────────────────────────────────────────────────────
@@ -85,7 +87,7 @@ class _ProphetPageState extends State<ProphetPage> with TickerProviderStateMixin
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
         child: Column(
           children: [
-            const Text(
+            Text(
               "حياة الرسول ﷺ",
               style: TextStyle(
                 color: _C.goldLight,
@@ -95,15 +97,15 @@ class _ProphetPageState extends State<ProphetPage> with TickerProviderStateMixin
                 shadows: [Shadow(color: Color(0x33D4A843), blurRadius: 15)],
               ),
             ),
-            const SizedBox(height: 4),
-            const Text(
+            SizedBox(height: 4),
+            Text(
               "السيرة النبوية العطرة",
               style: TextStyle(
                 color: _C.muted,
                 fontSize: 12.5,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Container(
               height: 1,
               decoration: BoxDecoration(
@@ -256,7 +258,7 @@ class ProphetBiographySectionCardState extends State<ProphetBiographySectionCard
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               // Icon badge
               Container(
                 width: 48,
@@ -268,7 +270,7 @@ class ProphetBiographySectionCardState extends State<ProphetBiographySectionCard
                 ),
                 child: Icon(s.icon, color: s.accent, size: 22),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               // Text
               Expanded(
                 child: Padding(
@@ -278,14 +280,14 @@ class ProphetBiographySectionCardState extends State<ProphetBiographySectionCard
                     children: [
                       Text(
                         s.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _C.onCard,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       Text(
                         s.subtitle,
                         style: TextStyle(
@@ -315,7 +317,7 @@ class ProphetBiographySectionCardState extends State<ProphetBiographySectionCard
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
             ],
           ),
         ),
@@ -375,7 +377,7 @@ class _ProphetSectionReader extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
                   s.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _C.onCard,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -428,7 +430,7 @@ class _ProphetSectionReader extends StatelessWidget {
                         child: Row(
                           children: [
                             Icon(s.icon, color: s.accent, size: 22),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 s.subtitle,
@@ -442,7 +444,7 @@ class _ProphetSectionReader extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                     ...paragraphs.map((p) => _buildParagraphCard(p, s.accent)),
                   ],
@@ -480,7 +482,7 @@ class _ProphetSectionReader extends StatelessWidget {
       child: Text(
         paragraph,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(
+        style: TextStyle(
           color: _C.textBody,
           fontSize: 16.5,
           height: 2.1,
@@ -519,7 +521,7 @@ class _BgPainter extends CustomPainter {
     canvas.drawRect(
       Rect.fromLTWH(0, 0, sz.width, sz.height),
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF090B12), Color(0xFF07090F)],

@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -106,13 +107,17 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF090D14);
-    const surface = Color(0xFF101622);
-    const cardColor = Color(0xFF151C2C);
-    const accent = Color(0xFF4ECCA3);
-    const gold = Color(0xFFE5A93C);
-    const textPri = Color(0xFFF1F5F9);
-    const textSec = Color(0xFF8C9BAE);
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) {
+        final isLight = ThemeProvider.instance.isLight;
+        final bg = isLight ? const Color(0xFFF8F6F0) : const Color(0xFF090D14);
+        final surface = isLight ? const Color(0xFFFFFFFF) : const Color(0xFF101622);
+        final cardColor = isLight ? const Color(0xFFFFFFFF) : const Color(0xFF151C2C);
+        final accent = isLight ? const Color(0xFF0F4A39) : const Color(0xFF4ECCA3);
+        final gold = isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C);
+        final textPri = isLight ? const Color(0xFF111827) : const Color(0xFFF1F5F9);
+        final textSec = isLight ? const Color(0xFF6B7280) : const Color(0xFF8C9BAE);
 
     return Scaffold(
       backgroundColor: bg,
@@ -121,10 +126,10 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_forward_ios_rounded, color: textPri, size: 20),
+          icon: Icon(Icons.arrow_forward_ios_rounded, color: textPri, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Column(
+        title: Column(
           children: [
             Text(
               'بودكاست إسلامي 🎙️',
@@ -157,14 +162,14 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
               child: TextField(
                 controller: _searchCtrl,
                 onChanged: _onSearchChanged,
-                style: const TextStyle(color: textPri, fontSize: 13.5),
+                style: TextStyle(color: textPri, fontSize: 13.5),
                 decoration: InputDecoration(
                   hintText: 'ابحث عن بودكاست، داعية، أو موضوع إسلامي...',
-                  hintStyle: const TextStyle(color: Color(0xFF5F6E84), fontSize: 12.5),
-                  prefixIcon: const Icon(Icons.search_rounded, color: accent, size: 20),
+                  hintStyle: TextStyle(color: Color(0xFF5F6E84), fontSize: 12.5),
+                  prefixIcon: Icon(Icons.search_rounded, color: accent, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.close_rounded, color: textSec, size: 18),
+                          icon: Icon(Icons.close_rounded, color: textSec, size: 18),
                           onPressed: () {
                             _searchCtrl.clear();
                             _onSearchChanged('');
@@ -212,7 +217,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                               size: 15,
                               color: isSelected ? accent : textSec,
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: 6),
                             Text(
                               ch.title,
                               style: TextStyle(
@@ -229,7 +234,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                 },
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // ── 3. Selected Channel Banner ────────────────────────────────────
             if (_selectedChannel != null)
@@ -261,12 +266,12 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                               ? Image.network(
                                   _selectedChannel!.artworkUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.podcasts_rounded, color: accent),
+                                  errorBuilder: (_, __, ___) => Icon(Icons.podcasts_rounded, color: accent),
                                 )
-                              : const Icon(Icons.podcasts_rounded, color: accent),
+                              : Icon(Icons.podcasts_rounded, color: accent),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,18 +280,18 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                               _selectedChannel!.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: textPri,
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            SizedBox(height: 3),
                             Text(
                               _selectedChannel!.artist.isNotEmpty ? _selectedChannel!.artist : 'سلسلة إسلامية صوتية',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: gold, fontSize: 11.5, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: gold, fontSize: 11.5, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -300,14 +305,14 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                         ),
                         child: Text(
                           '${_episodes.length} حلقة',
-                          style: const TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
           ],
 
           // ── 4. Main Body: Episodes or Search Results ───────────────────────
@@ -322,11 +327,13 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
         ],
       ),
     );
+      },
+    );
   }
 
   Widget _buildSearchResults(Color accent, Color textPri, Color textSec, Color surface) {
     if (_isSearching) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF4ECCA3)));
+      return Center(child: CircularProgressIndicator(color: Color(0xFF4ECCA3)));
     }
 
     if (_searchResults.isEmpty) {
@@ -335,7 +342,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off_rounded, color: textSec.withValues(alpha: 0.5), size: 48),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text('لم يتم العثور على بودكاست لـ "$_searchQuery"', style: TextStyle(color: textPri, fontSize: 14)),
           ],
         ),
@@ -352,7 +359,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
           margin: const EdgeInsets.only(bottom: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: Color(0xFF1E283C)),
+            side: BorderSide(color: Color(0xFF1E283C)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -363,13 +370,13 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                 height: 48,
                 color: Colors.black26,
                 child: ch.artworkUrl.isNotEmpty
-                    ? Image.network(ch.artworkUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.podcasts))
-                    : const Icon(Icons.podcasts),
+                    ? Image.network(ch.artworkUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.podcasts))
+                    : Icon(Icons.podcasts),
               ),
             ),
             title: Text(ch.title, maxLines: 1, style: TextStyle(color: textPri, fontSize: 14, fontWeight: FontWeight.bold)),
             subtitle: Text(ch.artist, maxLines: 1, style: TextStyle(color: textSec, fontSize: 12)),
-            trailing: const Icon(Icons.arrow_back_ios_rounded, color: Color(0xFF4ECCA3), size: 14),
+            trailing: Icon(Icons.arrow_back_ios_rounded, color: Color(0xFF4ECCA3), size: 14),
             onTap: () {
               _searchCtrl.clear();
               setState(() => _searchQuery = '');
@@ -383,7 +390,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
   Widget _buildEpisodeList(Color accent, Color gold, Color textPri, Color textSec, Color cardColor) {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -401,7 +408,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.mic_off_rounded, color: textSec.withValues(alpha: 0.5), size: 48),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text('لا توجد حلقات صوتية متوفرة حالياً', style: TextStyle(color: textPri, fontSize: 14)),
           ],
         ),
@@ -425,7 +432,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                 color: isPlaying ? accent.withValues(alpha: 0.12) : cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isPlaying ? accent : const BorderSide(color: Color(0xFF1E273A)).color,
+                  color: isPlaying ? accent : BorderSide(color: Color(0xFF1E273A)).color,
                   width: isPlaying ? 1.4 : 0.8,
                 ),
               ),
@@ -474,7 +481,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: 14),
 
                         // Title & Metadata
                         Expanded(
@@ -492,24 +499,24 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                                   height: 1.4,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              SizedBox(height: 6),
                               Row(
                                 children: [
                                   Icon(Icons.access_time_rounded, size: 12, color: gold),
-                                  const SizedBox(width: 4),
+                                  SizedBox(width: 4),
                                   Text(
                                     ep.formattedDuration,
                                     style: TextStyle(color: gold.withValues(alpha: 0.9), fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                   if (isPlaying) ...[
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: accent,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'يعمل الآن',
                                         style: TextStyle(color: Color(0xFF090D14), fontSize: 9.5, fontWeight: FontWeight.bold),
                                       ),
@@ -523,7 +530,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
                         // Info / More icon
                         IconButton(
-                          icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF6B7C96), size: 20),
+                          icon: Icon(Icons.info_outline_rounded, color: Color(0xFF6B7C96), size: 20),
                           onPressed: () => _showEpisodeDetails(ep),
                         ),
                       ],
@@ -543,7 +550,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
     return ValueListenableBuilder<PodcastEpisode?>(
       valueListenable: _podcastService.currentEpisode,
       builder: (context, ep, _) {
-        if (ep == null) return const SizedBox.shrink();
+        if (ep == null) return SizedBox.shrink();
 
         return Container(
           decoration: BoxDecoration(
@@ -587,7 +594,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                   children: [
                     // Rewind 10s
                     IconButton(
-                      icon: const Icon(Icons.replay_10_rounded, color: Color(0xFF90A0B8), size: 24),
+                      icon: Icon(Icons.replay_10_rounded, color: Color(0xFF90A0B8), size: 24),
                       onPressed: () => _podcastService.seekBackward10(),
                     ),
 
@@ -599,7 +606,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                           valueListenable: _podcastService.isBuffering,
                           builder: (_, buffering, __) {
                             if (buffering) {
-                              return const SizedBox(
+                              return SizedBox(
                                 width: 36,
                                 height: 36,
                                 child: Padding(
@@ -623,11 +630,11 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
                     // Forward 10s
                     IconButton(
-                      icon: const Icon(Icons.forward_10_rounded, color: Color(0xFF90A0B8), size: 24),
+                      icon: Icon(Icons.forward_10_rounded, color: Color(0xFF90A0B8), size: 24),
                       onPressed: () => _podcastService.seekForward10(),
                     ),
 
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
 
                     // Episode title & channel
                     Expanded(
@@ -656,7 +663,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
                     // Close stop button
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Color(0xFF708098), size: 20),
+                      icon: Icon(Icons.close_rounded, color: Color(0xFF708098), size: 20),
                       onPressed: () => _podcastService.stop(),
                     ),
                   ],
@@ -682,7 +689,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
         return Container(
           constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: modalBg,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(top: BorderSide(color: Color(0xFF223048), width: 1.2)),
@@ -718,39 +725,39 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                               color: accent.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.podcasts_rounded, color: accent, size: 22),
+                            child: Icon(Icons.podcasts_rounded, color: accent, size: 22),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   ep.channelTitle.isNotEmpty ? ep.channelTitle : 'بودكاست ديني',
-                                  style: const TextStyle(color: gold, fontSize: 13, fontWeight: FontWeight.bold),
+                                  style: TextStyle(color: gold, fontSize: 13, fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   ep.formattedDuration,
-                                  style: const TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
+                                  style: TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
 
                       // Episode Title
                       Text(
                         ep.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Color(0xFFF1F5F9),
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
 
                       // Player Controls Box
                       Container(
@@ -806,11 +813,11 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                                                 children: [
                                                   Text(
                                                     isThisActive ? TimeFormat.hhmmss(pos) : '00:00:00',
-                                                    style: const TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
+                                                    style: TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
                                                   ),
                                                   Text(
                                                     isThisActive && dur > Duration.zero ? TimeFormat.hhmmss(dur) : ep.formattedDuration,
-                                                    style: const TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
+                                                    style: TextStyle(color: Color(0xFF8C9BAE), fontSize: 11),
                                                   ),
                                                 ],
                                               ),
@@ -823,7 +830,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                                 );
                               },
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12),
 
                             // Control Buttons: -10s, Play/Pause, +10s, Speed
                             Row(
@@ -846,7 +853,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                                       },
                                       child: Text(
                                         '${sp}x',
-                                        style: const TextStyle(color: Color(0xFF8C9BAE), fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: TextStyle(color: Color(0xFF8C9BAE), fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                     );
                                   },
@@ -854,7 +861,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
                                 // -10s
                                 IconButton(
-                                  icon: const Icon(Icons.replay_10_rounded, color: Color(0xFFF1F5F9), size: 28),
+                                  icon: Icon(Icons.replay_10_rounded, color: Color(0xFFF1F5F9), size: 28),
                                   onPressed: () => _podcastService.seekBackward10(),
                                 ),
 
@@ -874,7 +881,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                                           height: 58,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            gradient: const LinearGradient(colors: [accent, gold]),
+                                            gradient: LinearGradient(colors: [accent, gold]),
                                             boxShadow: [
                                               BoxShadow(
                                                 color: accent.withValues(alpha: 0.4),
@@ -905,25 +912,25 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
 
                                 // +10s
                                 IconButton(
-                                  icon: const Icon(Icons.forward_10_rounded, color: Color(0xFFF1F5F9), size: 28),
+                                  icon: Icon(Icons.forward_10_rounded, color: Color(0xFFF1F5F9), size: 28),
                                   onPressed: () => _podcastService.seekForward10(),
                                 ),
 
-                                const SizedBox(width: 32),
+                                SizedBox(width: 32),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
                       // Episode Description
                       if (ep.description.isNotEmpty) ...[
-                        const Text(
+                        Text(
                           'عن هذه الحلقة:',
                           style: TextStyle(color: Color(0xFFF1F5F9), fontSize: 14.5, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -933,7 +940,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
                           ),
                           child: Text(
                             ep.description,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Color(0xFF94A3B8),
                               fontSize: 13,
                               height: 1.7,
@@ -952,3 +959,6 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> {
     );
   }
 }
+
+
+typedef PodcastPage = PrayerPodcastPage;

@@ -83,6 +83,100 @@ class HomeController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  Prayer get currentPrayerEnum {
+    try {
+      final now = DateTime.now();
+      final times = _todayTimes();
+      if (now.isBefore(times.fajr)) {
+        return Prayer.isha;
+      } else if (now.isBefore(times.dhuhr)) {
+        return Prayer.fajr;
+      } else if (now.isBefore(times.asr)) {
+        return Prayer.dhuhr;
+      } else if (now.isBefore(times.maghrib)) {
+        return Prayer.asr;
+      } else if (now.isBefore(times.isha)) {
+        return Prayer.maghrib;
+      } else {
+        return Prayer.isha;
+      }
+    } catch (_) {
+      return Prayer.fajr;
+    }
+  }
+
+  Prayer get nextPrayerEnum {
+    try {
+      final next = _todayTimes().nextPrayer();
+      if (next == Prayer.none || next == Prayer.sunrise) {
+        return Prayer.fajr;
+      }
+      return next;
+    } catch (_) {
+      return Prayer.fajr;
+    }
+  }
+
+  String get nextPrayerArabicName {
+    switch (nextPrayerEnum) {
+      case Prayer.fajr:
+        return 'الفجر';
+      case Prayer.sunrise:
+        return 'الشروق';
+      case Prayer.dhuhr:
+        return 'الظهر';
+      case Prayer.asr:
+        return 'العصر';
+      case Prayer.maghrib:
+        return 'المغرب';
+      case Prayer.isha:
+        return 'العشاء';
+      default:
+        return 'الفجر';
+    }
+  }
+
+  String get countdownDigitsOnly {
+    try {
+      final now = DateTime.now();
+      final times = _todayTimes();
+      final next = times.nextPrayer();
+      if (next == Prayer.none || next == Prayer.sunrise) {
+        final tomorrow = DateComponents.from(now.add(const Duration(days: 1)));
+        final tomorrowTimes = PrayerTimes(_coords, tomorrow, PrayerConfig.params);
+        final diff = tomorrowTimes.fajr.difference(now);
+        return TimeFormat.hhmmss(diff);
+      }
+      final nextTime = times.timeForPrayer(next);
+      if (nextTime == null) return '00:00:00';
+      final diff = nextTime.difference(now);
+      return TimeFormat.hhmmss(diff);
+    } catch (_) {
+      return '00:00:00';
+    }
+  }
+
+  Map<Prayer, String> get prayerScheduleTimes {
+    try {
+      final times = _todayTimes();
+      return {
+        Prayer.fajr: TimeFormat.hhmm(times.fajr),
+        Prayer.dhuhr: TimeFormat.hhmm(times.dhuhr),
+        Prayer.asr: TimeFormat.hhmm(times.asr),
+        Prayer.maghrib: TimeFormat.hhmm(times.maghrib),
+        Prayer.isha: TimeFormat.hhmm(times.isha),
+      };
+    } catch (_) {
+      return {
+        Prayer.fajr: '05:35',
+        Prayer.dhuhr: '12:38',
+        Prayer.asr: '03:45',
+        Prayer.maghrib: '06:09',
+        Prayer.isha: '07:29',
+      };
+    }
+  }
+
   String tomorrowFajrLabel() {
     try {
       final tomorrow = DateComponents.from(

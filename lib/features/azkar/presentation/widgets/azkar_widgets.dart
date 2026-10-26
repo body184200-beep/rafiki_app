@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -181,11 +182,7 @@ class _AzkarCardState extends State<AzkarCard>
             ]
                 : [],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Padding(
+          child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 15, 16, 13),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -317,8 +314,6 @@ class _AzkarCardState extends State<AzkarCard>
                   ],
                 ),
               ),
-            ),
-          ),
         ),
       ),
     );
@@ -429,20 +424,14 @@ class GlassButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: Colors.white.withValues(alpha: 0.05),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
-            ),
-            child: Center(child: child),
-          ),
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.white.withValues(alpha: 0.08),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
+        child: Center(child: child),
       ),
     );
   }

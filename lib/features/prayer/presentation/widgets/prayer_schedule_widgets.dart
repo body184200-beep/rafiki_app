@@ -45,9 +45,9 @@ class QadaCarryCard extends StatelessWidget {
               color: T.ruby.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.history_rounded, color: T.rubyL, size: 16),
+            child: Icon(Icons.history_rounded, color: T.rubyL, size: 16),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +55,7 @@ class QadaCarryCard extends StatelessWidget {
               children: [
                 Text(
                   entry.prayerName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: T.t1,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -63,7 +63,7 @@ class QadaCarryCard extends StatelessWidget {
                 ),
                 Text(
                   'فائتة من يوم ${entry.dateKey}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: T.rubyL,
                     fontSize: 11,
                   ),
@@ -83,7 +83,7 @@ class QadaCarryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: T.ruby.withValues(alpha: 0.5)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.check_rounded, color: T.rubyL, size: 14),
@@ -126,12 +126,12 @@ class BannerWidget extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.stars_rounded, color: AppColors.accent, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.stars_rounded, color: AppColors.accent, size: 18),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.accent,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -198,7 +198,7 @@ class PrayerScoreHero extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.mosque_rounded,
                 color: AppColors.accent,
@@ -207,7 +207,7 @@ class PrayerScoreHero extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // Huge Unlimited Score Number with Smooth Tween Animation
           TweenAnimationBuilder<double>(
@@ -219,7 +219,7 @@ class PrayerScoreHero extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 child: Text(
                   formatScore(value),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: T.t1,
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
@@ -231,10 +231,10 @@ class PrayerScoreHero extends StatelessWidget {
             },
           ),
 
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
 
           // Score Label
-          const Text(
+          Text(
             'مجموع نقاط الصلاة',
             style: TextStyle(
               color: T.t2,
@@ -243,7 +243,7 @@ class PrayerScoreHero extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Sub-row: Today's Gain & Streak Pills
           Wrap(
@@ -275,7 +275,7 @@ class PrayerScoreHero extends StatelessWidget {
                       color: todayGain > 0 ? AppColors.accent : T.t3,
                       size: 13,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       todayGain > 0
                           ? '+${formatScore(todayGain)} اليوم'
@@ -303,11 +303,11 @@ class PrayerScoreHero extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🔥', style: TextStyle(fontSize: 13)),
-                    const SizedBox(width: 5),
+                    Text('🔥', style: TextStyle(fontSize: 13)),
+                    SizedBox(width: 5),
                     Text(
                       '$streak ${streakGrammar(streak)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: T.flameL,
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -363,7 +363,7 @@ class TodayPrayersCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
                     Icon(
                       Icons.schedule_rounded,
@@ -409,7 +409,7 @@ class TodayPrayersCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Unified Container for 5 Prayers
           Container(
@@ -550,7 +550,7 @@ class CompactPrayerRow extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
 
               // Name & Rakats
               Expanded(
@@ -565,10 +565,10 @@ class CompactPrayerRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       '${prayer.rakats} ركعات',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: T.t3,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -585,7 +585,7 @@ class CompactPrayerRow extends StatelessWidget {
 
           // Inline Quick Actions when Available
           if (isAvailable) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -596,7 +596,7 @@ class CompactPrayerRow extends StatelessWidget {
                     onTap: () => onComplete(true),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: _buildActionBtn(
                     label: 'صليتها فردي',
@@ -611,7 +611,7 @@ class CompactPrayerRow extends StatelessWidget {
 
           // Inline Qada Action when Missed
           if (isQada) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             _buildActionBtn(
               label: 'قضيها',
               icon: Icons.refresh_rounded,
@@ -622,7 +622,7 @@ class CompactPrayerRow extends StatelessWidget {
 
           // Sunnah Chips (independent of Fardh locking)
           if (prayer.sunnah.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -647,7 +647,7 @@ class CompactPrayerRow extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (sel)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(left: 4),
                             child: Icon(Icons.check_rounded,
                                 color: AppColors.gold, size: 11),
@@ -705,7 +705,7 @@ class CompactPrayerRow extends StatelessWidget {
           icon: Icons.warning_amber_rounded,
         );
       case PrayerState.locked:
-        return const Text(
+        return Text(
           'لم يحن وقتها',
           style: TextStyle(
             color: T.t3,
@@ -732,7 +732,7 @@ class CompactPrayerRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 12),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
@@ -768,7 +768,7 @@ class CompactPrayerRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: color, size: 15),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
@@ -870,10 +870,10 @@ class DuhaPrayerCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
 
                   // Name & Subtitle
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -920,7 +920,7 @@ class DuhaPrayerCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 12),
@@ -944,7 +944,7 @@ class DuhaPrayerCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.radio_button_checked_rounded, color: AppColors.gold, size: 12),
@@ -961,7 +961,7 @@ class DuhaPrayerCard extends StatelessWidget {
                       ),
                     )
                   else
-                    const Text(
+                    Text(
                       'لم يحن وقتها',
                       style: TextStyle(
                         color: T.t3,
@@ -974,7 +974,7 @@ class DuhaPrayerCard extends StatelessWidget {
 
               // Inline Action when Available
               if (isAvailable) ...[
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -987,7 +987,7 @@ class DuhaPrayerCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.check_circle_outline_rounded, color: AppColors.gold, size: 15),
@@ -1026,7 +1026,7 @@ class MinimalMotivationFooter extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          const Text(
+          Text(
             'استمر... كل صلاة بتفرق 🤍',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -1035,7 +1035,7 @@ class MinimalMotivationFooter extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             '«وَأَقِمِ الصَّلَاةَ لِذِكْرِي» — سورة طه: ١٤',
             textAlign: TextAlign.center,

@@ -1,5 +1,7 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rafiki_app/core/widgets/category_chips.dart';
 import 'package:rafiki_app/core/widgets/glass_panel.dart';
 import 'package:rafiki_app/core/widgets/pinned_header.dart';
@@ -12,16 +14,14 @@ import 'package:rafiki_app/features/companions/presentation/pages/companion_deta
 // ─── COLOUR TOKENS ────────────────────────────────────────────────────────────
 
 class _C {
-  static const bg        = Color(0xFF07090F);
-  static const surface   = Color(0xFF0D1120);
-  static const gold      = Color(0xFFD4A843);
-  static const goldLight = Color(0xFFF0C870);
-  static const onCard    = Color(0xFFF5EDD8);
-  static const muted     = Color(0xFF4A5568);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get bg        => _l ? const Color(0xFFF8F6F0) : const Color(0xFF07090F);
+  static Color get surface   => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0D1120);
+  static Color get gold      => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A843);
+  static Color get goldLight => _l ? const Color(0xFFB48216) : const Color(0xFFF0C870);
+  static Color get onCard    => _l ? const Color(0xFF111827) : const Color(0xFFF5EDD8);
+  static Color get muted     => _l ? const Color(0xFF6B7280) : const Color(0xFF4A5568);
 }
-
-// ─── SAHABA DATA ──────────────────────────────────────────────────────────────
-
 
 // ─── MAIN WIDGET ──────────────────────────────────────────────────────────────
 
@@ -116,7 +116,7 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
 
   Widget _buildSegmentedControl() {
     return SegmentedTabs(
-      labels: const ['الصحابة الكرام', 'كبار التابعين'],
+      labels: ['الصحابة الكرام', 'كبار التابعين'],
       index: _selectedTab,
       onChanged: (i) {
         setState(() {
@@ -157,25 +157,54 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
         child: Column(
           children: [
-            const Text(
-              "الموسوعة الإسلامية",
-              style: TextStyle(
-                color: _C.goldLight,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-                shadows: [Shadow(color: Color(0x33D4A843), blurRadius: 15)],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(width: 40),
+                Expanded(
+                  child: Text(
+                    "الموسوعة الإسلامية",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _C.goldLight,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      shadows: [Shadow(color: Color(0x33D4A843), blurRadius: 15)],
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.maybePop(context);
+                  },
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: _C.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _C.gold.withValues(alpha: 0.35), width: 0.8),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: _C.goldLight,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               "سير الأعلام والشخصيات الإسلامية",
               style: TextStyle(color: _C.muted, fontSize: 12.5),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Container(
               height: 1,
               decoration: BoxDecoration(
@@ -198,7 +227,7 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
 
   Widget _buildGrid(List<Sahabi> list) {
     if (list.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           "لا توجد عناصر في هذا التصنيف",
           style: TextStyle(color: _C.muted, fontSize: 15),
@@ -207,13 +236,13 @@ class _CompanionsPageState extends State<CompanionsPage> with SingleTickerProvid
     }
     return GridView.builder(
       key: ValueKey("$_selectedTab-$_selectedCategory"),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
       itemCount: list.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 0.80,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.72,
       ),
       itemBuilder: (context, index) {
         return SahabiCard(
@@ -309,13 +338,13 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
         tag: s.name,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             color: _C.surface,
             border: Border.all(color: s.accent.withValues(alpha: 0.28), width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: s.accent.withValues(alpha: 0.14),
-                blurRadius: 18,
+                blurRadius: 16,
                 offset: const Offset(0, 5),
               ),
               BoxShadow(
@@ -326,15 +355,15 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
                 Positioned(
                   top: -24,
                   right: -24,
                   child: Container(
-                    width: 90,
-                    height: 90,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: s.accent.withValues(alpha: 0.12),
@@ -356,80 +385,81 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 58,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: s.accent.withValues(alpha: 0.12),
-                          border: Border.all(color: s.accent.withValues(alpha: 0.45), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: s.accent.withValues(alpha: 0.25),
-                              blurRadius: 12,
-                              spreadRadius: 1,
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: s.accent.withValues(alpha: 0.12),
+                            border: Border.all(color: s.accent.withValues(alpha: 0.45), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: s.accent.withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              s.initial,
+                              style: TextStyle(
+                                color: s.accent,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          s.name,
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _C.onCard,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            height: 1.25,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          s.title,
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: s.accent.withValues(alpha: 0.9),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.arrow_back_ios_new_rounded, color: _C.muted, size: 9),
+                            SizedBox(width: 4),
+                            Text(
+                              "اقرأ السيرة",
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(color: _C.muted, fontSize: 9.5),
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: Text(
-                            s.initial,
-                            style: TextStyle(
-                              color: s.accent,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        s.name,
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _C.onCard,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        s.title,
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: s.accent.withValues(alpha: 0.9),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.arrow_back_ios_new_rounded, color: _C.muted, size: 9),
-                          const SizedBox(width: 4),
-                          const Text(
-                            "اقرأ السيرة",
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(color: _C.muted, fontSize: 10),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -440,10 +470,6 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
     );
   }
 }
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-
 
 // ─── BACKGROUND ───────────────────────────────────────────────────────────────
 
@@ -462,10 +488,10 @@ class _BgPainter extends CustomPainter {
   static final _stars = List.generate(60, (i) {
     final r = math.Random(i * 37 + 11);
     return (
-    x: r.nextDouble(),
-    y: r.nextDouble(),
-    rad: r.nextDouble() * 1.2 + 0.2,
-    o: r.nextDouble() * 0.28 + 0.05,
+      x: r.nextDouble(),
+      y: r.nextDouble(),
+      rad: r.nextDouble() * 1.2 + 0.2,
+      o: r.nextDouble() * 0.28 + 0.05,
     );
   });
 
@@ -474,7 +500,7 @@ class _BgPainter extends CustomPainter {
     canvas.drawRect(
       Rect.fromLTWH(0, 0, sz.width, sz.height),
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF080A12), Color(0xFF07090F)],

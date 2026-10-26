@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -131,9 +132,11 @@ class _AdeiaPageState extends State<AdeiaPage> {
 
   @override
   Widget build(BuildContext context) {
-    final list = _filteredDuas;
-
-    return Directionality(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) {
+        final list = _filteredDuas;
+        return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _kBg,
@@ -168,6 +171,8 @@ class _AdeiaPageState extends State<AdeiaPage> {
         ),
       ),
     );
+      },
+    );
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -176,12 +181,12 @@ class _AdeiaPageState extends State<AdeiaPage> {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+        icon: Icon(Icons.arrow_back_ios_new_rounded,
             color: _kGoldLight, size: 18),
         onPressed: () => Navigator.pop(context),
         tooltip: 'رجوع',
       ),
-      title: const Text(
+      title: Text(
         'الأدعية والأذكار',
         style: TextStyle(
           color: _kGoldLight,
@@ -192,7 +197,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
       actions: [
         // Font size controls
         IconButton(
-          icon: const Icon(Icons.text_decrease_rounded,
+          icon: Icon(Icons.text_decrease_rounded,
               color: _kGoldLight, size: 20),
           tooltip: 'تصغير الخط',
           onPressed: () {
@@ -202,7 +207,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.text_increase_rounded,
+          icon: Icon(Icons.text_increase_rounded,
               color: _kGoldLight, size: 20),
           tooltip: 'تكبير الخط',
           onPressed: () {
@@ -265,7 +270,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
                 size: 15,
                 color: isSelected ? _kGoldLight : _kMuted,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
@@ -296,17 +301,17 @@ class _AdeiaPageState extends State<AdeiaPage> {
           controller: _searchCtrl,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: _kText, fontSize: 13.5),
+          style: TextStyle(color: _kText, fontSize: 13.5),
           cursorColor: _kGold,
           decoration: InputDecoration(
             prefixIcon:
-                const Icon(Icons.search_rounded, color: _kGold, size: 18),
+                Icon(Icons.search_rounded, color: _kGold, size: 18),
             hintText: 'ابحث في نصوص الأدعية والأذكار...',
             hintStyle: TextStyle(
                 color: _kMuted.withValues(alpha: 0.7), fontSize: 12.5),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded,
+                    icon: Icon(Icons.clear_rounded,
                         color: _kMuted, size: 16),
                     onPressed: () => _searchCtrl.clear(),
                   )
@@ -340,7 +345,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
                   Icon(cat.icon,
                       size: 13,
                       color: selected ? _kBg : _kMuted),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(cat.label),
                 ],
               ),
@@ -412,21 +417,21 @@ class _AdeiaPageState extends State<AdeiaPage> {
                   ),
                   child: Text(
                     item.category,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _kGoldLight,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _kText,
                           fontSize: 14.5,
                           fontWeight: FontWeight.w700,
@@ -457,7 +462,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
               ],
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Dua Text Box
             Container(
@@ -486,7 +491,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
 
             // Virtue (الفضل) & Source
             if (item.fadl.isNotEmpty || item.source.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -497,9 +502,9 @@ class _AdeiaPageState extends State<AdeiaPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline_rounded,
+                    Icon(Icons.info_outline_rounded,
                         color: _kMuted, size: 14),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         '${item.fadl}${item.source.isNotEmpty ? " • " + item.source : ""}',
@@ -516,7 +521,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
               ),
             ],
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Bottom Actions & Tasbeeh Counter Bar
             Row(
@@ -551,7 +556,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
                             color: isCompleted ? _kEmerald : _kGoldLight,
                             size: 16,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             isCompleted
                                 ? 'اكتمل ($count/${item.repeat}) ✓'
@@ -574,20 +579,20 @@ class _AdeiaPageState extends State<AdeiaPage> {
 
                 // Reset button (if count > 0)
                 if (count > 0) ...[
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   IconButton(
-                    icon: const Icon(Icons.refresh_rounded,
+                    icon: Icon(Icons.refresh_rounded,
                         color: _kMuted, size: 18),
                     tooltip: 'إعادة العداد',
                     onPressed: () => _resetCount(item.title),
                   ),
                 ],
 
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
 
                 // Copy
                 IconButton(
-                  icon: const Icon(Icons.copy_rounded, color: _kMuted, size: 17),
+                  icon: Icon(Icons.copy_rounded, color: _kMuted, size: 17),
                   tooltip: 'نسخ الدعاء',
                   onPressed: () {
                     Clipboard.setData(ClipboardData(
@@ -609,7 +614,7 @@ class _AdeiaPageState extends State<AdeiaPage> {
 
                 // Share
                 IconButton(
-                  icon: const Icon(Icons.share_rounded, color: _kMuted, size: 17),
+                  icon: Icon(Icons.share_rounded, color: _kMuted, size: 17),
                   tooltip: 'مشاركة',
                   onPressed: () {
                     Share.share(
@@ -630,8 +635,8 @@ class _AdeiaPageState extends State<AdeiaPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
-          const SizedBox(height: 10),
+          Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
+          SizedBox(height: 10),
           Text(
             _filterMode == 1
                 ? 'لا توجد أدعية محفوظة في المفضلة'

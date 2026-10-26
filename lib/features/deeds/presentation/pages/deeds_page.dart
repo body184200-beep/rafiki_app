@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -14,14 +15,22 @@ class DeedsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: 'serif',
-        scaffoldBackgroundColor: const Color(0xff060D12),
-        colorScheme: const ColorScheme.dark(primary: Color(0xff059669)),
-      ),
-      child: const DeedsScreen(),
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) {
+        final isLight = ThemeProvider.instance.isLight;
+        return Theme(
+          data: ThemeData(
+            brightness: isLight ? Brightness.light : Brightness.dark,
+            fontFamily: 'serif',
+            scaffoldBackgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xff060D12),
+            colorScheme: isLight
+                ? ColorScheme.light(primary: Color(0xFF0F4A39))
+                : ColorScheme.dark(primary: Color(0xff059669)),
+          ),
+          child: const DeedsScreen(),
+        );
+      },
     );
   }
 }
@@ -182,6 +191,7 @@ class _DeedsScreenState extends State<DeedsScreen>
       final prefs = await SharedPreferences.getInstance();
       final jsonList = _adhkar.map((e) => e.toJson()).toList();
       await prefs.setString('deeds_adhkar_list', jsonEncode(jsonList));
+      await prefs.setInt('total_tasbihat_count', _totalHasanat);
       await prefs.setInt('deeds_selected_index', _selectedIndex);
       await prefs.setString('misbaha_theme_id', _theme.id);
       await prefs.setInt('misbaha_haptic_mode', _hapticMode);
@@ -487,7 +497,7 @@ class _DeedsScreenState extends State<DeedsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff060D12),
+      backgroundColor: ThemeProvider.instance.isLight ? const Color(0xFFF8F6F0) : const Color(0xff060D12),
       body: Stack(
         children: [
           // Background ambient glows matching theme
@@ -517,9 +527,9 @@ class _DeedsScreenState extends State<DeedsScreen>
               child: Column(
                 children: [
                   _buildTopHeader(),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   _buildDhikrCarousel(),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
@@ -527,19 +537,19 @@ class _DeedsScreenState extends State<DeedsScreen>
                       child: Column(
                         children: [
                           _buildActiveDhikrCard(),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           _buildInteractiveMisbaha(),
-                          const SizedBox(height: 22),
+                          SizedBox(height: 22),
                           _buildTargetPill(),
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _buildActionButtons(),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           _buildRecordToggle(),
                           if (_showRecord) ...[
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                             _buildRecordList(),
                           ],
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -586,7 +596,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                         shaderCallback: (r) => LinearGradient(
                           colors: [_theme.accentLight, Colors.white],
                         ).createShader(r),
-                        child: const Text(
+                        child: Text(
                           "المِسْبَحَةُ الإِلِكْتُرُونِيَّة",
                           style: TextStyle(
                             fontSize: 21,
@@ -599,8 +609,8 @@ class _DeedsScreenState extends State<DeedsScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  const Text(
+                  SizedBox(height: 3),
+                  Text(
                     "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
                     style: TextStyle(
                       fontSize: 12,
@@ -619,7 +629,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                     tooltip: "خامة المسبحة (${_theme.name})",
                     onTap: _openThemeSheet,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   // Settings
                   GlassIconBtn(
                     icon: Icons.tune_rounded,
@@ -627,7 +637,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                     tooltip: "إعدادات الصوت والاهتزاز",
                     onTap: _openSettingsSheet,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   // Reset all
                   GlassIconBtn(
                     icon: Icons.restart_alt_rounded,
@@ -639,7 +649,7 @@ class _DeedsScreenState extends State<DeedsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           // Total Hasanat Badge Strip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -654,8 +664,8 @@ class _DeedsScreenState extends State<DeedsScreen>
                 Row(
                   children: [
                     Icon(Icons.stars_rounded, color: _theme.accentLight, size: 18),
-                    const SizedBox(width: 6),
-                    const Text(
+                    SizedBox(width: 6),
+                    Text(
                       "إجمالي التسبيحات",
                       style: TextStyle(color: DeedsColors.textSub, fontSize: 12),
                     ),
@@ -686,7 +696,7 @@ class _DeedsScreenState extends State<DeedsScreen>
         padding: const EdgeInsets.symmetric(horizontal: 18),
         physics: const BouncingScrollPhysics(),
         itemCount: _adhkar.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => SizedBox(width: 8),
         itemBuilder: (context, i) {
           if (i == _adhkar.length) {
             // Add custom dhikr chip
@@ -702,7 +712,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                 child: Row(
                   children: [
                     Icon(Icons.add_rounded, color: _theme.accentLight, size: 16),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       "المزيد...",
                       style: TextStyle(color: _theme.accentLight, fontSize: 12),
@@ -755,7 +765,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                     ),
                   ),
                 ),
-                const Row(
+                Row(
                   children: [
                     Text(
                       "تغيير الذكر",
@@ -767,11 +777,11 @@ class _DeedsScreenState extends State<DeedsScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               _current.text,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: DeedsColors.textMain,
@@ -779,7 +789,7 @@ class _DeedsScreenState extends State<DeedsScreen>
               ),
             ),
             if (_current.virtue != null && _current.virtue!.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
@@ -790,7 +800,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                 child: Row(
                   children: [
                     Icon(Icons.auto_awesome, color: _theme.accentLight, size: 15),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _current.virtue!,
@@ -965,7 +975,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                             child: Text(
                               "$_displayedCount",
                               key: ValueKey(_displayedCount),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 52,
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
@@ -974,7 +984,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
 
                           // Remaining or open state
                           Text(
@@ -992,7 +1002,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             "انقر للتسبيح",
                             style: TextStyle(
@@ -1032,21 +1042,21 @@ class _DeedsScreenState extends State<DeedsScreen>
             theme: _theme,
             onTap: () => _quickSetTarget(33),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           TargetCapsuleChip(
             label: "١٠٠",
             isSelected: _current.target == 100,
             theme: _theme,
             onTap: () => _quickSetTarget(100),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           TargetCapsuleChip(
             label: "١٠٠٠",
             isSelected: _current.target == 1000,
             theme: _theme,
             onTap: () => _quickSetTarget(1000),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           TargetCapsuleChip(
             label: "مفتوح ∞",
             isSelected: _current.target == 0,
@@ -1070,7 +1080,7 @@ class _DeedsScreenState extends State<DeedsScreen>
             onTap: _undo,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: ActionBtn(
             label: "تصفير",
@@ -1079,7 +1089,7 @@ class _DeedsScreenState extends State<DeedsScreen>
             onTap: _resetCurrent,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: ActionBtn(
             label: "تعديل الهدف",
@@ -1114,7 +1124,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             AnimatedRotation(
               turns: _showRecord ? 0.5 : 0,
               duration: const Duration(milliseconds: 250),
@@ -1153,7 +1163,7 @@ class _DeedsScreenState extends State<DeedsScreen>
                     Expanded(
                       child: Text(
                         entry.text,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: DeedsColors.textMain,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1185,14 +1195,14 @@ class _DeedsScreenState extends State<DeedsScreen>
                     if (entry.target > 0)
                       Text(
                         " / ${entry.target}",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: DeedsColors.textSub,
                           fontSize: 12,
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(

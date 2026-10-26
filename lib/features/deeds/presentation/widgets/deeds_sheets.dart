@@ -79,7 +79,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "قائمة الأذكار والتسبيحات",
                   style: TextStyle(
                     fontSize: 18,
@@ -116,7 +116,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                     controller: _textCtrl,
                     hint: "اكتب الذكر المبارك (مثال: سبحان الله وبحمده)",
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -126,7 +126,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                           keyboardType: TextInputType.number,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: widget.theme.primary,
@@ -137,16 +137,16 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                           ),
                         ),
                         onPressed: _submitNew,
-                        child: const Text("حفظ الذكر", style: TextStyle(fontWeight: FontWeight.w700)),
+                        child: Text("حفظ الذكر", style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   SheetInput(
                     controller: _virtueCtrl,
                     hint: "فضل هذا الذكر (اختياري)",
                   ),
-                  const Divider(color: Colors.white12, height: 24),
+                  Divider(color: Colors.white12, height: 24),
                 ],
               ),
             ),
@@ -162,7 +162,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: widget.adhkar.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, __) => SizedBox(height: 6),
               itemBuilder: (_, idx) {
                 final e = widget.adhkar[idx];
                 final selected = idx == widget.selectedIndex;
@@ -179,7 +179,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                       color: DeedsColors.red.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.delete_forever_rounded, color: DeedsColors.red),
+                    child: Icon(Icons.delete_forever_rounded, color: DeedsColors.red),
                   ),
                   onDismissed: (_) => widget.onDelete(idx),
                   child: Material(
@@ -211,7 +211,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                                     ? Icon(Icons.check_rounded, color: widget.theme.primaryLight, size: 18)
                                     : Text(
                                         "${idx + 1}",
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: DeedsColors.textSub,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
@@ -219,7 +219,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                                       ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +233,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                                     ),
                                   ),
                                   if (e.virtue != null && e.virtue!.isNotEmpty) ...[
-                                    const SizedBox(height: 2),
+                                    SizedBox(height: 2),
                                     Text(
                                       e.virtue!,
                                       maxLines: 1,
@@ -249,7 +249,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
@@ -264,7 +264,7 @@ class _DhikrPickerSheetState extends State<DhikrPickerSheet> {
                                 if (e.target > 0)
                                   Text(
                                     "الهدف: ${e.target}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: DeedsColors.textHint,
                                       fontSize: 10,
                                     ),
@@ -328,8 +328,8 @@ class MisbahaThemeSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 "مظهر وخامة المسبحة",
                 style: TextStyle(
                   fontSize: 19,
@@ -337,12 +337,12 @@ class MisbahaThemeSheet extends StatelessWidget {
                   color: DeedsColors.textMain,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 4),
+              Text(
                 "اختر خامة الأحجار الكريمة المناسبة لذوقك الروحي",
                 style: TextStyle(fontSize: 12.5, color: DeedsColors.textSub),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Column(
                 children: MisbahaTheme.all.map((theme) {
                   final isSel = theme.id == currentTheme.id;
@@ -395,7 +395,7 @@ class MisbahaThemeSheet extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 14),
+                              SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,10 +408,10 @@ class MisbahaThemeSheet extends StatelessWidget {
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    SizedBox(height: 2),
                                     Text(
                                       theme.description,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: DeedsColors.textSub,
                                         fontSize: 11.5,
                                       ),
@@ -504,8 +504,8 @@ class _MisbahaSettingsSheetState extends State<MisbahaSettingsSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 "إعدادات المسبحة",
                 style: TextStyle(
                   fontSize: 19,
@@ -513,35 +513,35 @@ class _MisbahaSettingsSheetState extends State<MisbahaSettingsSheet> {
                   color: DeedsColors.textMain,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
 
               // Haptics options
-              const Text(
+              Text(
                 "نمط الاهتزاز اللمسي",
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: DeedsColors.textMain),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: [
                   _buildOptionTab("مع كل تسبيحة", 1),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _buildOptionTab("عند إتمام الهدف", 2),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _buildOptionTab("إيقاف", 0),
                 ],
               ),
 
-              const SizedBox(height: 22),
+              SizedBox(height: 22),
 
               // Sound switch
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 activeColor: DeedsColors.jade,
-                title: const Text(
+                title: Text(
                   "صوت نقر الخرزات",
                   style: TextStyle(color: DeedsColors.textMain, fontSize: 14.5, fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   "نقر صوتي هادئ عند تحريك حبة المسبحة",
                   style: TextStyle(color: DeedsColors.textSub, fontSize: 12),
                 ),
@@ -556,11 +556,11 @@ class _MisbahaSettingsSheetState extends State<MisbahaSettingsSheet> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 activeColor: DeedsColors.jade,
-                title: const Text(
+                title: Text(
                   "وضع التسبيح بكامل الشاشة",
                   style: TextStyle(color: DeedsColors.textMain, fontSize: 14.5, fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   "انقر في أي مكان بالشاشة دون الحاجة للنظر إليها",
                   style: TextStyle(color: DeedsColors.textSub, fontSize: 12),
                 ),
@@ -679,8 +679,8 @@ class _TargetEditorSheetState extends State<TargetEditorSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               "تحديد هدف التسبيح",
               style: TextStyle(
                 fontSize: 18,
@@ -688,12 +688,12 @@ class _TargetEditorSheetState extends State<TargetEditorSheet> {
                 color: DeedsColors.textMain,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               widget.current.text,
-              style: const TextStyle(fontSize: 13, color: DeedsColors.textSub),
+              style: TextStyle(fontSize: 13, color: DeedsColors.textSub),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Preset buttons
             Row(
@@ -719,13 +719,13 @@ class _TargetEditorSheetState extends State<TargetEditorSheet> {
               }).toList(),
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             SheetInput(
               controller: _ctrl,
               hint: "أدخل هدفاً مخصصاً (أرقام)",
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -739,7 +739,7 @@ class _TargetEditorSheetState extends State<TargetEditorSheet> {
                   final val = int.tryParse(_ctrl.text.trim()) ?? 0;
                   _save(val);
                 },
-                child: const Text("حفظ وتطبيق", style: TextStyle(fontWeight: FontWeight.w700)),
+                child: Text("حفظ وتطبيق", style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],

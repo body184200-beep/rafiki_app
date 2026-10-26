@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:rafiki_app/core/di/service_locator.dart';
@@ -9,17 +10,18 @@ import 'package:rafiki_app/features/prayer/data/services/prayer_rule_engine.dart
 //  Design Tokens
 // ─────────────────────────────────────────────────────────────
 class T {
-  static const bg      = Color(0xFF080D12);
-  static const surface = Color(0xFF0E1620);
-  static const card    = Color(0xFF121C2A);
-  static const cardHi  = Color(0xFF182435);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get bg      => _l ? const Color(0xFFF8F6F0) : const Color(0xFF080D12);
+  static Color get surface => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0E1620);
+  static Color get card    => _l ? const Color(0xFFFFFFFF) : const Color(0xFF121C2A);
+  static Color get cardHi  => _l ? const Color(0xFFF3F4F6) : const Color(0xFF182435);
 
-  static const jade    = Color(0xFF2EC4A0);
-  static const jadeDim = Color(0xFF1A7060);
-  static const jadeSoft= Color(0xFF80DFCA);
+  static Color get jade    => _l ? const Color(0xFF0F4A39) : const Color(0xFF2EC4A0);
+  static Color get jadeDim => _l ? const Color(0xFF1A5A48) : const Color(0xFF1A7060);
+  static Color get jadeSoft=> _l ? const Color(0xFF2C745B) : const Color(0xFF80DFCA);
 
-  static const gold    = Color(0xFFD4A030);
-  static const goldSoft= Color(0xFFF0C860);
+  static Color get gold    => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A030);
+  static Color get goldSoft=> _l ? const Color(0xFFB48216) : const Color(0xFFF0C860);
 
   static const flame   = Color(0xFFFF6B30);
   static const flameL  = Color(0xFFFFAA60);
@@ -33,9 +35,9 @@ class T {
   static const sky     = Color(0xFF3498DB);
   static const skyL    = Color(0xFF7FB3D3);
 
-  static const t1 = Color(0xFFEEE8D8);
-  static const t2 = Color(0xFFAAA498);
-  static const t3 = Color(0xFF585450);
+  static Color get t1 => _l ? const Color(0xFF111827) : const Color(0xFFEEE8D8);
+  static Color get t2 => _l ? const Color(0xFF6B7280) : const Color(0xFFAAA498);
+  static Color get t3 => _l ? const Color(0xFF9CA3AF) : const Color(0xFF585450);
 
   static const List<List<Color>> prayerColors = [
     [Color(0xFF0E1E2A), Color(0xFF60C8F0)],

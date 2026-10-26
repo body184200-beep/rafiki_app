@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -77,20 +78,21 @@ class _SahabiDetailsState extends State<SahabiDetails>
   double _scrollOffset = 0;
 
   // ── PALETTE ───────────────────────────────────────────
-  static const Color _bg        = Color(0xFF080D1A);
-  static const Color _surface   = Color(0xFF0E1628);
-  static const Color _gold      = Color(0xFFD4A853);
-  static const Color _goldLight = Color(0xFFF0C97A);
-  static const Color _teal      = Color(0xFF1ABC9C);
-  static const Color _text      = Color(0xFFF0EAD6);
-  static const Color _textMuted = Color(0xFF6B7280);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bg        => _l ? const Color(0xFFF8F6F0) : const Color(0xFF080D1A);
+  static Color get _surface   => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0E1628);
+  static Color get _gold      => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A843);
+  static Color get _goldLight => _l ? const Color(0xFFB48216) : const Color(0xFFF0C97A);
+  static Color get _text      => _l ? const Color(0xFF111827) : const Color(0xFFF0EAD6);
+  static Color get _textMuted => const Color(0xFF6B7280);
+  static Color get _teal => const Color(0xFF1ABC9C);
   static const Color _purple    = Color(0xFF6C3483);
   static const Color _blue      = Color(0xFF1A3A5C);
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
@@ -139,27 +141,27 @@ class _SahabiDetailsState extends State<SahabiDetails>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 60),
                       child: Column(children: [
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         _buildDescriptionBanner(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         if (widget.biography.isNotEmpty) _buildBiographyCard(),
                         if (widget.battles.isNotEmpty) ...[
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _buildBattlesCard(),
                         ],
                         if (widget.attributes.isNotEmpty) ...[
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _buildAttributesCard(),
                         ],
                         if (widget.additionalInfo.isNotEmpty) ...[
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _buildInfoCard(),
                         ],
                         if (widget.day.isNotEmpty) ...[
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
                           _buildDayCard(),
                         ],
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                       ]),
                     ),
                   ),
@@ -181,7 +183,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
         final t = _orbRotate.value * 2 * math.pi;
         return Stack(children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment(0.3, -0.4),
                 radius: 1.4,
@@ -249,7 +251,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
               color: Colors.black38,
               border: Border.all(color: _gold.withValues(alpha: 0.4)),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, color: _goldLight, size: 18),
+            child: Icon(Icons.arrow_back_ios_new_rounded, color: _goldLight, size: 18),
           ),
         ),
       ),
@@ -258,7 +260,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
         background: _buildHeroHeader(),
         title: collapsed
             ? Text(widget.name,
-            style: const TextStyle(
+            style: TextStyle(
                 color: _goldLight, fontSize: 17, fontWeight: FontWeight.bold))
             : null,
         centerTitle: true,
@@ -268,7 +270,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
 
   Widget _buildHeroHeader() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF0A1628), Color(0xFF080D1A)],
           begin: Alignment.topCenter, end: Alignment.bottomCenter,
@@ -276,7 +278,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
       ),
       child: SafeArea(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           // ── Avatar ──────────────────────────────────
           AnimatedBuilder(
             animation: _shimmer,
@@ -296,7 +298,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
                   margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [Color(0xFF1A2A40), Color(0xFF0E1628)],
                       begin: Alignment.topLeft, end: Alignment.bottomRight,
                     ),
@@ -322,13 +324,13 @@ class _SahabiDetailsState extends State<SahabiDetails>
               );
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(widget.name,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   color: _text, fontSize: 26,
                   fontWeight: FontWeight.bold, letterSpacing: 1.0)),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(widget.description,
@@ -337,12 +339,12 @@ class _SahabiDetailsState extends State<SahabiDetails>
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: _textMuted, fontSize: 13, height: 1.5)),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           // ── Quick Stats Row ──────────────────────────
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Wrap(alignment: WrapAlignment.center, spacing: 10, runSpacing: 8, children: [
             _statPill(Icons.military_tech_rounded,
                 "${widget.battles.length} غزوة", _teal),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             _statPill(Icons.star_rounded,
                 "${widget.attributes.length} صفة", _gold),
           ]),
@@ -361,7 +363,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, color: color, size: 14),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(label, style: TextStyle(
             color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
@@ -394,11 +396,11 @@ class _SahabiDetailsState extends State<SahabiDetails>
           Expanded(
             child: Text(widget.description,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                style: TextStyle(
                     color: _text, fontSize: 15, height: 1.6,
                     fontWeight: FontWeight.w500)),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -406,7 +408,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
               color: _teal.withValues(alpha: 0.15),
               border: Border.all(color: _teal.withValues(alpha: 0.4)),
             ),
-            child: const Icon(Icons.person_rounded, color: _teal, size: 22),
+            child: Icon(Icons.person_rounded, color: _teal, size: 22),
           ),
         ]),
       ),
@@ -418,10 +420,10 @@ class _SahabiDetailsState extends State<SahabiDetails>
     return _GlassCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionHeader("السيرة", Icons.menu_book_rounded, _gold),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         Text(widget.biography,
             textAlign: TextAlign.right,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Color(0xFFCBC8BE), fontSize: 14.5, height: 1.8)),
       ]),
     );
@@ -432,7 +434,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
     return _GlassCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionHeader("الغزوات والمعارك", Icons.shield_rounded, _teal),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         Wrap(
           spacing: 8, runSpacing: 8,
           children: widget.battles.map((b) => _chip(b, _teal)).toList(),
@@ -446,7 +448,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
     return _GlassCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionHeader("الصفات", Icons.auto_awesome_rounded, _gold),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         Wrap(
           spacing: 8, runSpacing: 8,
           children: widget.attributes.map((a) => _chip(a, _gold)).toList(),
@@ -460,7 +462,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
     return _GlassCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionHeader("معلومة إضافية", Icons.lightbulb_rounded, _goldLight),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -470,7 +472,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
           ),
           child: Text(widget.additionalInfo,
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                   color: _goldLight, fontSize: 14.5, height: 1.7)),
         ),
       ]),
@@ -487,7 +489,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFF0A1020), Color(0xFF0D1A2E)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
@@ -511,9 +513,9 @@ class _SahabiDetailsState extends State<SahabiDetails>
             ),
           ),
           child: Row(children: [
-            const Icon(Icons.auto_stories_rounded, color: _goldLight, size: 22),
-            const SizedBox(width: 10),
-            const Text("القصة والسيرة",
+            Icon(Icons.auto_stories_rounded, color: _goldLight, size: 22),
+            SizedBox(width: 10),
+            Text("القصة والسيرة",
                 style: TextStyle(
                     color: _goldLight, fontSize: 17,
                     fontWeight: FontWeight.bold, letterSpacing: 0.5)),
@@ -535,7 +537,7 @@ class _SahabiDetailsState extends State<SahabiDetails>
                   color: _gold.withValues(alpha: 0.2),
                   border: Border.all(color: _gold.withValues(alpha: 0.4)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.fullscreen_rounded, color: _goldLight, size: 16),
@@ -612,9 +614,9 @@ class _SahabiDetailsState extends State<SahabiDetails>
           ),
         ),
       ),
-      const SizedBox(width: 8),
+      SizedBox(width: 8),
       Icon(icon, color: color, size: 20),
-      const SizedBox(width: 10),
+      SizedBox(width: 10),
       Text(title,
           style: TextStyle(
               color: color, fontSize: 16, fontWeight: FontWeight.bold)),
@@ -737,7 +739,7 @@ class _SahabiBookReaderPage extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: Color(0xFFF0C97A),
                       size: 16,
@@ -748,7 +750,7 @@ class _SahabiBookReaderPage extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Color(0xFFF0EAD6),
                     fontSize: 16.5,
                     fontWeight: FontWeight.w700,
@@ -770,7 +772,7 @@ class _SahabiBookReaderPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Center(
+                    Center(
                       child: Opacity(
                         opacity: 0.12,
                         child: Icon(Icons.auto_stories_rounded,
@@ -798,7 +800,7 @@ class _SahabiBookReaderPage extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.menu_book_rounded,
                               color: Color(0xFFD4A853), size: 20),
@@ -816,7 +818,7 @@ class _SahabiBookReaderPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     ...paragraphs.map((p) => _buildParagraphCard(p)),
                   ],
                 ),

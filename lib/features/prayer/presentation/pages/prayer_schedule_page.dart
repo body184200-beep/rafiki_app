@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,11 +13,11 @@ import 'package:rafiki_app/features/prayer/presentation/widgets/prayer_schedule_
 import 'package:rafiki_app/features/prayer/presentation/widgets/prayer_schedule_widgets.dart';
 
 class _T {
-  static const bg = T.bg;
-  static const ruby = T.ruby;
-  static const rubyL = T.rubyL;
-  static const t1 = T.t1;
-  static const t2 = T.t2;
+  static Color get bg => T.bg;
+  static Color get ruby => T.ruby;
+  static Color get rubyL => T.rubyL;
+  static Color get t1 => T.t1;
+  static Color get t2 => T.t2;
 }
 
 String _dateKey(DateTime d) => dateKey(d);
@@ -529,7 +530,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'سلسلة صلاتي',
           style: TextStyle(
             color: _T.t1,
@@ -540,7 +541,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
         ),
       );
 
-  Widget _buildHeaderSubtitle() => const Padding(
+  Widget _buildHeaderSubtitle() => Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
         child: Center(
           child: Text(
@@ -575,7 +576,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
                   Icon(Icons.warning_amber_rounded,
                       color: _T.rubyL, size: 18),
@@ -590,7 +591,7 @@ class _PrayerSchedulePageState extends State<PrayerSchedulePage>
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               ..._pendingQada.map((e) => QadaCarryCard(
                     entry: e,
                     onComplete: () => _completeCarryQada(e),

@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/hadith/domain/entities/hadith.dart';
@@ -8,14 +9,15 @@ import 'package:rafiki_app/features/hadith/presentation/pages/hadith_details_pag
 import 'package:rafiki_app/features/hadith/presentation/widgets/hadith_widgets.dart';
 
 // Unified Calming Islamic Palette
-const _kBg = Color(0xFF0A0E17);
-const _kCard = Color(0xFF111827);
-const _kCardBorder = Color(0xFF1F293D);
-const _kGold = Color(0xFFC9A84C);
-const _kGoldLight = Color(0xFFE8CC7A);
-const _kGoldDim = Color(0xFF8A6F30);
-const _kText = Color(0xFFF3EEDD);
-const _kMuted = Color(0xFF8B9CB2);
+bool get _l => ThemeProvider.instance.isLight;
+Color get _kBg => _l ? const Color(0xFFF8F6F0) : const Color(0xFF0A0E17);
+Color get _kCard => _l ? const Color(0xFFFFFFFF) : const Color(0xFF111827);
+Color get _kCardBorder => _l ? const Color(0xFFE5E7EB) : const Color(0xFF1F293D);
+Color get _kGold => _l ? const Color(0xFF8D5B18) : const Color(0xFFC9A84C);
+Color get _kGoldLight => _l ? const Color(0xFFB48216) : const Color(0xFFE8CC7A);
+Color get _kGoldDim => _l ? const Color(0xFF8D5B18) : const Color(0xFF8A6F30);
+Color get _kText => _l ? const Color(0xFF111827) : const Color(0xFFF3EEDD);
+Color get _kMuted => _l ? const Color(0xFF6B7280) : const Color(0xFF8B9CB2);
 
 class HadithScreen extends StatefulWidget {
   const HadithScreen({super.key});
@@ -74,7 +76,7 @@ class _HadithScreenState extends State<HadithScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
+      builder: (_) => Center(
         child: CircularProgressIndicator(color: _kGold),
       ),
     );
@@ -150,7 +152,7 @@ class _HadithScreenState extends State<HadithScreen> {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+        icon: Icon(Icons.arrow_back_ios_new_rounded,
             color: _kGoldLight, size: 18),
         onPressed: () => Navigator.pop(context),
         tooltip: 'رجوع',
@@ -158,7 +160,7 @@ class _HadithScreenState extends State<HadithScreen> {
       title: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'الأحاديث النبوية',
             style: TextStyle(
               color: _kGoldLight,
@@ -178,7 +180,7 @@ class _HadithScreenState extends State<HadithScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: _kGold, size: 22),
+          icon: Icon(Icons.refresh_rounded, color: _kGold, size: 22),
           onPressed: () => _c.load(reset: true),
           tooltip: 'تحديث الأحاديث',
         ),
@@ -223,7 +225,7 @@ class _HadithScreenState extends State<HadithScreen> {
                       size: 16,
                       color: _c.tab == 0 ? _kGoldLight : _kMuted,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       'جميع الأحاديث',
                       style: TextStyle(
@@ -266,7 +268,7 @@ class _HadithScreenState extends State<HadithScreen> {
                       size: 16,
                       color: _c.tab == 1 ? _kGoldLight : _kMuted,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       _c.favNums.isEmpty
                           ? 'المفضلة'
@@ -303,18 +305,18 @@ class _HadithScreenState extends State<HadithScreen> {
           controller: _searchController,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: _kText, fontSize: 13.5),
+          style: TextStyle(color: _kText, fontSize: 13.5),
           cursorColor: _kGold,
           onChanged: _c.search,
           decoration: InputDecoration(
             prefixIcon:
-                const Icon(Icons.search_rounded, color: _kGold, size: 18),
+                Icon(Icons.search_rounded, color: _kGold, size: 18),
             hintText: 'ابحث في متن الحديث أو الراوي...',
             hintStyle: TextStyle(
                 color: _kMuted.withValues(alpha: 0.7), fontSize: 12.5),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded,
+                    icon: Icon(Icons.clear_rounded,
                         color: _kMuted, size: 16),
                     onPressed: () {
                       _searchController.clear();
@@ -435,20 +437,20 @@ class _HadithScreenState extends State<HadithScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.bookmark_outline_rounded,
+              Icon(Icons.bookmark_outline_rounded,
                   color: _kGold, size: 16),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'متابعة القراءة: حديث #${_c.lastReadNumber} في ${_c.lastReadBookName}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _kGoldLight,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              const Icon(Icons.arrow_back_ios_new_rounded,
+              Icon(Icons.arrow_back_ios_new_rounded,
                   color: _kGold, size: 11),
             ],
           ),
@@ -484,7 +486,7 @@ class _HadithScreenState extends State<HadithScreen> {
         itemCount: _c.filtered.length + (_c.loadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _c.filtered.length) {
-            return const Padding(
+            return Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: SizedBox(
@@ -531,7 +533,7 @@ class _HadithScreenState extends State<HadithScreen> {
             ),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
-            child: const Icon(Icons.delete_outline_rounded,
+            child: Icon(Icons.delete_outline_rounded,
                 color: Colors.white, size: 22),
           ),
           onDismissed: (_) => _c.toggleFav(h.number),
@@ -553,14 +555,14 @@ class _HadithScreenState extends State<HadithScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off_rounded, color: _kMuted, size: 48),
-            const SizedBox(height: 12),
+            Icon(Icons.wifi_off_rounded, color: _kMuted, size: 48),
+            SizedBox(height: 12),
             Text(
               _c.error ?? 'تعذر تحميل الأحاديث',
-              style: const TextStyle(color: _kMuted, fontSize: 14),
+              style: TextStyle(color: _kMuted, fontSize: 14),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kGold,
@@ -572,8 +574,8 @@ class _HadithScreenState extends State<HadithScreen> {
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onPressed: () => _c.load(reset: true),
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('إعادة المحاولة',
+              icon: Icon(Icons.refresh_rounded, size: 18),
+              label: Text('إعادة المحاولة',
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
@@ -592,8 +594,8 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
-          const SizedBox(height: 10),
+          Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
+          SizedBox(height: 10),
           Text(
             'لم يتم العثور على أحاديث مطابقة',
             style: TextStyle(
@@ -624,16 +626,16 @@ class _FavEmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: _kGoldDim, width: 1.2),
               ),
-              child: const Icon(Icons.bookmark_outline_rounded,
+              child: Icon(Icons.bookmark_outline_rounded,
                   color: _kGold, size: 32),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'لا توجد أحاديث في المفضلة',
               style: TextStyle(
                   color: _kText, fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               'اضغط على علامة الحفظ في أي حديث للرجوع إليه لاحقاً',
               style: TextStyle(
@@ -646,3 +648,6 @@ class _FavEmptyState extends StatelessWidget {
     );
   }
 }
+
+
+typedef HadithPage = HadithScreen;

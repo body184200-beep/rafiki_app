@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
@@ -52,20 +53,20 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
   Timer? _saveDebouncer;
 
   // ── Palette ────────────────────────────────────────────────────────────────
-  static const Color _bg       = Color(0xff030810);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bg       => _l ? const Color(0xFFF8F6F0) : const Color(0xff030810);
+  static Color get _surfaceB => _l ? const Color(0xFFFFFFFF) : const Color(0xff0C1828);
+  static Color get _gold     => _l ? const Color(0xFF8D5B18) : const Color(0xffC9A84C);
+  static Color get _goldLt   => _l ? const Color(0xFFB48216) : const Color(0xffF0CC70);
+  static Color get _goldDim  => _l ? const Color(0xFF8D5B18) : const Color(0xff7A611C);
+  static Color get _teal     => _l ? const Color(0xFF0F4A39) : const Color(0xff2EB88A);
+  static Color get _tealLt   => _l ? const Color(0xFF1D5A46) : const Color(0xff5EFACC);
+  static Color get _tealDim  => _l ? const Color(0xFF0B4633) : const Color(0xff0D6E52);
+  static Color get _indigo   => const Color(0xff6B7FD4);
 
-  static const Color _surfaceB = Color(0xff0C1828);
-  static const Color _gold     = Color(0xffC9A84C);
-  static const Color _goldLt   = Color(0xffF0CC70);
-  static const Color _goldDim  = Color(0xff7A611C);
-  static const Color _teal     = Color(0xff2EB88A);
-  static const Color _tealLt   = Color(0xff5EFACC);
-  static const Color _tealDim  = Color(0xff0D6E52);
-  static const Color _indigo   = Color(0xff6B7FD4);   // new: night-sky accent
-
-  static const Color _textMid  = Color(0xffA8B4C0);
-  static const Color _sub      = Color(0xff5A6E7E);
-  static const Color _border   = Color(0xff0E1E30);
+  static Color get _textMid  => _l ? const Color(0xFF374151) : const Color(0xffA8B4C0);
+  static Color get _sub      => _l ? const Color(0xFF6B7280) : const Color(0xff5A6E7E);
+  static Color get _border   => _l ? const Color(0xFFE5E7EB) : const Color(0xff0E1E30);
 
   // ── Stars ──────────────────────────────────────────────────────────────────
   late final List<Star> _stars;
@@ -244,6 +245,11 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('totalScore', totalScore);
     await prefs.setInt('dailyScore', dailyScore);
+    final currentAzkar = totalScore > 0 ? totalScore : dailyScore;
+    final highestAzkar = prefs.getInt('highest_azkar_streak') ?? 0;
+    if (currentAzkar > highestAzkar) {
+      await prefs.setInt('highest_azkar_streak', currentAzkar);
+    }
     await prefs.setStringList(
       'progress',
       progress.entries
@@ -389,9 +395,9 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
               // Total score is now the FIRST element the user sees on the page.
               _buildTotalScoreBar(),
               _buildTopBar(),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               _buildScoreHeader(),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _buildTabBar(),
               Expanded(
                 child: TabBarView(
@@ -450,10 +456,10 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.workspace_premium_rounded,
+                    Icon(Icons.workspace_premium_rounded,
                         color: _goldLt, size: 18),
-                    const SizedBox(width: 8),
-                    const Text(
+                    SizedBox(width: 8),
+                    Text(
                       'إجمالي النقاط',
                       style: TextStyle(
                         color: _textMid, fontSize: 12.5,
@@ -463,12 +469,12 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   ],
                 ),
                 ShaderMask(
-                  shaderCallback: (r) => const LinearGradient(
+                  shaderCallback: (r) => LinearGradient(
                     colors: [_gold, _goldLt],
                   ).createShader(r),
                   child: Text(
                     '$totalScore',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white, fontSize: 21,
                       fontWeight: FontWeight.w800,
                     ),
@@ -491,16 +497,16 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
         children: [
           GlassButton(
             onTap: () => Navigator.maybePop(context),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
+            child: Icon(Icons.arrow_back_ios_new_rounded,
                 color: Colors.white70, size: 16),
           ),
           Column(
             children: [
               ShaderMask(
-                shaderCallback: (r) => const LinearGradient(
+                shaderCallback: (r) => LinearGradient(
                   colors: [_gold, _goldLt],
                 ).createShader(r),
-                child: const Text(
+                child: Text(
                   '✦  الأذكار  ✦',
                   style: TextStyle(
                     color: Colors.white, fontSize: 18,
@@ -508,16 +514,16 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   ),
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 _greeting,
-                style: const TextStyle(
+                style: TextStyle(
                   color: _sub, fontSize: 11, letterSpacing: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 44),
+          SizedBox(width: 44),
         ],
       ),
     );
@@ -577,14 +583,14 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                               children: [
                                 Text(
                                   '$dailyScore',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: _goldLt,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 18,
                                     height: 1,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'اليوم',
                                   style: TextStyle(
                                     color: _goldDim,
@@ -601,7 +607,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   },
                 ),
 
-                const SizedBox(width: 18),
+                SizedBox(width: 18),
 
                 // ── Right side info ──────────────────────────────────────
                 Expanded(
@@ -630,7 +636,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                                 border: Border.all(
                                     color: _teal.withValues(alpha: 0.3)),
                               ),
-                              child: const Text('أحسنت! 🌟',
+                              child: Text('أحسنت! 🌟',
                                   style: TextStyle(
                                     color: _tealLt, fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -639,7 +645,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                         ],
                       ),
 
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
 
                       // Progress pills
                       Row(
@@ -650,7 +656,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                               color: _gold,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             child: ProgressPill(
                               label: '🌙', done: eDone, total: eTotal,
@@ -660,7 +666,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                         ],
                       ),
 
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
 
                       // Horizon thin line
                       ClipRRect(
@@ -704,7 +710,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [_tealDim, _teal],
                 ),
                 boxShadow: [
@@ -717,7 +723,7 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
               indicatorSize: TabBarIndicatorSize.tab,
               labelColor: Colors.white,
               unselectedLabelColor: _sub,
-              labelStyle: const TextStyle(
+              labelStyle: TextStyle(
                 fontSize: 15, fontWeight: FontWeight.w600,
               ),
               tabs: [
@@ -725,9 +731,9 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('☀️', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 7),
-                      const Text('الصباح'),
+                      Text('☀️', style: TextStyle(fontSize: 16)),
+                      SizedBox(width: 7),
+                      Text('الصباح'),
                     ],
                   ),
                 ),
@@ -735,9 +741,9 @@ class _AzkarPageState extends State<AzkarPage> with TickerProviderStateMixin, Wi
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('🌙', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 7),
-                      const Text('المساء'),
+                      Text('🌙', style: TextStyle(fontSize: 16)),
+                      SizedBox(width: 7),
+                      Text('المساء'),
                     ],
                   ),
                 ),

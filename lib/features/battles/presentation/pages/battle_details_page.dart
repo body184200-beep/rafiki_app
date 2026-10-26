@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -109,22 +110,23 @@ class _BattleDetailsState extends State<BattleDetails>
   double _scrollOffset = 0;
 
   // ── PALETTE ───────────────────────────────────────────
-  static const Color _bg        = Color(0xFF080C18);
-  static const Color _surface   = Color(0xFF0F1525);
-  static const Color _crimson   = Color(0xFFC0392B);
-  static const Color _crimsonLt = Color(0xFFE74C3C);
-  static const Color _gold      = Color(0xFFD4A853);
-  static const Color _goldLight = Color(0xFFF0C97A);
-  static const Color _text      = Color(0xFFF0EAD6);
-  static const Color _textMuted = Color(0xFF7A7468);
-  static const Color _green     = Color(0xFF27AE60);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bg        => _l ? const Color(0xFFF8F6F0) : const Color(0xFF080C18);
+  static Color get _surface   => _l ? const Color(0xFFFFFFFF) : const Color(0xFF0F1525);
+  static Color get _crimson   => const Color(0xFFC0392B);
+  static Color get _crimsonLt => const Color(0xFFE74C3C);
+  static Color get _gold      => _l ? const Color(0xFF8D5B18) : const Color(0xFFD4A843);
+  static Color get _goldLight => _l ? const Color(0xFFB48216) : const Color(0xFFF0C97A);
+  static Color get _text      => _l ? const Color(0xFF111827) : const Color(0xFFF0EAD6);
+  static Color get _textMuted => _l ? const Color(0xFF6B7280) : const Color(0xFF7A7468);
+  static Color get _green     => const Color(0xFF27AE60);
 
   bool get _muslimWon => widget.winner == "المسلمون";
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
@@ -154,7 +156,9 @@ class _BattleDetailsState extends State<BattleDetails>
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) => Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _bg,
@@ -173,17 +177,17 @@ class _BattleDetailsState extends State<BattleDetails>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 60),
                       child: Column(children: [
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         _buildWinnerBanner(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildStatsGrid(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildLeadersCard(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         _buildCasualtiesCard(),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         if (widget.participants.isNotEmpty) _buildParticipantsCard(),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         if (widget.ahdas.isNotEmpty) _buildAhdasCard(),
                       ]),
                     ),
@@ -195,6 +199,7 @@ class _BattleDetailsState extends State<BattleDetails>
           _buildTopGradient(),
         ]),
       ),
+    ),
     );
   }
 
@@ -206,7 +211,7 @@ class _BattleDetailsState extends State<BattleDetails>
         final t = _orbRotate.value * 2 * math.pi;
         return Stack(children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment(0.2, -0.5),
                 radius: 1.5,
@@ -273,7 +278,7 @@ class _BattleDetailsState extends State<BattleDetails>
               color: Colors.black38,
               border: Border.all(color: _crimson.withValues(alpha: 0.4)),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, color: _crimsonLt, size: 18),
+            child: Icon(Icons.arrow_back_ios_new_rounded, color: _crimsonLt, size: 18),
           ),
         ),
       ),
@@ -282,7 +287,7 @@ class _BattleDetailsState extends State<BattleDetails>
         background: _buildHeroHeader(),
         title: collapsed
             ? Text(widget.name,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Color(0xFFE57373), fontSize: 17, fontWeight: FontWeight.bold))
             : null,
         centerTitle: true,
@@ -292,7 +297,7 @@ class _BattleDetailsState extends State<BattleDetails>
 
   Widget _buildHeroHeader() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1A0808), Color(0xFF080C18)],
           begin: Alignment.topCenter, end: Alignment.bottomCenter,
@@ -300,7 +305,7 @@ class _BattleDetailsState extends State<BattleDetails>
       ),
       child: SafeArea(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           AnimatedBuilder(
             animation: _shimmer,
             builder: (_, __) {
@@ -328,26 +333,30 @@ class _BattleDetailsState extends State<BattleDetails>
                       BoxShadow(color: _crimson.withValues(alpha: 0.4), blurRadius: 20),
                     ],
                   ),
-                  child: const Icon(Icons.local_fire_department_rounded, color: _crimsonLt, size: 36),
+                  child: Icon(Icons.local_fire_department_rounded, color: _crimsonLt, size: 36),
                 ),
               );
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(widget.name,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   color: _text, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(widget.description,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: _textMuted, fontSize: 13, height: 1.5)),
-          const SizedBox(height: 14),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _pill(Icons.calendar_today_rounded, widget.date, _gold),
-            const SizedBox(width: 10),
-            _pill(Icons.location_on_rounded, widget.location, _crimsonLt),
-          ]),
+              style: TextStyle(color: _textMuted, fontSize: 13, height: 1.5)),
+          SizedBox(height: 14),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              _pill(Icons.calendar_today_rounded, widget.date, _gold),
+              _pill(Icons.location_on_rounded, widget.location, _crimsonLt),
+            ],
+          ),
         ]),
       ),
     );
@@ -363,7 +372,7 @@ class _BattleDetailsState extends State<BattleDetails>
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, color: color, size: 13),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
     );
@@ -395,15 +404,25 @@ class _BattleDetailsState extends State<BattleDetails>
               BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 20, spreadRadius: -2),
             ],
           ),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, color: colorL, size: 24),
-            const SizedBox(width: 12),
-            Text(label,
-                style: TextStyle(
-                  color: colorL, fontSize: 18,
-                  fontWeight: FontWeight.bold, letterSpacing: 0.5,
-                )),
-          ]),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: colorL, size: 24),
+              SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorL,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -413,7 +432,7 @@ class _BattleDetailsState extends State<BattleDetails>
   Widget _buildStatsGrid() {
     return Row(children: [
       Expanded(child: _statTile(Icons.location_on_rounded, "الموقع", widget.location, _gold)),
-      const SizedBox(width: 12),
+      SizedBox(width: 12),
       Expanded(child: _statTile(Icons.schedule_rounded, "التاريخ", widget.date, _crimsonLt)),
     ]);
   }
@@ -425,16 +444,19 @@ class _BattleDetailsState extends State<BattleDetails>
         borderRadius: BorderRadius.circular(20),
         color: const Color(0xFF0F1525),
         border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: Colors.black45, blurRadius: 12, offset: Offset(0, 4)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, color: color, size: 20),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: _textMuted, fontSize: 11)),
-        const SizedBox(height: 4),
-        Text(value, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        Text(label, style: TextStyle(color: _textMuted, fontSize: 11)),
+        SizedBox(height: 4),
+        Text(value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.bold)),
       ]),
     );
   }
@@ -444,7 +466,7 @@ class _BattleDetailsState extends State<BattleDetails>
     return _Card(
       child: Column(children: [
         _sectionLabel("القادة", Icons.person_pin_rounded),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(children: [
           Expanded(child: _leaderTile("قائد المسلمين", widget.muslimLeader, _green, Icons.star_rounded)),
           Container(width: 1, height: 60, color: const Color(0xFF2A2416)),
@@ -459,9 +481,9 @@ class _BattleDetailsState extends State<BattleDetails>
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(children: [
         Icon(icon, color: color, size: 22),
-        const SizedBox(height: 6),
-        Text(title, style: const TextStyle(color: _textMuted, fontSize: 11)),
-        const SizedBox(height: 4),
+        SizedBox(height: 6),
+        Text(title, style: TextStyle(color: _textMuted, fontSize: 11)),
+        SizedBox(height: 4),
         Text(name,
             textAlign: TextAlign.center,
             style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
@@ -487,7 +509,7 @@ class _BattleDetailsState extends State<BattleDetails>
     return _Card(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _sectionLabel("الخسائر البشرية", Icons.people_outline_rounded),
-        const SizedBox(height: 18),
+        SizedBox(height: 18),
         Row(children: [
           Expanded(
             flex: (mRatio * 10).ceil().clamp(1, 9),
@@ -510,10 +532,10 @@ class _BattleDetailsState extends State<BattleDetails>
             ),
           ),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(children: [
           Expanded(child: _casualtyBox("شهداء المسلمين", mText, _green)),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(child: _casualtyBox("خسائر العدو", eText, _crimsonLt)),
         ]),
       ]),
@@ -531,10 +553,10 @@ class _BattleDetailsState extends State<BattleDetails>
       child: Column(children: [
         Text(value,
             style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: _textMuted, fontSize: 12)),
+            style: TextStyle(color: _textMuted, fontSize: 12)),
       ]),
     );
   }
@@ -546,7 +568,7 @@ class _BattleDetailsState extends State<BattleDetails>
       child: _Card(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _sectionLabel("المشاركون", Icons.groups_rounded),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
           Wrap(
             spacing: 8, runSpacing: 8,
             children: widget.participants.map((p) => Container(
@@ -556,7 +578,7 @@ class _BattleDetailsState extends State<BattleDetails>
                 color: _gold.withValues(alpha: 0.1),
                 border: Border.all(color: _gold.withValues(alpha: 0.25)),
               ),
-              child: Text(p, style: const TextStyle(color: _goldLight, fontSize: 13)),
+              child: Text(p, style: TextStyle(color: _goldLight, fontSize: 13)),
             )).toList(),
           ),
         ]),
@@ -574,7 +596,7 @@ class _BattleDetailsState extends State<BattleDetails>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFF140A08), Color(0xFF0A0F1A)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
@@ -594,13 +616,16 @@ class _BattleDetailsState extends State<BattleDetails>
             ),
           ),
           child: Row(children: [
-            const Icon(Icons.history_edu_rounded, color: _crimsonLt, size: 22),
-            const SizedBox(width: 10),
-            const Text("أحداث ورواية الغزوة",
-                style: TextStyle(
-                  color: Color(0xFFE57373), fontSize: 17,
-                  fontWeight: FontWeight.bold, letterSpacing: 0.5,
-                )),
+            Icon(Icons.history_edu_rounded, color: _crimsonLt, size: 22),
+            SizedBox(width: 10),
+            Text(
+              "أحداث ورواية الغزوة",
+              style: TextStyle(
+                color: Color(0xFFE57373),
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () => Navigator.push(
@@ -619,7 +644,7 @@ class _BattleDetailsState extends State<BattleDetails>
                   color: _crimson.withValues(alpha: 0.2),
                   border: Border.all(color: _crimson.withValues(alpha: 0.4)),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.fullscreen_rounded, color: _crimsonLt, size: 16),
@@ -688,17 +713,17 @@ class _BattleDetailsState extends State<BattleDetails>
         width: 4, height: 18,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [_gold, _goldLight],
             begin: Alignment.topCenter, end: Alignment.bottomCenter,
           ),
         ),
       ),
-      const SizedBox(width: 8),
+      SizedBox(width: 8),
       Icon(icon, color: _gold, size: 20),
-      const SizedBox(width: 10),
+      SizedBox(width: 10),
       Text(text,
-          style: const TextStyle(
+          style: TextStyle(
               color: _goldLight, fontSize: 16, fontWeight: FontWeight.bold)),
     ]);
   }
@@ -806,7 +831,7 @@ class _BattleBookReaderPage extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: Color(0xFFE74C3C),
                       size: 16,
@@ -817,7 +842,7 @@ class _BattleBookReaderPage extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Color(0xFFF0EAD6),
                     fontSize: 16.5,
                     fontWeight: FontWeight.w700,
@@ -839,7 +864,7 @@ class _BattleBookReaderPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Center(
+                    Center(
                       child: Opacity(
                         opacity: 0.12,
                         child: Icon(Icons.history_edu_rounded,
@@ -867,7 +892,7 @@ class _BattleBookReaderPage extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.shield_rounded,
                               color: Color(0xFFE74C3C), size: 20),
@@ -885,7 +910,7 @@ class _BattleBookReaderPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     ...paragraphs.map((p) => _buildParagraphCard(p)),
                   ],
                 ),

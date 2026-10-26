@@ -63,6 +63,8 @@ dependencies:
     sdk: flutter
   intl: any
   share_plus: ^13.2.0
+  image_picker: ^1.2.4
+  flutter_compass: ^0.8.1
 
 dev_dependencies:
   flutter_test:

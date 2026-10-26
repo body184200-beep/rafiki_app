@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -66,11 +67,11 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
         backgroundColor: _kBg,
         title: Text(
           'حديث رقم ${h.number}',
-          style: const TextStyle(color: _kGold, fontSize: 16, fontWeight: FontWeight.w700),
+          style: TextStyle(color: _kGold, fontSize: 16, fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.remove_circle_outline_rounded, color: _kMuted, size: 20),
+            icon: Icon(Icons.remove_circle_outline_rounded, color: _kMuted, size: 20),
             onPressed: () {
               if (_arabicFontSize > 15) {
                 setState(() => _arabicFontSize -= 2.0);
@@ -81,11 +82,11 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
           Center(
             child: Text(
               '${_arabicFontSize.toInt()}',
-              style: const TextStyle(color: _kGold, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(color: _kGold, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: _kMuted, size: 20),
+            icon: Icon(Icons.add_circle_outline_rounded, color: _kMuted, size: 20),
             onPressed: () {
               if (_arabicFontSize < 34) {
                 setState(() => _arabicFontSize += 2.0);
@@ -93,7 +94,7 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
             },
             tooltip: 'تكبير الخط',
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           IconButton(
             icon: Icon(
               _showEnglish ? Icons.translate_rounded : Icons.g_translate_rounded,
@@ -111,7 +112,7 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
             isFav:    _localFav.contains(h.number),
             onToggle: _toggle,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
         ],
       ),
       body: Column(
@@ -120,13 +121,13 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               '${_current + 1} / ${widget.list.length}',
-              style: const TextStyle(color: _kGold, fontSize: 13, letterSpacing: 1),
+              style: TextStyle(color: _kGold, fontSize: 13, letterSpacing: 1),
             ),
           ),
           LinearProgressIndicator(
             value: (_current + 1) / widget.list.length,
             backgroundColor: _kCard,
-            valueColor: const AlwaysStoppedAnimation<Color>(_kGold),
+            valueColor: AlwaysStoppedAnimation<Color>(_kGold),
             minHeight: 2,
           ),
           Expanded(
@@ -146,7 +147,7 @@ class _HadithDetailsPageState extends State<HadithDetailsPage> {
               ),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -219,7 +220,7 @@ class DetailPage extends StatelessWidget {
           children: [
             // Card header
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFF0C1624),
                 borderRadius: BorderRadius.only(
                   topLeft:  Radius.circular(24),
@@ -233,17 +234,17 @@ class DetailPage extends StatelessWidget {
                   Row(children: [
                     Container(
                       width: 6, height: 6,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: _kTeal, shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(hadith.source.isNotEmpty ? hadith.source : 'موسوعة الأحاديث',
-                        style: const TextStyle(color: _kMuted, fontSize: 12)),
+                        style: TextStyle(color: _kMuted, fontSize: 12)),
                   ]),
                   Text(
                     'الحديث ${hadith.number}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _kGold, fontSize: 14, fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -263,26 +264,26 @@ class DetailPage extends StatelessWidget {
                       children: [
                         if (hadith.grade.isNotEmpty) ...[
                           _pillTag(hadith.grade, _kTeal),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                         ],
                         if (hadith.category.isNotEmpty)
                           _pillTag(hadith.category, _kGold),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // Narrator section
                     if (hadith.narrator.isNotEmpty) ...[
                       Text(
                         'رواه ${hadith.narrator} رضي الله عنه:',
                         textDirection: TextDirection.rtl,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _kGold,
                           fontSize: 14.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                     ],
                     // Arabic Hadith Text (Main)
                     Text(
@@ -296,22 +297,22 @@ class DetailPage extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     // English/Indonesian Translation (Secondary)
                     if (showEnglish && transText.isNotEmpty) ...[
-                      const Divider(color: Color(0xFF1E2D45), thickness: 1),
-                      const SizedBox(height: 12),
+                      Divider(color: Color(0xFF1E2D45), thickness: 1),
+                      SizedBox(height: 12),
                       Text(
                         transLabel,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _kGold,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -338,7 +339,7 @@ class DetailPage extends StatelessWidget {
             ),
             // Card Footer Actions (Copy & Share)
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFF0C1624),
                 borderRadius: BorderRadius.only(
                   bottomLeft:  Radius.circular(24),
@@ -350,7 +351,7 @@ class DetailPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded, color: _kGold, size: 20),
+                    icon: Icon(Icons.copy_rounded, color: _kGold, size: 20),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(
                         text: '${hadith.arab}\n\nالراوي: ${hadith.narrator}\nالمصدر: ${hadith.source}\nالدرجة: ${hadith.grade}',
@@ -365,7 +366,7 @@ class DetailPage extends StatelessWidget {
                     tooltip: 'نسخ الحديث',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.share_rounded, color: _kGold, size: 20),
+                    icon: Icon(Icons.share_rounded, color: _kGold, size: 20),
                     onPressed: () {
                       Share.share(
                         '${hadith.arab}\n\nالراوي: ${hadith.narrator}\nالمصدر: ${hadith.source}\nالدرجة: ${hadith.grade}',

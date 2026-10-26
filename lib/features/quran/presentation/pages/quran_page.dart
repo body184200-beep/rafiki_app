@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -23,21 +24,22 @@ class _MushafPageState extends State<MushafPage>
   final quran.QuranRepository _quranRepository = sl<quran.QuranRepository>();
 
   // ── Palette ───────────────────────────────────────────────────────────
-  static const Color _bg         = Color(0xff070B10);
-  static const Color _bgGrad     = Color(0xff0B1220);
-  static const Color _surface    = Color(0xff0F1520);
-  static const Color _surfaceAlt = Color(0xff131A28);
-  static const Color _high       = Color(0xff192035);
-  static const Color _border     = Color(0xff1C2540);
-  static const Color _borderSoft = Color(0xff141C2E);
-  static const Color _accent     = Color(0xff5DD3A8);
-  static const Color _accentDim  = Color(0xff1F9E72);
-  static const Color _gold       = Color(0xffD4A853);
-  static const Color _textPri    = Color(0xffEDF1F8);
-  static const Color _textSec    = Color(0xff7A8599);
-  static const Color _textDim    = Color(0xff2E3A50);
-  static const Color _meccanClr  = Color(0xff4A9ECC);
-  static const Color _medinanClr = Color(0xff8B6ED4);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bg         => _l ? const Color(0xFFF8F6F0) : const Color(0xff070B10);
+  static Color get _bgGrad     => _l ? const Color(0xFFF0EBE1) : const Color(0xff0B1220);
+  static Color get _surface    => _l ? const Color(0xFFFFFFFF) : const Color(0xff0F1520);
+  static Color get _surfaceAlt => _l ? const Color(0xFFF3F4F6) : const Color(0xff131A28);
+  static Color get _high       => _l ? const Color(0xFFE5E7EB) : const Color(0xff192035);
+  static Color get _border     => _l ? const Color(0xFFE5E7EB) : const Color(0xff1C2540);
+  static Color get _borderSoft => _l ? const Color(0xFFF3F4F6) : const Color(0xff141C2E);
+  static Color get _accent     => _l ? const Color(0xFF0F4A39) : const Color(0xff5DD3A8);
+  static Color get _accentDim  => _l ? const Color(0xFF1D5A46) : const Color(0xff1F9E72);
+  static Color get _gold       => _l ? const Color(0xFF8D5B18) : const Color(0xffD4A853);
+  static Color get _textPri    => _l ? const Color(0xFF111827) : const Color(0xffEDF1F8);
+  static Color get _textSec    => _l ? const Color(0xFF6B7280) : const Color(0xff7A8599);
+  static Color get _textDim    => _l ? const Color(0xFF9CA3AF) : const Color(0xff2E3A50);
+  static Color get _meccanClr  => const Color(0xff4A9ECC);
+  static Color get _medinanClr => const Color(0xff8B6ED4);
 
   // ── State ─────────────────────────────────────────────────────────────
   List<Map<String, dynamic>> _surahs         = [];
@@ -57,7 +59,7 @@ class _MushafPageState extends State<MushafPage>
   bool _showScrollTop = false;
 
   static const List<String> _filterLabels  = ['الكل', 'مكية', 'مدنية'];
-  static const List<Color>  _filterColors  = [_accent, _meccanClr, _medinanClr];
+  static List<Color> get _filterColors => [_accent, _meccanClr, _medinanClr];
 
   @override
   void initState() {
@@ -268,25 +270,27 @@ class _MushafPageState extends State<MushafPage>
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: _high.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _border),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_rounded,
-                color: _textSec,
-                size: 15,
+          if (Navigator.canPop(context)) ...[
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _high.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: _textSec,
+                  size: 15,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
+            SizedBox(width: 14),
+          ],
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -318,7 +322,7 @@ class _MushafPageState extends State<MushafPage>
               color: _accent.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.menu_book_rounded,
               color: _accent,
               size: 20,
@@ -332,7 +336,7 @@ class _MushafPageState extends State<MushafPage>
   // ── Bookmark Card / Continue Reading ──────────────────────────────────
 
   Widget _bookmarkCard() {
-    if (_isLoading || _hasError) return const SizedBox.shrink();
+    if (_isLoading || _hasError) return SizedBox.shrink();
 
     if (_savedBookmark != null) {
       final surahNum = _savedBookmark!['surahNumber'] as int?;
@@ -361,19 +365,19 @@ class _MushafPageState extends State<MushafPage>
             ),
             child: Row(
               children: [
-                const Icon(Icons.bookmark_rounded, color: _gold, size: 20),
-                const SizedBox(width: 10),
+                Icon(Icons.bookmark_rounded, color: _gold, size: 20),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'متابعة القراءة: سورة $surahName • آية $ayahNum',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _textPri,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const Icon(Icons.arrow_back_ios_rounded, color: _gold, size: 12),
+                Icon(Icons.arrow_back_ios_rounded, color: _gold, size: 12),
               ],
             ),
           ),
@@ -381,7 +385,7 @@ class _MushafPageState extends State<MushafPage>
       );
     }
 
-    return const SizedBox.shrink();
+    return SizedBox.shrink();
   }
 
   // ── Main Tab Switch (السور / الأجزاء) ──────────────────────────────────
@@ -428,7 +432,7 @@ class _MushafPageState extends State<MushafPage>
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -452,7 +456,7 @@ class _MushafPageState extends State<MushafPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.headphones_rounded, size: 15, color: _mainTab == 1 ? _gold : _textSec),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
                         'المصحف الصوتي',
                         style: TextStyle(
@@ -489,7 +493,7 @@ class _MushafPageState extends State<MushafPage>
         controller: _searchCtrl,
         onChanged: _onSearch,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(
+        style: TextStyle(
           color: _textPri, fontSize: 14, fontWeight: FontWeight.w400,
         ),
         cursorColor: _accent,
@@ -498,7 +502,7 @@ class _MushafPageState extends State<MushafPage>
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           hintText: hint,
-          hintStyle: const TextStyle(color: _textDim, fontSize: 13),
+          hintStyle: TextStyle(color: _textDim, fontSize: 13),
           prefixIcon: Padding(
             padding: const EdgeInsets.only(right: 6),
             child: Icon(
@@ -509,7 +513,7 @@ class _MushafPageState extends State<MushafPage>
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-            icon: const Icon(Icons.close_rounded, color: _textSec, size: 18),
+            icon: Icon(Icons.close_rounded, color: _textSec, size: 18),
             onPressed: () { _searchCtrl.clear(); _onSearch(''); },
           )
               : null,
@@ -565,7 +569,7 @@ class _MushafPageState extends State<MushafPage>
           padding: const EdgeInsets.only(right: 8),
           child: Text(
             '${_filteredSurahs.length} سورة',
-            style: const TextStyle(color: _textDim, fontSize: 11),
+            style: TextStyle(color: _textDim, fontSize: 11),
           ),
         ),
       ],
@@ -609,18 +613,18 @@ class _MushafPageState extends State<MushafPage>
               shape: BoxShape.circle,
               border: Border.all(color: _border),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.wifi_off_rounded, color: _textSec, size: 32,
             ),
           ),
-          const SizedBox(height: 20),
-          const Text('تعذّر تحميل المصحف',
+          SizedBox(height: 20),
+          Text('تعذّر تحميل المصحف',
               style: TextStyle(color: _textPri, fontSize: 17,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          const Text('حدث خطأ أثناء تحميل البيانات المحلية',
+          SizedBox(height: 8),
+          Text('حدث خطأ أثناء تحميل البيانات المحلية',
               style: TextStyle(color: _textSec, fontSize: 13)),
-          const SizedBox(height: 28),
+          SizedBox(height: 28),
           GestureDetector(
             onTap: _fetchQuran,
             child: Container(
@@ -630,7 +634,7 @@ class _MushafPageState extends State<MushafPage>
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: _accentDim),
               ),
-              child: const Text('إعادة المحاولة',
+              child: Text('إعادة المحاولة',
                   style: TextStyle(
                     color: _accent, fontWeight: FontWeight.w700, fontSize: 14,
                   )),
@@ -646,13 +650,13 @@ class _MushafPageState extends State<MushafPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.search_off_rounded, color: _textDim, size: 48),
-          const SizedBox(height: 14),
+          Icon(Icons.search_off_rounded, color: _textDim, size: 48),
+          SizedBox(height: 14),
           Text('لا نتائج لـ "$_searchQuery"',
               textDirection: TextDirection.rtl,
-              style: const TextStyle(color: _textSec, fontSize: 15)),
-          const SizedBox(height: 6),
-          const Text('جرّب كلمة أخرى أو رقماً آخر',
+              style: TextStyle(color: _textSec, fontSize: 15)),
+          SizedBox(height: 6),
+          Text('جرّب كلمة أخرى أو رقماً آخر',
               style: TextStyle(color: _textDim, fontSize: 12)),
         ],
       ),
@@ -672,10 +676,12 @@ class _MushafPageState extends State<MushafPage>
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) => Directionality(
       textDirection: TextDirection.rtl,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
+        value: SystemUiOverlayStyle(
           statusBarColor:            Colors.transparent,
           statusBarIconBrightness:   Brightness.light,
           systemNavigationBarColor:  Color(0xff070B10),
@@ -695,12 +701,12 @@ class _MushafPageState extends State<MushafPage>
               ),
               backgroundColor: _accentDim,
               elevation: 0,
-              child: const Icon(Icons.keyboard_arrow_up_rounded,
+              child: Icon(Icons.keyboard_arrow_up_rounded,
                   color: Colors.white),
             ),
           ),
           body: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [_bg, _bgGrad],
                 begin: Alignment.topCenter,
@@ -713,20 +719,20 @@ class _MushafPageState extends State<MushafPage>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── Hero Header ────────────────────────────────────
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _headerHero(),
 
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // ── Bookmark Card ──────────────────────────────────
                   _bookmarkCard(),
 
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // ── Main Tab Switch (السور / الأجزاء) ───────────────
                   _tabSwitch(),
 
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   // ── Search & Filters (Only in Mushaf tab) ───────────
                   if (_mainTab == 0 && !_isLoading && !_hasError) ...[
@@ -734,12 +740,12 @@ class _MushafPageState extends State<MushafPage>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _searchBar(),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _filterRow(),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                   ],
 
                   // ── List (Mushaf Surahs or Audio View) ───────────────
@@ -773,6 +779,7 @@ class _MushafPageState extends State<MushafPage>
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -852,7 +859,7 @@ class _SurahTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
 
               // اسم السورة
               Expanded(
@@ -864,22 +871,22 @@ class _SurahTile extends StatelessWidget {
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: _textPri,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         if (isLastRead) ...[
-                          const SizedBox(width: 8),
-                          const Icon(Icons.bookmark_rounded, color: _gold, size: 14),
+                          SizedBox(width: 8),
+                          Icon(Icons.bookmark_rounded, color: _gold, size: 14),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Text(
                       '$typeLabel • $ayahCount آية',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: _textSec,
                         fontSize: 11.5,
                       ),
@@ -896,7 +903,7 @@ class _SurahTile extends StatelessWidget {
                   fontSize: 11,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Icon(
                 Icons.arrow_back_ios_rounded,
                 color: _textSec.withValues(alpha: 0.35),
@@ -968,13 +975,13 @@ class _ShimmerCardState extends State<_ShimmerCard>
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _shimmerBox(width: 110, height: 13, t: t),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _shimmerBox(width: 75, height: 10, t: t, opacity: 0.6),
                   ],
                 ),
@@ -1003,7 +1010,7 @@ class _ShimmerCardState extends State<_ShimmerCard>
             _high.withValues(alpha: (0.5 + t * 0.2) * opacity),
             _high.withValues(alpha: (0.3 + t * 0.35) * opacity),
           ],
-          stops: const [0.0, 0.5, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ),
         borderRadius: BorderRadius.circular(6),
       ),

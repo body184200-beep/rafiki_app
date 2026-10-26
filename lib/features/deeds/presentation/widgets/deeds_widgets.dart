@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -122,17 +123,17 @@ class MisbahaTheme {
 //  DeedsColors – General App Colors
 // ─────────────────────────────────────────────────────────────────────────────
 class DeedsColors {
-  DeedsColors._();
-  static const Color surface   = Color(0xff090F16);
-  static const Color jade      = Color(0xff2EB88A);
-  static const Color jadeLight = Color(0xff5EFACC);
-  static const Color jadeDim   = Color(0xff1A7A5C);
-  static const Color gold      = Color(0xffC9A84C);
-  static const Color goldLight = Color(0xffF0CC7A);
-  static const Color textMain  = Color(0xffEEE8D5);
-  static const Color textSub   = Color(0xff7A8F98);
-  static const Color textHint  = Color(0xff3E5260);
-  static const Color red       = Color(0xffE05252);
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get surface   => _l ? const Color(0xFFFFFFFF) : const Color(0xff090F16);
+  static Color get jade      => _l ? const Color(0xFF0F4A39) : const Color(0xff2EB88A);
+  static Color get jadeLight => _l ? const Color(0xFF1D5A46) : const Color(0xff5EFACC);
+  static Color get jadeDim   => const Color(0xff1A7A5C);
+  static Color get gold      => _l ? const Color(0xFF8D5B18) : const Color(0xffC9A84C);
+  static Color get goldLight => _l ? const Color(0xFFB48216) : const Color(0xffF0CC7A);
+  static Color get textMain  => _l ? const Color(0xFF111827) : const Color(0xffEEE8D5);
+  static Color get textSub   => _l ? const Color(0xFF6B7280) : const Color(0xff7A8F98);
+  static Color get textHint  => _l ? const Color(0xFF9CA3AF) : const Color(0xff3E5260);
+  static Color get red       => const Color(0xffE05252);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ class DhikrCapsuleChip extends StatelessWidget {
           children: [
             if (isDone) ...[
               Icon(Icons.check_circle_rounded, color: theme.accentLight, size: 14),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
             ],
             Text(
               text,
@@ -203,7 +204,7 @@ class DhikrCapsuleChip extends StatelessWidget {
               ),
             ),
             if (count > 0) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -371,7 +372,7 @@ class ActionBtn extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 18),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
@@ -409,10 +410,10 @@ class StatItem extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: DeedsColors.textSub,
             fontSize: 10,
             letterSpacing: 0.5,
@@ -453,10 +454,10 @@ class SheetInput extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           onChanged: onChanged,
-          style: const TextStyle(color: DeedsColors.textMain, fontSize: 14.5),
+          style: TextStyle(color: DeedsColors.textMain, fontSize: 14.5),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: DeedsColors.textHint, fontSize: 13.5),
+            hintStyle: TextStyle(color: DeedsColors.textHint, fontSize: 13.5),
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
             isDense: true,
@@ -501,7 +502,7 @@ class ConfirmDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      title: const Row(
+      title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: DeedsColors.red, size: 24),
           SizedBox(width: 8),
@@ -510,12 +511,12 @@ class ConfirmDialog extends StatelessWidget {
       ),
       content: Text(
         message,
-        style: const TextStyle(color: DeedsColors.textSub, fontSize: 14),
+        style: TextStyle(color: DeedsColors.textSub, fontSize: 14),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("إلغاء", style: TextStyle(color: DeedsColors.textSub)),
+          child: Text("إلغاء", style: TextStyle(color: DeedsColors.textSub)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -528,7 +529,7 @@ class ConfirmDialog extends StatelessWidget {
             Navigator.pop(context);
             onConfirm();
           },
-          child: const Text("تأكيد"),
+          child: Text("تأكيد"),
         ),
       ],
     );

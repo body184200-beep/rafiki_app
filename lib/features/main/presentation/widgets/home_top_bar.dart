@@ -7,7 +7,7 @@ import 'package:rafiki_app/core/widgets/glass_panel.dart';
 import 'package:rafiki_app/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:rafiki_app/features/notification/presentation/pages/notification_page.dart';
 import 'package:rafiki_app/features/quran/presentation/pages/quran_page.dart';
-import 'package:rafiki_app/features/settings/presentation/pages/settings_page.dart';
+import 'package:rafiki_app/features/settings/presentation/pages/profile_page.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -74,7 +74,7 @@ class HomeTopBar extends StatelessWidget {
             _IconBtn(
               icon: Icons.person_rounded,
               tooltip: loc.tooltip_settings,
-              onTap: () => pushPage(context, const Setting()),
+              onTap: () => pushPage(context, const ProfilePage()),
             ),
           ],
         ),

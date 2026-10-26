@@ -409,6 +409,15 @@ class PrayerStreakEngine {
 
   Future<void> _saveState({DateTime? overrideToday}) async {
     await _repository.saveGlobalStreak(globalStreak.value);
+
+    // Persist highest streak reached (never decreases even if streak resets to 0)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentHighest = prefs.getInt('highest_prayer_streak') ?? 0;
+      if (globalStreak.value > currentHighest) {
+        await prefs.setInt('highest_prayer_streak', globalStreak.value);
+      }
+    } catch (_) {}
     
     // Save fardh streaks
     await _repository.saveFardhStreaks(fardhStreaks.value);

@@ -1,3 +1,4 @@
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -135,9 +136,11 @@ class _SunnahPageState extends State<SunnahPage> {
 
   @override
   Widget build(BuildContext context) {
-    final list = _filteredSunan;
-
-    return Directionality(
+    return ListenableBuilder(
+      listenable: ThemeProvider.instance,
+      builder: (context, _) {
+        final list = _filteredSunan;
+        return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _kBg,
@@ -172,6 +175,8 @@ class _SunnahPageState extends State<SunnahPage> {
         ),
       ),
     );
+      },
+    );
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -180,7 +185,7 @@ class _SunnahPageState extends State<SunnahPage> {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+        icon: Icon(Icons.arrow_back_ios_new_rounded,
             color: _kGoldLight, size: 18),
         onPressed: () => Navigator.pop(context),
         tooltip: 'رجوع',
@@ -188,7 +193,7 @@ class _SunnahPageState extends State<SunnahPage> {
       title: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'سنن المصطفى ﷺ',
             style: TextStyle(
               color: _kGoldLight,
@@ -264,7 +269,7 @@ class _SunnahPageState extends State<SunnahPage> {
                 size: 14,
                 color: isSelected ? _kGoldLight : _kMuted,
               ),
-              const SizedBox(width: 5),
+              SizedBox(width: 5),
               Text(
                 label,
                 style: TextStyle(
@@ -295,17 +300,17 @@ class _SunnahPageState extends State<SunnahPage> {
           controller: _searchCtrl,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.right,
-          style: const TextStyle(color: _kText, fontSize: 13.5),
+          style: TextStyle(color: _kText, fontSize: 13.5),
           cursorColor: _kGold,
           decoration: InputDecoration(
             prefixIcon:
-                const Icon(Icons.search_rounded, color: _kGold, size: 18),
+                Icon(Icons.search_rounded, color: _kGold, size: 18),
             hintText: 'ابحث في سنن النبي ﷺ وهديه...',
             hintStyle: TextStyle(
                 color: _kMuted.withValues(alpha: 0.7), fontSize: 12.5),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded,
+                    icon: Icon(Icons.clear_rounded,
                         color: _kMuted, size: 16),
                     onPressed: () => _searchCtrl.clear(),
                   )
@@ -339,7 +344,7 @@ class _SunnahPageState extends State<SunnahPage> {
                   Icon(cat.icon,
                       size: 13,
                       color: selected ? _kBg : _kMuted),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(cat.label),
                 ],
               ),
@@ -411,14 +416,14 @@ class _SunnahPageState extends State<SunnahPage> {
                     child: Icon(item.icon, color: _kGoldLight, size: 18),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _kGoldLight,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -449,7 +454,7 @@ class _SunnahPageState extends State<SunnahPage> {
               ],
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
 
             // Description
             Text(
@@ -462,7 +467,7 @@ class _SunnahPageState extends State<SunnahPage> {
               ),
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Hadith Box
             if (item.hadith.isNotEmpty)
@@ -480,7 +485,7 @@ class _SunnahPageState extends State<SunnahPage> {
                 child: Text(
                   item.hadith,
                   textDirection: TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _kGoldLight,
                     fontSize: 13.5,
                     height: 1.75,
@@ -492,13 +497,13 @@ class _SunnahPageState extends State<SunnahPage> {
 
             // Virtue (الفضل)
             if (item.fadl.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.star_outline_rounded,
+                  Icon(Icons.star_outline_rounded,
                       color: _kGold, size: 14),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       item.fadl,
@@ -514,7 +519,7 @@ class _SunnahPageState extends State<SunnahPage> {
               ),
             ],
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Bottom Actions Bar
             Row(
@@ -549,7 +554,7 @@ class _SunnahPageState extends State<SunnahPage> {
                             color: isDone ? _kEmerald : _kMuted,
                             size: 16,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Text(
                             isDone ? 'طبّقتها اليوم ✓' : 'طبّقتها اليوم',
                             style: TextStyle(
@@ -565,11 +570,11 @@ class _SunnahPageState extends State<SunnahPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
 
                 // Copy
                 IconButton(
-                  icon: const Icon(Icons.copy_rounded, color: _kMuted, size: 17),
+                  icon: Icon(Icons.copy_rounded, color: _kMuted, size: 17),
                   tooltip: 'نسخ السنة',
                   onPressed: () {
                     Clipboard.setData(ClipboardData(
@@ -591,7 +596,7 @@ class _SunnahPageState extends State<SunnahPage> {
 
                 // Share
                 IconButton(
-                  icon: const Icon(Icons.share_rounded, color: _kMuted, size: 17),
+                  icon: Icon(Icons.share_rounded, color: _kMuted, size: 17),
                   tooltip: 'مشاركة',
                   onPressed: () {
                     Share.share(
@@ -612,8 +617,8 @@ class _SunnahPageState extends State<SunnahPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
-          const SizedBox(height: 10),
+          Icon(Icons.search_off_rounded, color: _kMuted, size: 46),
+          SizedBox(height: 10),
           Text(
             _filterMode == 1
                 ? 'لم تسجل أي سنّة مطبقة اليوم بعد'
