@@ -16,6 +16,8 @@ import 'package:rafiki_app/features/quran_radio/presentation/pages/quran_radio_p
 
 import 'package:adhan/adhan.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:upgrader/upgrader.dart';
+import 'package:rafiki_app/core/services/app_upgrader_service.dart';
 import 'package:rafiki_app/core/utils/time_format.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 import '../controllers/home_controller.dart';
@@ -343,63 +345,70 @@ class _StartState extends State<Start>
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([_home, ThemeProvider.instance]),
-      builder: (context, _) {
-        _home.bindLocalizations(AppLocalizations.of(context)!);
-        final hideChrome = _home.hidePrayerChrome;
-        final showAlert =
-            _home.showPrayerAlert && _home.activePrayer != null && !hideChrome;
-        final showFajr = _home.isAfterIsha &&
-            !_home.showPrayerAlert &&
-            !_home.alertDismissedByUser &&
-            !hideChrome;
-        final isLight = ThemeProvider.instance.isLight;
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: isLight ? AppTheme.systemUiLight : AppTheme.systemUi,
-          child: Scaffold(
-            extendBody: true,
-            backgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xFF070B14),
-            body: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  if (showAlert && _home.tabIndex == 0)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                      child: HomePrayerAlert(controller: _home),
+    return UpgradeAlert(
+      upgrader: AppUpgraderService.instance,
+      showIgnore: false,
+      showLater: true,
+      showPrompt: false,
+      showReleaseNotes: false,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_home, ThemeProvider.instance]),
+        builder: (context, _) {
+          _home.bindLocalizations(AppLocalizations.of(context)!);
+          final hideChrome = _home.hidePrayerChrome;
+          final showAlert =
+              _home.showPrayerAlert && _home.activePrayer != null && !hideChrome;
+          final showFajr = _home.isAfterIsha &&
+              !_home.showPrayerAlert &&
+              !_home.alertDismissedByUser &&
+              !hideChrome;
+          final isLight = ThemeProvider.instance.isLight;
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: isLight ? AppTheme.systemUiLight : AppTheme.systemUi,
+            child: Scaffold(
+              extendBody: true,
+              backgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xFF070B14),
+              body: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    if (showAlert && _home.tabIndex == 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                        child: HomePrayerAlert(controller: _home),
+                      ),
+                    if (showFajr && _home.tabIndex == 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                        child: HomeFajrBanner(controller: _home),
+                      ),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _home.tabIndex,
+                        children: [
+                          for (int i = 0; i < _pages.length; i++)
+                            TickerMode(
+                              enabled: i == _home.tabIndex,
+                              child: _pages[i],
+                            ),
+                        ],
+                      ),
                     ),
-                  if (showFajr && _home.tabIndex == 0)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                      child: HomeFajrBanner(controller: _home),
+                    RepaintBoundary(
+                      child: HomeBottomNav(controller: _home, sizeFactor: _navAnim),
                     ),
-                  Expanded(
-                    child: IndexedStack(
-                      index: _home.tabIndex,
-                      children: [
-                        for (int i = 0; i < _pages.length; i++)
-                          TickerMode(
-                            enabled: i == _home.tabIndex,
-                            child: _pages[i],
-                          ),
-                      ],
+                    SizedBox(
+                      height: MediaQuery.paddingOf(context).bottom > 0
+                          ? MediaQuery.paddingOf(context).bottom
+                          : 0,
                     ),
-                  ),
-                  RepaintBoundary(
-                    child: HomeBottomNav(controller: _home, sizeFactor: _navAnim),
-                  ),
-                  SizedBox(
-                    height: MediaQuery.paddingOf(context).bottom > 0
-                        ? MediaQuery.paddingOf(context).bottom
-                        : 0,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
