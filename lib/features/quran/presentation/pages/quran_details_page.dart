@@ -97,6 +97,45 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   bool _showControls = true;
   int? _bookmarkedPage;
 
+  // ── Zoom State ─────────────────────────────────────────────────────────────
+  double _pinchBaseFontSize = 20.0;
+  Timer? _zoomHudTimer;
+  bool _showZoomHud = false;
+
+  void _zoomIn() async {
+    HapticFeedback.selectionClick();
+    final newSize = (_fontSize + 2.0).clamp(14.0, 36.0);
+    setState(() => _fontSize = newSize);
+    _triggerZoomHud();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('mushaf_font_size', newSize);
+  }
+
+  void _zoomOut() async {
+    HapticFeedback.selectionClick();
+    final newSize = (_fontSize - 2.0).clamp(14.0, 36.0);
+    setState(() => _fontSize = newSize);
+    _triggerZoomHud();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('mushaf_font_size', newSize);
+  }
+
+  void _resetZoom() async {
+    HapticFeedback.mediumImpact();
+    setState(() => _fontSize = 20.0);
+    _triggerZoomHud();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('mushaf_font_size', 20.0);
+  }
+
+  void _triggerZoomHud() {
+    _zoomHudTimer?.cancel();
+    setState(() => _showZoomHud = true);
+    _zoomHudTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _showZoomHud = false);
+    });
+  }
+
   _MushafTheme get _theme => _kMushafThemes[_themeIndex];
   MushafPage? get _currentPage =>
       _pages.isNotEmpty && _currentPageIndex < _pages.length ? _pages[_currentPageIndex] : null;
@@ -110,6 +149,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
 
   @override
   void dispose() {
+    _zoomHudTimer?.cancel();
     _pageCtrl.dispose();
     super.dispose();
   }
@@ -969,6 +1009,16 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                   centerTitle: true,
                   actions: [
                     IconButton(
+                      icon: Icon(Icons.zoom_out_rounded, color: _theme.primary, size: 21),
+                      tooltip: 'تصغير الخط',
+                      onPressed: _zoomOut,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.zoom_in_rounded, color: _theme.primary, size: 21),
+                      tooltip: 'تكبير الخط',
+                      onPressed: _zoomIn,
+                    ),
+                    IconButton(
                       icon: Icon(
                         isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
                         color: isBookmarked ? _theme.accent : _theme.primary,
@@ -985,30 +1035,190 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                   ],
                 )
               : null,
-          body: GestureDetector(
-            onDoubleTap: () => setState(() => _showControls = !_showControls),
-            child: PageView.builder(
-              controller: _pageCtrl,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: _onPageChanged,
-              itemCount: _pages.length,
-              itemBuilder: (context, index) {
-                final page = _pages[index];
-                return MushafPageWidget(
-                  page: page,
-                  fontSize: _fontSize,
-                  textColor: _theme.text,
-                  primaryColor: _theme.primary,
-                  accentColor: _theme.accent,
-                  bgColor: _theme.bg,
-                  isDark: _theme.isDark,
-                  onAyahTap: _showAyahTafsir,
-                  onSearchTap: _showJumpDialog,
-                  onIndexTap: _showIndexModal,
-                  onPageNumberTap: _showJumpDialog,
-                );
-              },
+          body: Stack(
+            children: [
+              GestureDetector(
+                onDoubleTap: () => setState(() => _showControls = !_showControls),
+                onScaleStart: (details) {
+                  if (details.pointerCount >= 2) {
+                    _pinchBaseFontSize = _fontSize;
+                  }
+                },
+                onScaleUpdate: (details) {
+                  if (details.pointerCount >= 2) {
+                    final newSize = (_pinchBaseFontSize * details.scale).clamp(14.0, 36.0);
+                    setState(() => _fontSize = newSize);
+                    _triggerZoomHud();
+                  }
+                },
+                onScaleEnd: (details) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setDouble('mushaf_font_size', _fontSize);
+                },
+                child: PageView.builder(
+                  controller: _pageCtrl,
+                  physics: const BouncingScrollPhysics(),
+                  onPageChanged: _onPageChanged,
+                  itemCount: _pages.length,
+                  itemBuilder: (context, index) {
+                    final page = _pages[index];
+                    return MushafPageWidget(
+                      page: page,
+                      fontSize: _fontSize,
+                      textColor: _theme.text,
+                      primaryColor: _theme.primary,
+                      accentColor: _theme.accent,
+                      bgColor: _theme.bg,
+                      isDark: _theme.isDark,
+                      onAyahTap: _showAyahTafsir,
+                      onSearchTap: _showJumpDialog,
+                      onIndexTap: _showIndexModal,
+                      onPageNumberTap: _showJumpDialog,
+                    );
+                  },
+                ),
+              ),
+
+              // Floating Bottom Zoom Controller
+              _buildFloatingZoomBar(),
+
+              // Temporary Zoom Level Toast/HUD
+              _buildZoomHud(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingZoomBar() {
+    return Positioned(
+      bottom: 24,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: AnimatedOpacity(
+          opacity: _showControls ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: IgnorePointer(
+            ignoring: !_showControls,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: _theme.isDark
+                    ? const Color(0xFF161E2E).withValues(alpha: 0.94)
+                    : Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: _theme.accent.withValues(alpha: 0.45),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.remove_rounded, color: _theme.primary, size: 20),
+                    tooltip: 'تصغير الخط',
+                    onPressed: _zoomOut,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    padding: EdgeInsets.zero,
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _theme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.format_size_rounded, size: 14, color: _theme.accent),
+                        const SizedBox(width: 4),
+                        Text(
+                          toArabicDigits(_fontSize.round()),
+                          style: TextStyle(
+                            color: _theme.isDark ? _theme.accent : _theme.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.add_rounded, color: _theme.primary, size: 20),
+                    tooltip: 'تكبير الخط',
+                    onPressed: _zoomIn,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    padding: EdgeInsets.zero,
+                  ),
+                  if ((_fontSize - 20.0).abs() > 0.5) ...[
+                    Container(
+                      width: 1,
+                      height: 18,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      color: _theme.primary.withValues(alpha: 0.2),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.restart_alt_rounded, color: _theme.accent, size: 18),
+                      tooltip: 'الحجم الافتراضي',
+                      onPressed: _resetZoom,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ],
+              ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZoomHud() {
+    if (!_showZoomHud) return const SizedBox.shrink();
+    return Positioned(
+      top: 90,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: _theme.accent.withValues(alpha: 0.6), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.format_size_rounded, color: _theme.accent, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'حجم الخط: ${toArabicDigits(_fontSize.round())}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -211,10 +211,19 @@ class PrayerTaskHandler extends TaskHandler {
       final countdownStr = TimeFormat.hhmmss(safeDiff);
       final isTomorrow = source == 'tomorrow';
 
-      final title = isTomorrow
-          ? 'الصلاة القادمة: $prayerName (غداً)'
-          : 'الصلاة القادمة: $prayerName';
-      final text = '$prayerTimeStr   •   $countdownStr';
+      final String title;
+      final String text;
+
+      if (safeDiff.inMinutes < 15 && !isTomorrow) {
+        title = '🔔 اقترب أذان صلاة $prayerName ($prayerTimeStr)';
+        text = '⏳ متبقي: $countdownStr  •  استعد للصلاة والوضوء';
+      } else if (isTomorrow) {
+        title = '🕌 الصلاة القادمة: صلاة $prayerName (غداً)';
+        text = '⏳ متبقي: $countdownStr  •  ⏰ الأذان: $prayerTimeStr';
+      } else {
+        title = '🕌 الصلاة القادمة: صلاة $prayerName';
+        text = '⏳ متبقي: $countdownStr  •  ⏰ الأذان: $prayerTimeStr';
+      }
 
       // Live update foreground notification only when text changes
       if (_lastNotificationTitle != title || _lastNotificationText != text) {
@@ -225,7 +234,7 @@ class PrayerTaskHandler extends TaskHandler {
           notificationText: text,
           notificationIcon: const NotificationIcon(
             metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
-            backgroundColor: Color(0xFF4ECCA3),
+            backgroundColor: Color(0xFF10B981),
           ),
         );
       }

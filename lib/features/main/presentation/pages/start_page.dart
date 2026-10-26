@@ -268,13 +268,22 @@ class _StartState extends State<Start>
       final prayerTimeStr = TimeFormat.format12h(nextPrayerTime);
       final countdownStr = TimeFormat.hhmmss(safeDiff);
 
-      final title = isTomorrow
-          ? 'الصلاة القادمة: $prayerName (غداً)'
-          : 'الصلاة القادمة: $prayerName';
-      final text = '$prayerTimeStr   •   $countdownStr';
+      final String title;
+      final String text;
+
+      if (safeDiff.inMinutes < 15 && !isTomorrow) {
+        title = '🔔 اقترب أذان صلاة $prayerName ($prayerTimeStr)';
+        text = '⏳ متبقي: $countdownStr  •  استعد للصلاة والوضوء';
+      } else if (isTomorrow) {
+        title = '🕌 الصلاة القادمة: صلاة $prayerName (غداً)';
+        text = '⏳ متبقي: $countdownStr  •  ⏰ الأذان: $prayerTimeStr';
+      } else {
+        title = '🕌 الصلاة القادمة: صلاة $prayerName';
+        text = '⏳ متبقي: $countdownStr  •  ⏰ الأذان: $prayerTimeStr';
+      }
       return (title, text);
     } catch (_) {
-      return ('الصلاة القادمة: الفجر', '04:30 ص   •   00:00:00');
+      return ('🕌 الصلاة القادمة: صلاة الفجر', '⏳ متبقي: 00:00:00  •  ⏰ الأذان: 04:30 ص');
     }
   }
 
@@ -320,7 +329,7 @@ class _StartState extends State<Start>
         notificationText: initialText,
         notificationIcon: const NotificationIcon(
           metaDataName: 'com.pravera.flutter_foreground_task.notification_icon',
-          backgroundColor: Color(0xFF4ECCA3),
+          backgroundColor: Color(0xFF10B981),
         ),
         callback: startCallback,
       );
