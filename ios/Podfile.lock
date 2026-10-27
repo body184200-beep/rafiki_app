@@ -1,0 +1,35 @@
+PODS:
+  - awesome_notifications (0.11.0):
+    - Flutter
+    - IosAwnCore (~> 0.11.0)
+  - Flutter (1.0.0)
+  - flutter_foreground_task (0.0.1):
+    - Flutter
+  - IosAwnCore (0.11.0)
+
+DEPENDENCIES:
+  - awesome_notifications (from `.symlinks/plugins/awesome_notifications/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_foreground_task (from `.symlinks/plugins/flutter_foreground_task/ios`)
+
+SPEC REPOS:
+  trunk:
+    - IosAwnCore
+
+EXTERNAL SOURCES:
+  awesome_notifications:
+    :path: ".symlinks/plugins/awesome_notifications/ios"
+  Flutter:
+    :path: Flutter
+  flutter_foreground_task:
+    :path: ".symlinks/plugins/flutter_foreground_task/ios"
+
+SPEC CHECKSUMS:
+  awesome_notifications: 8291dd4082db761556cd8bf7977567f5c960c87e
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  flutter_foreground_task: a159d2c2173b33699ddb3e6c2a067045d7cebb89
+  IosAwnCore: 32019505f4a4909fa9079ee401b2c82aeeab78a8
+
+PODFILE CHECKSUM: 603db959fc3e1cd0176dd0be6f9f0b17aba35efd
+
+COCOAPODS: 1.16.2

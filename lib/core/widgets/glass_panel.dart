@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import '../theme/theme_provider.dart';
 
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
@@ -21,13 +22,18 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final light = ThemeProvider.instance.isLight;
     return Container(
       padding: padding ?? const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: background ?? Colors.white.withValues(alpha: 0.06),
+        color: background ??
+            (light ? Colors.white : Colors.white.withValues(alpha: 0.06)),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: borderColor ?? Colors.white.withValues(alpha: 0.08),
+          color: borderColor ??
+              (light
+                  ? const Color(0xFFE5E7EB)
+                  : Colors.white.withValues(alpha: 0.08)),
         ),
       ),
       child: child,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/core/theme/app_colors.dart';
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/core/widgets/glass_panel.dart';
 
 import '../controllers/home_controller.dart';
@@ -33,6 +34,7 @@ class HomePrayerStrip extends StatelessWidget {
     }
 
     final loc = AppLocalizations.of(context)!;
+    final light = ThemeProvider.instance.isLight;
     final current = controller.currentPrayer;
     final times = controller.prayerTimes;
     final entries = [
@@ -55,6 +57,7 @@ class HomePrayerStrip extends StatelessWidget {
               time: entries[i].$3,
               isNow: entries[i].$1 == current,
               isPast: currentIdx >= 0 && i < currentIdx,
+              light: light,
             ),
         ],
       ),
@@ -68,25 +71,28 @@ class _PrayerCell extends StatelessWidget {
     required this.time,
     required this.isNow,
     required this.isPast,
+    required this.light,
   });
 
   final String name;
   final String time;
   final bool isNow;
   final bool isPast;
+  final bool light;
 
   @override
   Widget build(BuildContext context) {
+    final nowName = light ? const Color(0xFF0F4A39) : AppColors.accent;
+    final idleName = light ? const Color(0xFF6B7280) : AppColors.textSecondary;
+    final nowTime = light ? const Color(0xFF111827) : AppColors.textPrimary;
+    final idleTime = light ? const Color(0xFF374151) : AppColors.textPrimary.withValues(alpha: 0.7);
+    final pastTime = light ? const Color(0xFF9CA3AF) : AppColors.textPrimary.withValues(alpha: 0.3);
     final nameColor = isNow
-        ? AppColors.accent
+        ? nowName
         : isPast
-            ? AppColors.textSecondary.withValues(alpha: 0.45)
-            : AppColors.textSecondary;
-    final timeColor = isNow
-        ? AppColors.textPrimary
-        : isPast
-            ? AppColors.textPrimary.withValues(alpha: 0.3)
-            : AppColors.textPrimary.withValues(alpha: 0.7);
+            ? idleName.withValues(alpha: 0.55)
+            : idleName;
+    final timeColor = isNow ? nowTime : isPast ? pastTime : idleTime;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -211,8 +217,10 @@ class HomeFajrBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   loc.banner_next_tomorrow_fajr(controller.tomorrowFajrLabel()),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: ThemeProvider.instance.isLight
+                        ? const Color(0xFF4B5563)
+                        : AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),

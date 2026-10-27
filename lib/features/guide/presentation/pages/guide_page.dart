@@ -51,6 +51,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ThemeProvider.instance.addListener(_onTheme);
 
     _bgCtrl = AnimationController(
       vsync: this,
@@ -158,6 +159,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
 
   @override
   void dispose() {
+    ThemeProvider.instance.removeListener(_onTheme);
     WidgetsBinding.instance.removeObserver(this);
     _bgCtrl.dispose();
     _entryCtrl.dispose();
@@ -178,6 +180,10 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
       if (_starCtrl.isAnimating) _starCtrl.stop();
       if (_pulseCtrl.isAnimating) _pulseCtrl.stop();
     }
+  }
+
+  void _onTheme() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -205,7 +211,7 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          systemOverlayStyle: _l ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
           centerTitle: true,
           title: ShaderMask(
             shaderCallback: (r) => LinearGradient(
@@ -237,11 +243,17 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
                         -0.6 + _bgCtrl.value * 0.4,
                       ),
                       radius: 1.6,
-                      colors: [
-                        Color(0xff0A2035),
-                        Color(0xff041018),
-                        _bgDeep,
-                      ],
+                      colors: _l
+                          ? [
+                              const Color(0xFFE4EFE8),
+                              const Color(0xFFF6F1E6),
+                              _bgDeep,
+                            ]
+                          : [
+                              const Color(0xff0A2035),
+                              const Color(0xff041018),
+                              _bgDeep,
+                            ],
                       stops: [0, 0.5, 1],
                     ),
                   ),
@@ -250,17 +262,18 @@ class _GuidePageState extends State<GuidePage> with TickerProviderStateMixin, Wi
             ),
 
             // ── Star field (layered depth) ─────────────────────────────────────
-            AnimatedBuilder(
-              animation: _starCtrl,
-              builder: (_, __) => Positioned.fill(
-                child: CustomPaint(
-                  painter: _StarFieldPainter(
-                    stars: _stars,
-                    twinkle: _starCtrl.value,
+            if (!_l)
+              AnimatedBuilder(
+                animation: _starCtrl,
+                builder: (_, __) => Positioned.fill(
+                  child: CustomPaint(
+                    painter: _StarFieldPainter(
+                      stars: _stars,
+                      twinkle: _starCtrl.value,
+                    ),
                   ),
                 ),
               ),
-            ),
 
             // ── Crescent motif ─────────────────────────────────────────────────
             Positioned(
@@ -656,9 +669,9 @@ class _ContentCardState extends State<_ContentCard>
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                   colors: [
-                    d.accentA.withValues(alpha: 0.22),
-                    Colors.white.withValues(alpha: 0.04),
-                    d.accentB.withValues(alpha: 0.06),
+                    d.accentA.withValues(alpha: _GuidePageState._l ? 0.16 : 0.22),
+                    _GuidePageState._l ? Colors.white.withValues(alpha: 0.88) : Colors.white.withValues(alpha: 0.04),
+                    d.accentB.withValues(alpha: _GuidePageState._l ? 0.10 : 0.06),
                   ],
                   stops: [0, 0.5, 1],
                 ),
@@ -733,7 +746,7 @@ class _ContentCardState extends State<_ContentCard>
                                 height: 20,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: const Color(0xff020A12),
+                                  color: _GuidePageState._l ? const Color(0xFFFFFFFF) : const Color(0xff020A12),
                                   border: Border.all(
                                       color: d.accentB.withValues(alpha: 0.5),
                                       width: 1),
@@ -782,7 +795,7 @@ class _ContentCardState extends State<_ContentCard>
                               Text(
                                 d.title,
                                 style: TextStyle(
-                                  color: Color(0xffEEE8D5),
+                                  color: _GuidePageState._l ? const Color(0xFF111827) : const Color(0xffEEE8D5),
                                   fontSize: 16.5,
                                   fontWeight: FontWeight.w800,
                                   height: 1.2,
@@ -792,7 +805,7 @@ class _ContentCardState extends State<_ContentCard>
                               Text(
                                 d.subtitle,
                                 style: TextStyle(
-                                  color: Color(0xff7A9AAD),
+                                  color: _GuidePageState._l ? const Color(0xFF6B7280) : const Color(0xff7A9AAD),
                                   fontSize: 11.5,
                                   height: 1.45,
                                 ),

@@ -28,6 +28,7 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
   List<ProphetStory> _allProphets = [];
   List<ProphetStory> _filteredProphets = [];
   bool _isLoading = true;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -61,7 +62,10 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
     } catch (e) {
       debugPrint('Error loading prophets stories: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _loadFailed = true;
+        });
       }
     }
   }
@@ -110,29 +114,30 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
             children: [
               _buildHeader(),
               _buildSearch(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'المجموع: ${_allProphets.length} نبياً ورسولاً',
-                      style: TextStyle(
-                        color: kGoldDim.withValues(alpha: 0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+              if (!_loadFailed)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'المجموع: ${_allProphets.length} نبياً ورسولاً',
+                        style: TextStyle(
+                          color: kGoldDim.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'قصص كاملة ومفصلة بالآيات والعبر',
-                      style: TextStyle(
-                        color: kGold.withValues(alpha: 0.5),
-                        fontSize: 11,
+                      Text(
+                        'قصص كاملة ومفصلة بالآيات والعبر',
+                        style: TextStyle(
+                          color: kGold.withValues(alpha: 0.5),
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               SizedBox(height: 6),
               Expanded(
                 child: _isLoading
@@ -288,17 +293,36 @@ class _AnbiaaState extends State<Anbiaa> with TickerProviderStateMixin {
   }
 
   Widget _buildEmpty() {
+    final searching = _searchController.text.trim().isNotEmpty;
+    final title = _loadFailed && !searching
+        ? 'تعذر فتح القصص الآن'
+        : 'لم يُعثر على نبي مطابق للبحث';
+    final detail = _loadFailed && !searching
+        ? 'ملف القصص غير متوفر في هذه النسخة.'
+        : null;
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('🔍', style: TextStyle(fontSize: 40)),
-          SizedBox(height: 12),
-          Text(
-            'لم يُعثر على نبي مطابق للبحث',
-            style: TextStyle(color: kGold.withValues(alpha: 0.5), fontSize: 15),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(searching ? '🔍' : '📖', style: const TextStyle(fontSize: 40)),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: kGold.withValues(alpha: 0.8), fontSize: 15),
+            ),
+            if (detail != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                detail,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: kGold.withValues(alpha: 0.5), fontSize: 12),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

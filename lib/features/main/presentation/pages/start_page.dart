@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -134,25 +136,33 @@ class _StartState extends State<Start>
 
     if (!mounted) return;
 
-    // Show respectful dialog requesting user gesture
+    final light = ThemeProvider.instance.isLight;
+    final dialogBg = light ? const Color(0xFFFFFFFF) : const Color(0xFF0F1520);
+    final dialogBorder = light ? const Color(0xFFE5E7EB) : const Color(0xFF1E2A3E);
+    final titleColor = light ? const Color(0xFF111827) : const Color(0xFFEEF2F8);
+    final bodyColor = light ? const Color(0xFF4B5563) : const Color(0xFF8A96AA);
+    final accent = light ? const Color(0xFF0F4A39) : const Color(0xFF4ECCA3);
+    final onAccent = light ? Colors.white : const Color(0xFF060A10);
+    final liveCountdown = !kIsWeb && Platform.isAndroid;
+
     await showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F1520),
+        backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF1E2A3E), width: 0.8),
+          side: BorderSide(color: dialogBorder, width: 0.8),
         ),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.notifications_active_rounded, color: Color(0xFF4ECCA3), size: 26),
-            SizedBox(width: 10),
+            Icon(Icons.notifications_active_rounded, color: accent, size: 26),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'تفعيل تنبيهات الأذان',
                 style: TextStyle(
-                  color: Color(0xFFEEF2F8),
+                  color: titleColor,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -160,10 +170,12 @@ class _StartState extends State<Start>
             ),
           ],
         ),
-        content: const Text(
-          'ليتمكن رفيقي من تذكيرك بمواقيت الصلاة، وإطلاق الأذان في موعده، ومتابعة العداد المباشر بدقة، يلزم السماح بإرسال الإشعارات.',
+        content: Text(
+          liveCountdown
+              ? 'ليتمكن رفيقي من تذكيرك بمواقيت الصلاة، وإطلاق الأذان في موعده، ومتابعة العداد في شريط الإشعارات، يلزم السماح بإرسال الإشعارات.'
+              : 'ليتمكن رفيقي من تذكيرك بمواقيت الصلاة وإطلاق الأذان في موعده حتى والتطبيق مغلق، يلزم السماح بالإشعارات.',
           style: TextStyle(
-            color: Color(0xFF8A96AA),
+            color: bodyColor,
             fontSize: 14,
             height: 1.6,
           ),
@@ -171,15 +183,15 @@ class _StartState extends State<Start>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
+            child: Text(
               'لاحقاً',
-              style: TextStyle(color: Color(0xFF8A96AA)),
+              style: TextStyle(color: bodyColor),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4ECCA3),
-              foregroundColor: const Color(0xFF060A10),
+              backgroundColor: accent,
+              foregroundColor: onAccent,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             ),
@@ -308,7 +320,9 @@ class _StartState extends State<Start>
 
   /// Central, idempotent method to ensure the prayer foreground service is running.
   Future<bool> ensureForegroundServiceRunning() async {
-    if (kIsWeb) return false;
+    // iOS has no persistent foreground service. Prayer alerts use scheduled
+    // local notifications, which keep working after the app is closed.
+    if (kIsWeb || Platform.isIOS) return false;
     try {
       final isAllowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isAllowed) {

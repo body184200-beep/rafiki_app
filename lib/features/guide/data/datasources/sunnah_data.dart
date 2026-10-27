@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+
+import 'package:rafiki_app/features/guide/data/models/sunnah_model.dart';
+
+const List<SunnahCategory> sunnahCategories = [
+  SunnahCategory(label: 'الكل', icon: Icons.apps_rounded),
+  SunnahCategory(label: 'الصلاة', icon: Icons.mosque_rounded),
+  SunnahCategory(label: 'الطعام', icon: Icons.restaurant_rounded),
+  SunnahCategory(label: 'النوم', icon: Icons.bedtime_rounded),
+  SunnahCategory(label: 'الذكر', icon: Icons.auto_awesome_rounded),
+];
+
+const List<SunnahItem> allSunan = [
+  SunnahItem(
+    id: 'siwak',
+    category: 'الصلاة',
+    title: 'السواك عند الصلاة',
+    description: 'التسوّك قبل الوضوء والصلاة من هدي النبي ﷺ.',
+    hadith: 'السواك مطهرة للفم مرضاة للرب.',
+    fadl: 'طهارة للفم وسبب لرضا الله.',
+    practicalTip: 'ضع سواكاً بجانب مكان الوضوء واستعمله قبل كل صلاة.',
+    source: 'رواه أحمد والنسائي',
+    badge: 'صلاة',
+    icon: Icons.clean_hands_rounded,
+  ),
+  SunnahItem(
+    id: 'witr',
+    category: 'الصلاة',
+    title: 'صلاة الوتر',
+    description: 'الوتر آخر صلاة الليل، وأقله ركعة بعد صلاة العشاء.',
+    hadith: 'أوتروا يا أهل القرآن.',
+    fadl: 'ختم صلاة الليل كما يُختم النهار بالمغرب.',
+    practicalTip: 'صلّ ركعة وتراً على الأقل قبل النوم إن لم تقم الليل.',
+    source: 'رواه أبو داود والترمذي',
+    icon: Icons.nightlight_round,
+  ),
+  SunnahItem(
+    id: 'right_hand',
+    category: 'الطعام',
+    title: 'الأكل والشرب باليمين',
+    description: 'كان النبي ﷺ يأكل بيمينه ويشرب بيمينه.',
+    hadith: 'يا غلام، سمّ الله، وكل بيمينك، وكل مما يليك.',
+    fadl: 'متابعة لهدي النبي ﷺ في أدب المائدة.',
+    practicalTip: 'سمِّ الله قبل اللقمة الأولى، وكل بيدك اليمنى.',
+    source: 'متفق عليه',
+    icon: Icons.restaurant_rounded,
+  ),
+  SunnahItem(
+    id: 'sleep_wudu',
+    category: 'النوم',
+    title: 'الوضوء قبل النوم',
+    description: 'من هديه ﷺ أن ينام على طهارة.',
+    hadith: 'إذا أتيت مضجعك فتوضأ وضوءك للصلاة.',
+    fadl: 'نوم على طهارة مع ذكر النوم.',
+    practicalTip: 'توضأ ثم اضطجع على شقك الأيمن وقل ذكر النوم.',
+    source: 'متفق عليه',
+    icon: Icons.bedtime_rounded,
+  ),
+  SunnahItem(
+    id: 'morning_dhikr',
+    category: 'الذكر',
+    title: 'أذكار الصباح',
+    description: 'أذكار الصباح من هدي النبي ﷺ في أول النهار.',
+    hadith: 'من قال حين يصبح وحين يمسي: سبحان الله وبحمده، مائة مرة، لم يأت أحد يوم القيامة بأفضل مما جاء به، إلا أحد قال مثل ما قال أو زاد عليه.',
+    fadl: 'ذكر متكرر يحفظ به العبد صدر يومه.',
+    practicalTip: 'اجعلها بعد صلاة الفجر مباشرة قبل فتح الهاتف.',
+    source: 'رواه مسلم',
+    badge: 'صباح',
+    icon: Icons.wb_sunny_rounded,
+  ),
+  SunnahItem(
+    id: 'evening_dhikr',
+    category: 'الذكر',
+    title: 'أذكار المساء',
+    description: 'أذكار المساء تحصين بعد العصر حتى الليل.',
+    hadith: 'من قال إذا أمسى: بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم، ثلاث مرات، لم يضره شيء.',
+    fadl: 'حفظ من الضرر بإذن الله.',
+    practicalTip: 'ضعها تذكيراً بعد صلاة العصر.',
+    source: 'رواه أبو داود والترمذي',
+    icon: Icons.nights_stay_rounded,
+  ),
+];

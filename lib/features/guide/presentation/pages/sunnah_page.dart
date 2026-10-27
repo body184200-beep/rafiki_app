@@ -6,17 +6,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/features/guide/data/models/sunnah_model.dart';
 import 'package:rafiki_app/features/guide/data/datasources/sunnah_data.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  Unified Calming Islamic Palette
-// ─────────────────────────────────────────────────────────────
-const Color _kBg = Color(0xFF0A0E17);
-const Color _kCard = Color(0xFF111827);
-const Color _kCardBorder = Color(0xFF1F293D);
-const Color _kGold = Color(0xFFC9A84C);
-const Color _kGoldLight = Color(0xFFE8CC7A);
-const Color _kText = Color(0xFFF3EEDD);
-const Color _kMuted = Color(0xFF8B9CB2);
-const Color _kEmerald = Color(0xFF10B981);
+bool get _sunnahLight => ThemeProvider.instance.isLight;
+Color get _kBg => _sunnahLight ? const Color(0xFFF8F6F0) : const Color(0xFF0A0E17);
+Color get _kCard => _sunnahLight ? const Color(0xFFFFFFFF) : const Color(0xFF111827);
+Color get _kCardBorder => _sunnahLight ? const Color(0xFFE5E7EB) : const Color(0xFF1F293D);
+Color get _kGold => _sunnahLight ? const Color(0xFF8D5B18) : const Color(0xFFC9A84C);
+Color get _kGoldLight => _sunnahLight ? const Color(0xFFB48216) : const Color(0xFFE8CC7A);
+Color get _kText => _sunnahLight ? const Color(0xFF111827) : const Color(0xFFF3EEDD);
+Color get _kMuted => _sunnahLight ? const Color(0xFF6B7280) : const Color(0xFF8B9CB2);
+Color get _kEmerald => _sunnahLight ? const Color(0xFF0F4A39) : const Color(0xFF10B981);
 
 class SunnahPage extends StatefulWidget {
   const SunnahPage({super.key});

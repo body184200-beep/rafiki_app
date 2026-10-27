@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/l10n/app_localizations.dart';
 import 'package:rafiki_app/core/theme/app_colors.dart';
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/core/widgets/glass_panel.dart';
 import 'package:rafiki_app/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:rafiki_app/features/notification/presentation/pages/notification_page.dart';
@@ -19,6 +20,10 @@ class HomeTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final light = ThemeProvider.instance.isLight;
+    final label = light ? const Color(0xFF6B7280) : AppColors.textSecondary;
+    final countdown = light ? const Color(0xFF0F4A39) : AppColors.accent;
+    final icon = light ? const Color(0xFF0F4A39) : Colors.white.withValues(alpha: 0.85);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       child: GlassPanel(
@@ -27,11 +32,13 @@ class HomeTopBar extends StatelessWidget {
           children: [
             _IconBtn(
               icon: Icons.menu_book_rounded,
+              color: icon,
               tooltip: loc.tooltip_quran,
               onTap: () => pushPage(context, const MushafPage()),
             ),
             _IconBtn(
               icon: Icons.auto_awesome_rounded,
+              color: icon,
               tooltip: loc.tooltip_azkar,
               onTap: () => pushPage(context, const AzkarPage()),
             ),
@@ -41,8 +48,8 @@ class HomeTopBar extends StatelessWidget {
                 children: [
                   Text(
                     loc.tooltip_next_prayer,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: label,
                       fontSize: 9,
                       letterSpacing: 0.8,
                     ),
@@ -55,8 +62,8 @@ class HomeTopBar extends StatelessWidget {
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.accent,
+                      style: TextStyle(
+                        color: countdown,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.3,
@@ -68,11 +75,13 @@ class HomeTopBar extends StatelessWidget {
             ),
             _IconBtn(
               icon: Icons.notifications_rounded,
+              color: icon,
               tooltip: loc.tooltip_notifications,
               onTap: () => pushPage(context, const NotificationPage()),
             ),
             _IconBtn(
               icon: Icons.person_rounded,
+              color: icon,
               tooltip: loc.tooltip_settings,
               onTap: () => pushPage(context, const ProfilePage()),
             ),
@@ -86,11 +95,13 @@ class HomeTopBar extends StatelessWidget {
 class _IconBtn extends StatelessWidget {
   const _IconBtn({
     required this.icon,
+    required this.color,
     required this.tooltip,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color color;
   final String tooltip;
   final VoidCallback onTap;
 
@@ -111,7 +122,7 @@ class _IconBtn extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             child: Icon(
               icon,
-              color: Colors.white.withValues(alpha: 0.85),
+              color: color,
               size: 21,
             ),
           ),
