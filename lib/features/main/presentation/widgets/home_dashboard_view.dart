@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/theme/theme_provider.dart';
+import 'package:rafiki_app/core/utils/hijri_helper.dart';
 import 'package:rafiki_app/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:rafiki_app/features/battles/presentation/pages/battles_page.dart';
 import 'package:rafiki_app/features/companions/presentation/pages/companions_page.dart';
@@ -56,34 +57,68 @@ class HomeDashboardView extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              // ── Row 1: Al-Hadith & Al-Qibla ───────────────────────────────────────
+              // ── Row 1: Calendar (Hijri & Gregorian) & Al-Qibla ───────────────────
               Row(
                 children: [
-                  // Left: Al-Hadith (Amber/Gold Card)
+                  // Left: Calendar Card (Hijri & Gregorian)
                   Expanded(
                     child: _buildActionCard(
                       height: 78,
-                      bgColor: isLight ? const Color(0xFFFDF1DB) : const Color(0xFF261A0C),
-                      borderColor: isLight ? const Color(0xFFF5DEC0) : const Color(0xFF503615),
-                      onTap: () => _push(context, const HadithScreen()),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'الأحاديث',
-                            style: TextStyle(
-                              color: isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
+                      bgColor: isLight ? const Color(0xFFFDF7EC) : const Color(0xFF1F1A12),
+                      borderColor: isLight ? const Color(0xFFF5DEC0) : const Color(0xFF4A3820),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: (isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C))
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.calendar_month_rounded,
+                                color: isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C),
+                                size: 22,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.book_outlined,
-                            color: isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C),
-                            size: 24,
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    HijriDate.now().formattedArabic,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: isLight ? const Color(0xFF8D5B18) : const Color(0xFFE5A93C),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _formatGregorianDateArabic(DateTime.now()),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9EABB8),
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -627,5 +662,20 @@ class HomeDashboardView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatGregorianDateArabic(DateTime date) {
+    const weekdays = [
+      'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'
+    ];
+    const months = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    final dayName = weekdays[date.weekday - 1];
+    final monthName = months[date.month - 1];
+    final day = HijriDate.toArabicDigits(date.day);
+    final year = HijriDate.toArabicDigits(date.year);
+    return '$dayName، $day $monthName $year م';
   }
 }

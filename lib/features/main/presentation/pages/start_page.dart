@@ -365,44 +365,52 @@ class _StartState extends State<Start>
           final isLight = ThemeProvider.instance.isLight;
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: isLight ? AppTheme.systemUiLight : AppTheme.systemUi,
-            child: Scaffold(
-              extendBody: true,
-              backgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xFF070B14),
-              body: SafeArea(
-                bottom: false,
-                child: Column(
-                  children: [
-                    if (showAlert && _home.tabIndex == 0)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                        child: HomePrayerAlert(controller: _home),
+            child: PopScope(
+              canPop: _home.tabIndex == 0,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop && _home.tabIndex != 0) {
+                  _home.setTab(0);
+                }
+              },
+              child: Scaffold(
+                extendBody: true,
+                backgroundColor: isLight ? const Color(0xFFF8F6F0) : const Color(0xFF070B14),
+                body: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      if (showAlert && _home.tabIndex == 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                          child: HomePrayerAlert(controller: _home),
+                        ),
+                      if (showFajr && _home.tabIndex == 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                          child: HomeFajrBanner(controller: _home),
+                        ),
+                      Expanded(
+                        child: IndexedStack(
+                          index: _home.tabIndex,
+                          children: [
+                            for (int i = 0; i < _pages.length; i++)
+                              TickerMode(
+                                enabled: i == _home.tabIndex,
+                                child: _pages[i],
+                              ),
+                          ],
+                        ),
                       ),
-                    if (showFajr && _home.tabIndex == 0)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                        child: HomeFajrBanner(controller: _home),
+                      RepaintBoundary(
+                        child: HomeBottomNav(controller: _home, sizeFactor: _navAnim),
                       ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _home.tabIndex,
-                        children: [
-                          for (int i = 0; i < _pages.length; i++)
-                            TickerMode(
-                              enabled: i == _home.tabIndex,
-                              child: _pages[i],
-                            ),
-                        ],
+                      SizedBox(
+                        height: MediaQuery.paddingOf(context).bottom > 0
+                            ? MediaQuery.paddingOf(context).bottom
+                            : 0,
                       ),
-                    ),
-                    RepaintBoundary(
-                      child: HomeBottomNav(controller: _home, sizeFactor: _navAnim),
-                    ),
-                    SizedBox(
-                      height: MediaQuery.paddingOf(context).bottom > 0
-                          ? MediaQuery.paddingOf(context).bottom
-                          : 0,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

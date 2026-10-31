@@ -32,6 +32,8 @@ class AppConstants {
   static const String notificationChannelAzkar = 'azkar_channel_v2';
   static const String notificationChannelPrayer = 'prayer_channel_v5';
   static const String notificationChannelPrayerReminder = 'prayer_reminder_channel_v2';
+  static const String notificationChannelMedia = 'media_playback_channel_v1';
+  static const int notificationIdMedia = 99999;
 
   // ── Gamification ───────────────────────────────────────────
   static const int keysPerChest = 5;

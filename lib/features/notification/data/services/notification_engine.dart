@@ -13,6 +13,7 @@ import 'package:rafiki_app/features/notification/data/models/notification_model.
 import 'package:rafiki_app/features/prayer/data/services/prayer_config.dart';
 import 'package:rafiki_app/features/prayer/data/services/prayer_engine.dart';
 import 'package:rafiki_app/core/constants/app_constants.dart';
+import 'package:rafiki_app/core/services/media_notification_service.dart';
 
 class NotificationEngine {
   static final NotificationEngine instance = NotificationEngine._internal();
@@ -75,6 +76,17 @@ class NotificationEngine {
   @pragma('vm:entry-point')
   static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
     debugPrint('🔔 [NotifEngine] Notification Action: id=${receivedAction.id}, key=${receivedAction.buttonKeyPressed}');
+    if (receivedAction.buttonKeyPressed.startsWith('MEDIA_') || receivedAction.id == AppConstants.notificationIdMedia) {
+      await MediaNotificationService.instance.handleAction(receivedAction.buttonKeyPressed);
+    }
+  }
+
+  @pragma('vm:entry-point')
+  static Future<void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+    debugPrint('🔔 [NotifEngine] Notification Dismissed: id=${receivedAction.id}');
+    if (receivedAction.id == AppConstants.notificationIdMedia) {
+      await MediaNotificationService.instance.handleAction('MEDIA_STOP');
+    }
   }
 
   Future<void> initialize() async {
@@ -166,12 +178,25 @@ class NotificationEngine {
           onlyAlertOnce: true,
           defaultPrivacy: NotificationPrivacy.Public,
         ),
+        NotificationChannel(
+          channelKey: AppConstants.notificationChannelMedia,
+          channelName: 'Media Playback',
+          channelDescription: 'إشعارات تشغيل الصوتيات (إذاعة، قرآن، بودكاست)',
+          importance: NotificationImportance.Low,
+          channelShowBadge: false,
+          enableVibration: false,
+          playSound: false,
+          defaultColor: AppColors.accent,
+          locked: true,
+          defaultPrivacy: NotificationPrivacy.Public,
+        ),
       ],
     );
     debugPrint('🔔 [NotifEngine] AwesomeNotifications().initialize() DONE');
 
     await AwesomeNotifications().setListeners(
       onActionReceivedMethod: onActionReceivedMethod,
+      onDismissActionReceivedMethod: onDismissActionReceivedMethod,
     );
 
     // 4. Check permissions
@@ -469,40 +494,61 @@ class NotificationEngine {
       if (!notif.enabled) continue;
 
       // Unique hash block in 10000..79000 range (strictly disjoint from prayer IDs 90000..90019)
-      final baseBlock = 10000 + ((notif.id.hashCode.abs() % 6900) * 10);
+      final baseBlock = 10000 + ((notif.id.hashCode.abs() % 6500) * 10);
+
+      final interval = notif.repeatIntervalHours;
+      final isRepeatingInterval = interval != null && interval > 0;
+
+      // Determine the list of hours to trigger
+      final List<int> hoursToSchedule = [];
+      if (isRepeatingInterval) {
+        int h = notif.time.hour;
+        while (h <= 22) {
+          hoursToSchedule.add(h);
+          h += interval;
+        }
+        if (hoursToSchedule.isEmpty) {
+          hoursToSchedule.add(notif.time.hour);
+        }
+      } else {
+        hoursToSchedule.add(notif.time.hour);
+      }
 
       for (var i = 0; i < notif.days.length; i++) {
         final weekday = _dayMap[notif.days[i].trim()] ?? DateTime.monday;
-        final scheduleId = baseBlock + weekday;
 
-        try {
-          await AwesomeNotifications().createNotification(
-            content: NotificationContent(
-              id: scheduleId,
-              channelKey: AppConstants.notificationChannelAzkar,
-              title: notif.title.isNotEmpty ? notif.title : 'تذكير بذكر الله',
-              body: notif.body,
-              notificationLayout: NotificationLayout.BigText,
-              category: NotificationCategory.Reminder,
-              largeIcon: 'resource://mipmap/ic_launcher',
-              roundedLargeIcon: true,
-              color: AppColors.accent,
-              wakeUpScreen: true,
-              autoDismissible: true,
-            ),
-            schedule: NotificationCalendar(
-              weekday: weekday,
-              hour: notif.time.hour,
-              minute: notif.time.minute,
-              second: 0,
-              timeZone: localTimeZone,
-              repeats: true,
-              allowWhileIdle: true,
-              preciseAlarm: false,
-            ),
-          );
-        } catch (e) {
-          debugPrint('🔔 [NotifEngine] Azkar schedule error for ID $scheduleId: $e');
+        for (final hourVal in hoursToSchedule) {
+          final scheduleId = baseBlock + (weekday * 24) + hourVal;
+
+          try {
+            await AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                id: scheduleId,
+                channelKey: AppConstants.notificationChannelAzkar,
+                title: notif.title.isNotEmpty ? notif.title : 'تذكير بذكر الله',
+                body: notif.body,
+                notificationLayout: NotificationLayout.BigText,
+                category: NotificationCategory.Reminder,
+                largeIcon: 'resource://mipmap/ic_launcher',
+                roundedLargeIcon: true,
+                color: AppColors.accent,
+                wakeUpScreen: true,
+                autoDismissible: true,
+              ),
+              schedule: NotificationCalendar(
+                weekday: weekday,
+                hour: hourVal,
+                minute: notif.time.minute,
+                second: 0,
+                timeZone: localTimeZone,
+                repeats: true,
+                allowWhileIdle: true,
+                preciseAlarm: false,
+              ),
+            );
+          } catch (e) {
+            debugPrint('🔔 [NotifEngine] Azkar schedule error for ID $scheduleId: $e');
+          }
         }
       }
     }

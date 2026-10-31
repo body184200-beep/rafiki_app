@@ -47,6 +47,17 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يحتاج تطبيق رفيقي إلى إذن تحديد الموقع لحساب اتجاه القبلة الشريفة ومواقيت الصلاة بدقة لموقعك الحالي.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يحتاج تطبيق رفيقي إلى إذن تحديد الموقع لحساب اتجاه القبلة الشريفة ومواقيت الصلاة بدقة لموقعك الحالي.</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>en</string>
+	</array>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

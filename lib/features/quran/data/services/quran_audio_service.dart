@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rafiki_app/core/logging/app_logger.dart';
+import 'package:rafiki_app/core/services/media_notification_service.dart';
 
 class QuranReciter {
   final int id;
@@ -38,6 +40,22 @@ class QuranReciter {
       surahTotal: completeMoshaf['surah_total'] as int? ?? 114,
     );
   }
+}
+
+class DownloadedSurahItem {
+  final int reciterId;
+  final String reciterName;
+  final int surahNumber;
+  final String filePath;
+  final int fileSizeBytes;
+
+  const DownloadedSurahItem({
+    required this.reciterId,
+    required this.reciterName,
+    required this.surahNumber,
+    required this.filePath,
+    required this.fileSizeBytes,
+  });
 }
 
 /// كبار قراء العالم الإسلامي المسجلين للقرآن كاملاً (١١٤ سورة)
@@ -129,15 +147,76 @@ const List<QuranReciter> kDefaultReciters = [
 ];
 
 class QuranAudioService {
-  QuranAudioService._();
+  QuranAudioService._() {
+    _initSavedReciter();
+    _initAudioListeners();
+    MediaNotificationService.instance.registerHandlers(
+      type: ActiveMediaType.quran,
+      onPlay: () async {
+        await _player.play();
+      },
+      onPause: () async {
+        await _player.pause();
+      },
+      onStop: () async {
+        await stop();
+      },
+    );
+  }
+
+  void _initAudioListeners() {
+    _player.playerStateStream.listen((state) {
+      if (MediaNotificationService.instance.activeType == ActiveMediaType.quran) {
+        if (state.processingState == ProcessingState.completed) {
+          MediaNotificationService.instance.dismiss();
+        } else if (state.processingState != ProcessingState.idle) {
+          MediaNotificationService.instance.updatePlaybackState(state.playing);
+        }
+      }
+    });
+
+    _player.positionStream.listen((pos) {
+      if (MediaNotificationService.instance.activeType == ActiveMediaType.quran) {
+        MediaNotificationService.instance.updateProgress(
+          position: pos,
+          duration: _player.duration ?? Duration.zero,
+        );
+      }
+    });
+  }
   static final QuranAudioService instance = QuranAudioService._();
 
   final AudioPlayer _player = AudioPlayer();
   AudioPlayer get player => _player;
 
+  static const String _kSavedReciterKey = 'quran_saved_reciter_id_v1';
+
   QuranReciter _selectedReciter = kDefaultReciters.first;
   QuranReciter get selectedReciter => _selectedReciter;
-  set selectedReciter(QuranReciter r) => _selectedReciter = r;
+
+  Future<void> _initSavedReciter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedId = prefs.getInt(_kSavedReciterKey);
+      if (savedId != null) {
+        final match = _allReciters.where((r) => r.id == savedId).firstOrNull;
+        if (match != null) {
+          _selectedReciter = match;
+          _reciterCtrl.add(match);
+        }
+      }
+    } catch (_) {}
+  }
+
+  void setSelectedReciter(QuranReciter r) {
+    _selectedReciter = r;
+    _reciterCtrl.add(r);
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setInt(_kSavedReciterKey, r.id);
+    }).catchError((_) {});
+  }
+
+  set selectedReciter(QuranReciter r) => setSelectedReciter(r);
 
   int? _currentSurahNumber;
   int? get currentSurahNumber => _currentSurahNumber;
@@ -221,6 +300,54 @@ class QuranAudioService {
     }
   }
 
+  /// Fetches ALL downloaded Surahs across ALL reciters stored on the device
+  Future<List<DownloadedSurahItem>> getAllDownloadedSurahs() async {
+    try {
+      final audioDir = await _getAudioDir();
+      if (!await audioDir.exists()) return [];
+      final entities = audioDir.listSync();
+      final List<DownloadedSurahItem> list = [];
+
+      for (final entity in entities) {
+        if (entity is File && entity.path.endsWith('.mp3')) {
+          final name = entity.uri.pathSegments.isNotEmpty
+              ? entity.uri.pathSegments.last
+              : entity.path.split(Platform.isWindows ? r'\' : '/').last;
+
+          // Format: reciter_{reciterId}_surah_{surahNum}.mp3
+          if (name.startsWith('reciter_') && name.contains('_surah_')) {
+            final parts = name.replaceAll('.mp3', '').split('_surah_');
+            if (parts.length == 2) {
+              final reciterIdStr = parts[0].replaceFirst('reciter_', '');
+              final surahNumStr = parts[1];
+              final rId = int.tryParse(reciterIdStr);
+              final sNum = int.tryParse(surahNumStr);
+
+              if (rId != null && sNum != null && entity.lengthSync() > 1000) {
+                final reciter = _allReciters.where((r) => r.id == rId).firstOrNull;
+                final rName = reciter?.name ?? 'القارئ رقم $rId';
+                list.add(
+                  DownloadedSurahItem(
+                    reciterId: rId,
+                    reciterName: rName,
+                    surahNumber: sNum,
+                    filePath: entity.path,
+                    fileSizeBytes: entity.lengthSync(),
+                  ),
+                );
+              }
+            }
+          }
+        }
+      }
+      // Sort by surah number
+      list.sort((a, b) => a.surahNumber.compareTo(b.surahNumber));
+      return list;
+    } catch (_) {
+      return [];
+    }
+  }
+
   /// Downloads Surah MP3 to device storage for 100% offline playback
   Future<bool> downloadSurah({
     required QuranReciter reciter,
@@ -280,7 +407,6 @@ class QuranAudioService {
   }
 
   /// Fetches the live list of reciters from MP3Quran API v3
-  /// Filtering strictly for complete Qurans (surah_total == 114)
   Future<List<QuranReciter>> fetchReciters() async {
     try {
       final uri = Uri.parse('https://mp3quran.net/api/v3/reciters?language=ar');
@@ -317,15 +443,13 @@ class QuranAudioService {
     return '$server$numPadded.mp3';
   }
 
-  /// Plays Surah with Automatic Offline Fallback:
-  /// 1. Checks if local file exists -> plays directly from storage without internet!
-  /// 2. If not downloaded -> streams from internet.
   Future<void> playSurah({
     required QuranReciter reciter,
     required int surahNumber,
     required String surahName,
   }) async {
     try {
+      await MediaNotificationService.instance.ensureExclusivePlayback(ActiveMediaType.quran);
       _isLoading = true;
       _selectedReciter = reciter;
       _currentSurahNumber = surahNumber;
@@ -349,6 +473,14 @@ class QuranAudioService {
 
       _isLoading = false;
       await _player.play();
+      MediaNotificationService.instance.show(
+        type: ActiveMediaType.quran,
+        title: 'سورة $surahName',
+        subtitle: 'القارئ: ${reciter.name}',
+        isPlaying: true,
+        position: _player.position,
+        duration: _player.duration ?? Duration.zero,
+      );
     } catch (e) {
       _isLoading = false;
       AppLogger.error('Error playing Quran audio', tag: 'QuranAudio', error: e);
@@ -358,8 +490,21 @@ class QuranAudioService {
   Future<void> togglePlayPause() async {
     if (_player.playing) {
       await _player.pause();
+      if (MediaNotificationService.instance.activeType == ActiveMediaType.quran) {
+        await MediaNotificationService.instance.updatePlaybackState(false);
+      }
     } else {
       await _player.play();
+      if (_currentSurahName != null) {
+        await MediaNotificationService.instance.show(
+          type: ActiveMediaType.quran,
+          title: 'سورة $_currentSurahName',
+          subtitle: 'القارئ: ${_selectedReciter.name}',
+          isPlaying: true,
+          position: _player.position,
+          duration: _player.duration ?? Duration.zero,
+        );
+      }
     }
   }
 
@@ -372,5 +517,8 @@ class QuranAudioService {
     _currentSurahNumber = null;
     _currentSurahName = null;
     _surahChangeCtrl.add(null);
+    if (MediaNotificationService.instance.activeType == ActiveMediaType.quran) {
+      await MediaNotificationService.instance.dismiss();
+    }
   }
 }

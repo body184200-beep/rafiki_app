@@ -1,59 +1,15 @@
-import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/di/service_locator.dart';
-import 'package:rafiki_app/core/l10n/app_localizations.dart';
-import 'package:rafiki_app/features/azkar/data/datasources/azkar_data.dart';
-import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
+import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/features/notification/data/models/notification_model.dart';
+import 'package:rafiki_app/features/notification/data/services/notification_engine.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Design Tokens
+//  Clean, Simple & Modern Notification Page
 // ─────────────────────────────────────────────────────────────────────────────
-class _T {
-  static bool get _l => ThemeProvider.instance.isLight;
-  static Color get bg       => _l ? const Color(0xFFF8F6F0) : const Color(0xff06080D);
-  static Color get surf     => _l ? const Color(0xFFFFFFFF) : const Color(0xff0D1117);
-  static Color get surf2    => _l ? const Color(0xFFF3F4F6) : const Color(0xff131A24);
-  static Color get surf3    => _l ? const Color(0xFFE5E7EB) : const Color(0xff1B2332);
-  static Color get acc      => _l ? const Color(0xFF0F4A39) : const Color(0xff4ECBA8);
-  static Color get acc2     => _l ? const Color(0xFF1D5A46) : const Color(0xff2E9E7A);
-  static Color get acc3     => _l ? const Color(0xFF0B4633) : const Color(0xff1B6B53);
-  static Color get txt      => _l ? const Color(0xFF111827) : const Color(0xffECF0F8);
-  static Color get txt2     => _l ? const Color(0xFF6B7280) : const Color(0xff8896AB);
-  static Color get txt3     => _l ? const Color(0xFF9CA3AF) : const Color(0xff4D5A6C);
-  static Color get border   => _l ? const Color(0xFFE5E7EB) : const Color(0xff1E2A38);
-  static Color get border2  => _l ? const Color(0xFFE5E7EB) : const Color(0xff253040);
-  static const errorBg  = Color(0xff1E0808);
-  static const errorAcc = Color(0xffE24B4A);
-}
 
-const _readyAzkar = <String>[
-  'سبحان الله وبحمده سبحان الله العظيم',
-  'لا إله إلا الله وحده لا شريك له',
-  'اللهم صل وسلم على نبينا محمد',
-  'أستغفر الله العظيم وأتوب إليه',
-  'لا حول ولا قوة إلا بالله',
-  'حسبي الله ونعم الوكيل',
-  'اللهم اغفر لي ولوالدي',
-  'اللهم ارزقني الجنة وأجرني من النار',
-];
-
-/// Build locale-aware days list from AppLocalizations.
-List<Map<String, String>> _buildDays(AppLocalizations loc) => [
-  {'label': loc.day_sat, 'short': loc.day_sat_short},
-  {'label': loc.day_sun, 'short': loc.day_sun_short},
-  {'label': loc.day_mon, 'short': loc.day_mon_short},
-  {'label': loc.day_tue, 'short': loc.day_tue_short},
-  {'label': loc.day_wed, 'short': loc.day_wed_short},
-  {'label': loc.day_thu, 'short': loc.day_thu_short},
-  {'label': loc.day_fri, 'short': loc.day_fri_short},
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Page
-// ─────────────────────────────────────────────────────────────────────────────
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
 
@@ -61,26 +17,22 @@ class NotificationPage extends StatefulWidget {
   State<NotificationPage> createState() => _NotificationPageState();
 }
 
-class _NotificationPageState extends State<NotificationPage> with TickerProviderStateMixin {
-  late final AnimationController _headerAnim;
-  late final Animation<double> _headerFade;
+class _NotificationPageState extends State<NotificationPage> {
+  final NotificationEngine _engine = sl<NotificationEngine>();
+
+  static bool get _l => ThemeProvider.instance.isLight;
+  static Color get _bg => _l ? const Color(0xFFF8F6F0) : const Color(0xff060A12);
+  static Color get _cardBg => _l ? const Color(0xFFFFFFFF) : const Color(0xff0E1626);
+  static Color get _teal => _l ? const Color(0xFF0F4A39) : const Color(0xff2EB88A);
+  static Color get _gold => _l ? const Color(0xFF8D5B18) : const Color(0xffC9A84C);
+  static Color get _textMain => _l ? const Color(0xFF111827) : const Color(0xffEDE8D8);
+  static Color get _textSub => _l ? const Color(0xFF6B7280) : const Color(0xff7E93A8);
+  static Color get _border => _l ? const Color(0xFFE5E7EB) : const Color(0xff162238);
 
   @override
   void initState() {
     super.initState();
-    _headerAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _headerFade = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
-    _headerAnim.forward();
-    sl<NotificationEngine>().checkAndRequestPermission();
-  }
-
-  @override
-  void dispose() {
-    _headerAnim.dispose();
-    super.dispose();
+    _engine.checkAndRequestPermission();
   }
 
   void _showForm([CustomNotification? notif]) {
@@ -89,253 +41,263 @@ class _NotificationPageState extends State<NotificationPage> with TickerProvider
 
   Future<void> _toggleNotif(String id, bool val) async {
     HapticFeedback.lightImpact();
-    await sl<NotificationEngine>().toggleNotification(id, val);
+    await _engine.toggleNotification(id, val);
   }
 
-  Future<void> _deleteNotif(String id) async {
-    HapticFeedback.mediumImpact();
-    await sl<NotificationEngine>().deleteNotification(id);
+  Future<void> _deleteNotif(String id, String body) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: _cardBg,
+          title: Text('حذف التذكير', style: TextStyle(color: _textMain, fontSize: 16)),
+          content: Text('هل أنت متأكد من حذف هذا التذكير؟', style: TextStyle(color: _textSub, fontSize: 13)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('إلغاء', style: TextStyle(color: _textSub)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('حذف', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirm == true) {
+      HapticFeedback.mediumImpact();
+      await _engine.deleteNotification(id);
+    }
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'ص' : 'م';
+    return '$hour:$minute $period';
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: _T.bg,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-      child: Directionality(
-        textDirection: Localizations.localeOf(context).languageCode == 'ar'
-            ? TextDirection.rtl
-            : TextDirection.ltr,
-        child: Scaffold(
-          backgroundColor: _T.bg,
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: _T.acc,
-            foregroundColor: _T.bg,
-            onPressed: () => _showForm(),
-            child: Icon(Icons.add_rounded),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: _bg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            'تذكيرات الأذكار',
+            style: TextStyle(color: _textMain, fontWeight: FontWeight.bold, fontSize: 18),
           ),
-          body: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ── App Bar ──────────────────────────────────────────────
-              SliverAppBar(
-                expandedHeight: 140,
-                pinned: true,
-                elevation: 0,
-                backgroundColor: _T.bg,
-                surfaceTintColor: Colors.transparent,
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  title: FadeTransition(
-                    opacity: _headerFade,
-                    child: Builder(
-                      builder: (ctx) {
-                        final loc = AppLocalizations.of(ctx)!;
-                        return Text(
-                          loc.notif_title,
-                          style: TextStyle(
-                            color: _T.txt,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 20,
-                            letterSpacing: -0.3,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  background: Container(
-                    color: _T.bg,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 56, 20, 0),
-                        child: FadeTransition(
-                          opacity: _headerFade,
-                          child: Builder(
-                            builder: (ctx) {
-                              final loc = AppLocalizations.of(ctx)!;
-                              return Text(
-                                loc.notif_subtitle,
-                                style: TextStyle(color: _T.txt2, fontSize: 13.5),
-                              );
-                            },
-                          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_forward_ios_rounded, color: _textMain, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          backgroundColor: _teal,
+          foregroundColor: Colors.white,
+          onPressed: () => _showForm(),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('إضافة ذكر للتذكير', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        body: ValueListenableBuilder<List<CustomNotification>>(
+          valueListenable: _engine.notifications,
+          builder: (context, notifs, _) {
+            if (notifs.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: _teal.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
+                        child: Icon(Icons.notifications_active_outlined, size: 48, color: _teal),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'لا توجد تذكيرات نشطة حالياً',
+                        style: TextStyle(color: _textMain, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'أضف أذكارك المفضلة وحدد وقتها أو اختر تكرارها كل عدة ساعات لتصلك تلقائياً على هاتفك.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: _textSub, fontSize: 13, height: 1.5),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _teal,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('إنشاء تذكير جديد', style: TextStyle(fontWeight: FontWeight.bold)),
+                        onPressed: () => _showForm(),
+                      ),
+                    ],
                   ),
                 ),
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(1),
-                  child: Container(height: 1, color: _T.border),
-                ),
-              ),
+              );
+            }
 
-              // ── Permission Warning Banner ───────────────────────────────────
-              ValueListenableBuilder<bool>(
-                valueListenable: sl<NotificationEngine>().isGlobalAllowed,
-                builder: (context, allowed, _) {
-                  if (allowed) return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  final loc = AppLocalizations.of(context)!;
-                  return SliverToBoxAdapter(
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _T.errorBg,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _T.errorAcc.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded, color: _T.errorAcc),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              loc.notif_permission_disabled,
-                              style: TextStyle(color: _T.txt, fontSize: 13, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await sl<NotificationEngine>().requestAllNotificationPermissions(context: context);
-                            },
-                            child: Text(
-                              loc.notif_enable_button,
-                              style: TextStyle(color: _T.acc, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+            final activeCount = notifs.where((n) => n.enabled).length;
 
-              // ── List ──────────────────────────────────────────────────
-              ValueListenableBuilder<List<CustomNotification>>(
-                valueListenable: sl<NotificationEngine>().notifications,
-                builder: (context, notifications, _) {
-                  final loc = AppLocalizations.of(context)!;
-                  if (notifications.isEmpty) {
-                    return SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
+            return ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+              children: [
+                // Info Banner
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: _cardBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _border),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded, color: _teal, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
                         child: Text(
-                          loc.notif_empty,
-                          style: TextStyle(color: _T.txt3, fontSize: 16),
+                          'لديك $activeCount تذكيرات مفعلة تعمل محلياً على الهاتف بدون إنترنت.',
+                          style: TextStyle(color: _textSub, fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
-                    );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (ctx, i) {
-                          final n = notifications[i];
-                          return _buildNotifCard(n);
-                        },
-                        childCount: notifications.length,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotifCard(CustomNotification n) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: _T.surf,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _T.border),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xff0D1117), Color(0xff0A0F18)],
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  n.body,
-                  style: TextStyle(
-                    color: n.enabled ? _T.txt : _T.txt3,
-                    fontSize: 15,
-                    height: 1.5,
+                    ],
                   ),
                 ),
-              ),
-              Switch(
-                value: n.enabled,
-                onChanged: (val) => _toggleNotif(n.id, val),
-                activeColor: _T.acc,
-                inactiveThumbColor: _T.txt3,
-                inactiveTrackColor: _T.surf3,
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.access_time_rounded, size: 16, color: n.enabled ? _T.acc : _T.txt3),
-              SizedBox(width: 6),
-              Text(
-                n.time.format(context),
-                style: TextStyle(
-                  color: n.enabled ? _T.acc : _T.txt3,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: Icon(Icons.edit_rounded, color: _T.txt2, size: 20),
-                onPressed: () => _showForm(n),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              SizedBox(width: 16),
-              IconButton(
-                icon: Icon(Icons.delete_outline_rounded, color: _T.errorAcc, size: 20),
-                onPressed: () => _deleteNotif(n.id),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Text(
-            n.days.join(' • '),
-            style: TextStyle(color: _T.txt3, fontSize: 11),
-          ),
-        ],
+
+                // Reminders list
+                for (final notif in notifs) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: notif.enabled ? _cardBg : _cardBg.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: notif.enabled ? _teal.withValues(alpha: 0.3) : _border,
+                        width: notif.enabled ? 1.2 : 0.8,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row 1: Frequency Badge & Toggle Switch
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: notif.enabled
+                                    ? _teal.withValues(alpha: 0.14)
+                                    : Colors.grey.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    notif.repeatIntervalHours != null && notif.repeatIntervalHours! > 0
+                                        ? Icons.repeat_rounded
+                                        : Icons.access_time_rounded,
+                                    size: 14,
+                                    color: notif.enabled ? _teal : _textSub,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    notif.repeatIntervalHours != null && notif.repeatIntervalHours! > 0
+                                        ? 'يتكرر كل ${notif.repeatIntervalHours} ساعات'
+                                        : 'يومياً الساعة ${_formatTimeOfDay(notif.time)}',
+                                    style: TextStyle(
+                                      color: notif.enabled ? _teal : _textSub,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: notif.enabled,
+                              activeColor: _teal,
+                              onChanged: (val) => _toggleNotif(notif.id, val),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Dhikr Title & Body
+                        Text(
+                          notif.body,
+                          style: TextStyle(
+                            color: notif.enabled ? _textMain : _textSub,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            height: 1.5,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Actions & Days
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                notif.days.length == 7 ? 'كل الأيام' : notif.days.join('، '),
+                                style: TextStyle(color: _textSub, fontSize: 11),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.edit_outlined, size: 18, color: _textSub),
+                              tooltip: 'تعديل',
+                              onPressed: () => _showForm(notif),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent.withValues(alpha: 0.7)),
+                              tooltip: 'حذف',
+                              onPressed: () => _deleteNotif(notif.id, notif.body),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Form Bottom Sheet
+//  Simple, Intuitive Bottom Sheet Form
 // ─────────────────────────────────────────────────────────────────────────────
+
 class NotificationFormSheet extends StatefulWidget {
   final CustomNotification? existing;
   final String? initialZekr;
@@ -356,11 +318,14 @@ class NotificationFormSheet extends StatefulWidget {
     String? initialZekr,
     String? initialTitle,
     TimeOfDay? initialTime,
-  }) {
-    return showModalBottomSheet(
+  }) async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ThemeProvider.instance.isLight ? Colors.white : const Color(0xFF0F1728),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => NotificationFormSheet(
         existing: existing,
         initialZekr: initialZekr,
@@ -375,143 +340,85 @@ class NotificationFormSheet extends StatefulWidget {
 }
 
 class _NotificationFormSheetState extends State<NotificationFormSheet> {
-  final _titleController = TextEditingController();
-  final _zekrController = TextEditingController();
-  TimeOfDay _selectedTime = const TimeOfDay(hour: 5, minute: 30);
-  final List<String> _selectedDays = [];
+  final TextEditingController _textCtrl = TextEditingController();
+  late TimeOfDay _time;
+  int? _repeatIntervalHours; // null for specific time, or 1, 2, 3, 4, 6
+  bool _isPeriodicMode = true; // User can choose between repeat interval vs specific time
   bool _isSaving = false;
-  bool _initializedDays = false;
+
+  final List<String> _days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+  final Set<String> _selectedDays = {};
+
+  static const List<String> _presetAzkar = [
+    'سبحان الله وبحمده سبحان الله العظيم',
+    'لا إله إلا الله وحده لا شريك له',
+    'اللهم صلِّ وسلم على نبينا محمد',
+    'أستغفر الله العظيم وأتوب إليه',
+    'لا حول ولا قوة إلا بالله العلي العظيم',
+    'حسبي الله ونعم الوكيل',
+    'اللهم اغفر لي ولوالدي وللمسلمين',
+    'رضيت بالله رباً وبالإسلام ديناً وبمحمد نبياً',
+  ];
+
+  static const List<int> _intervalOptions = [1, 2, 3, 4, 6];
 
   @override
   void initState() {
     super.initState();
-    if (widget.existing != null) {
-      _titleController.text = widget.existing!.title;
-      _zekrController.text = widget.existing!.body;
-      _selectedTime = widget.existing!.time;
-      _selectedDays.addAll(widget.existing!.days);
-      _initializedDays = true;
+    final ex = widget.existing;
+    if (ex != null) {
+      _textCtrl.text = ex.body;
+      _time = ex.time;
+      _repeatIntervalHours = ex.repeatIntervalHours;
+      _isPeriodicMode = ex.repeatIntervalHours != null && ex.repeatIntervalHours! > 0;
+      _selectedDays.addAll(ex.days);
     } else {
-      _titleController.text = widget.initialTitle ?? '';
-      _zekrController.text = widget.initialZekr ?? _readyAzkar.first;
-      if (widget.initialTime != null) {
-        _selectedTime = widget.initialTime!;
-      }
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initializedDays) {
-      _initializedDays = true;
-      final loc = AppLocalizations.of(context);
-      if (loc != null) {
-        _selectedDays.addAll([
-          loc.day_sat,
-          loc.day_sun,
-          loc.day_mon,
-          loc.day_tue,
-          loc.day_wed,
-          loc.day_thu,
-          loc.day_fri,
-        ]);
-      }
+      _textCtrl.text = widget.initialZekr ?? _presetAzkar.first;
+      _time = widget.initialTime ?? const TimeOfDay(hour: 8, minute: 0);
+      _repeatIntervalHours = 2; // Default to repeating every 2 hours!
+      _isPeriodicMode = true;
+      _selectedDays.addAll(_days); // Default to all days
     }
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _zekrController.dispose();
+    _textCtrl.dispose();
     super.dispose();
-  }
-
-  void _showSnack(String msg, {bool isError = false}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(msg, style: TextStyle(fontFamily: 'Tajawal')),
-          backgroundColor: isError ? _T.errorBg : _T.surf3,
-        ),
-      );
   }
 
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedTime,
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: _T.acc,
-            onPrimary: _T.bg,
-            surface: _T.surf3,
-            onSurface: _T.txt,
-          ),
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: _T.surf,
-            hourMinuteColor: _T.surf3,
-            hourMinuteTextColor: _T.txt,
-            dialBackgroundColor: _T.surf3,
-            dialHandColor: _T.acc,
-            entryModeIconColor: _T.txt2,
-            dialTextColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected) ? _T.bg : _T.txt,
-            ),
-          ),
-        ),
-        child: child!,
-      ),
+      initialTime: _time,
+      builder: (context, child) {
+        return Directionality(textDirection: TextDirection.rtl, child: child!);
+      },
     );
-    if (picked != null) setState(() => _selectedTime = picked);
-  }
-
-  Future<void> _openZekrLibraryPicker() async {
-    final result = await showModalBottomSheet<Map<String, String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _ZekrPickerSheet(),
-    );
-    if (result != null && mounted) {
-      setState(() {
-        _zekrController.text = result['text'] ?? '';
-        if (_titleController.text.trim().isEmpty ||
-            _titleController.text == 'تذكير بالأذكار') {
-          _titleController.text = result['category'] ?? 'تذكير بذكر الله';
-        }
-      });
+    if (picked != null) {
+      setState(() => _time = picked);
     }
   }
 
-  Future<void> _onSave() async {
-    final loc = AppLocalizations.of(context)!;
-    final text = _zekrController.text.trim();
-    if (text.isEmpty) {
-      _showSnack(loc.notif_error_no_zekr, isError: true);
-      return;
-    }
-    if (_selectedDays.isEmpty) {
-      _showSnack(loc.notif_error_no_days, isError: true);
+  Future<void> _save() async {
+    final body = _textCtrl.text.trim();
+    if (body.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال نص الذكر أو الدعاء')),
+      );
       return;
     }
 
     setState(() => _isSaving = true);
 
-    final title = _titleController.text.trim().isNotEmpty
-        ? _titleController.text.trim()
-        : loc.notif_default_title;
-
     final notif = CustomNotification(
       id: widget.existing?.id ?? UniqueKey().toString(),
-      title: title,
-      body: text,
-      time: _selectedTime,
-      days: _selectedDays,
+      title: widget.initialTitle ?? '🤍 تذكير بذكر الله',
+      body: body,
+      time: _time,
+      days: _selectedDays.toList(),
       enabled: widget.existing?.enabled ?? true,
+      repeatIntervalHours: _isPeriodicMode ? _repeatIntervalHours : null,
     );
 
     try {
@@ -520,498 +427,309 @@ class _NotificationFormSheetState extends State<NotificationFormSheet> {
       } else {
         await sl<NotificationEngine>().addNotification(notif);
       }
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم حفظ وتفعيل إشعار التذكير بنجاح 🔔',
-                style: TextStyle(fontFamily: 'Tajawal')),
-            backgroundColor: Color(0xff1B2332),
+            content: Text('تم حفظ وتفعيل التذكير بنجاح 🔔'),
             behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
           ),
         );
       }
-    } catch (e) {
-      _showSnack(e.toString().replaceAll('Exception: ', ''), isError: true);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(
-      text,
-      style: TextStyle(color: _T.txt3, fontSize: 11, fontWeight: FontWeight.w700),
-    ),
-  );
-
-  Widget _card({required Widget child, VoidCallback? onTap}) {
-    Widget inner = Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _T.surf,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _T.border),
-      ),
-      child: child,
-    );
-    if (onTap != null) inner = GestureDetector(onTap: onTap, child: inner);
-    return inner;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    final days = _buildDays(loc);
-    return Directionality(
-      textDirection: Localizations.localeOf(context).languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.88,
-        decoration: BoxDecoration(
-          color: _T.bg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Column(
-          children: [
-            SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: _T.surf3,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              widget.existing != null ? loc.notif_edit_title : 'تحديد ذكر للتذكير اليومي',
-              style: TextStyle(color: _T.txt, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  // Browse full Azkar library button
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      onTap: _openZekrLibraryPicker,
-                      borderRadius: BorderRadius.circular(18),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: _T.acc3.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: _T.acc2.withValues(alpha: 0.5)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.menu_book_rounded, color: _T.acc, size: 22),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'تصفح مكتبة الأذكار الكاملة',
-                                    style: TextStyle(
-                                      color: _T.acc,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'اختر من أذكار الصباح، المساء، أو الأدعية النبوية',
-                                    style: TextStyle(color: _T.txt2, fontSize: 11),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(Icons.arrow_forward_ios_rounded, color: _T.acc, size: 14),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Zekr Select & Custom Input
-                  _card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label('أذكار وأدعية سريعة:'),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _readyAzkar.map((z) {
-                            final isActive = _zekrController.text == z;
-                            return GestureDetector(
-                              onTap: () => setState(() => _zekrController.text = z),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isActive ? _T.acc3.withValues(alpha: 0.22) : _T.surf2,
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(color: isActive ? _T.acc2 : _T.border2),
-                                ),
-                                child: Text(
-                                  z,
-                                  style: TextStyle(
-                                    color: isActive ? _T.acc : _T.txt2,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        SizedBox(height: 18),
-                        _label('عنوان التنبيه (اختياري):'),
-                        TextField(
-                          controller: _titleController,
-                          style: TextStyle(color: _T.txt, fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'مثال: أذكار الصباح، ورد الاستغفار، الصلاة على النبي',
-                            hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
-                            filled: true,
-                            fillColor: _T.surf2,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        _label('نص الذكر المطلوب التذكير به:'),
-                        TextField(
-                          controller: _zekrController,
-                          maxLines: 3,
-                          style: TextStyle(color: _T.txt, fontSize: 14, height: 1.5),
-                          decoration: InputDecoration(
-                            hintText: loc.notif_zekr_hint,
-                            hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
-                            filled: true,
-                            fillColor: _T.surf2,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                          ),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 12),
-
-                  // Time
-                  _card(
-                    onTap: _pickTime,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: _T.acc3.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(Icons.access_time_rounded, color: _T.acc, size: 22),
-                        ),
-                        SizedBox(width: 14),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _label(loc.notif_time_label),
-                            Text(
-                              _selectedTime.format(context),
-                              style: TextStyle(
-                                color: _T.txt,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 12),
-
-                  // Days
-                  _card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label(loc.notif_days_label),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 10,
-                          children: days.map((d) {
-                            final isSel = _selectedDays.contains(d['label']);
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  isSel ? _selectedDays.remove(d['label']) : _selectedDays.add(d['label']!);
-                                });
-                              },
-                              child: Container(
-                                width: 52,
-                                height: 52,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isSel ? _T.acc3.withValues(alpha: 0.22) : _T.surf2,
-                                  border: Border.all(color: isSel ? _T.acc : _T.border2),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    d['short']!,
-                                    style: TextStyle(
-                                      color: isSel ? _T.acc : _T.txt2,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Save button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _onSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _T.acc,
-                        foregroundColor: _T.bg,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      ),
-                      child: _isSaving
-                          ? CircularProgressIndicator(color: _T.bg)
-                          : Text(
-                              loc.notif_save,
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Full Zekr Library Picker Sheet
-// ─────────────────────────────────────────────────────────────────────────────
-class _ZekrPickerSheet extends StatefulWidget {
-  const _ZekrPickerSheet();
-
-  @override
-  State<_ZekrPickerSheet> createState() => _ZekrPickerSheetState();
-}
-
-class _ZekrPickerSheetState extends State<_ZekrPickerSheet>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabCtrl;
-  final TextEditingController _searchCtrl = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _tabCtrl = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabCtrl.dispose();
-    _searchCtrl.dispose();
-    super.dispose();
-  }
-
-  List<String> _filter(List<String> list) {
-    if (_searchQuery.isEmpty) return list;
-    final q = _searchQuery.trim().toLowerCase();
-    return list.where((s) => s.toLowerCase().contains(q)).toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final morningList = morningAzkar.map((m) => m['text'] as String).toList();
-    final eveningList = eveningAzkar.map((m) => m['text'] as String).toList();
-    final generalList = _readyAzkar;
+    final isLight = ThemeProvider.instance.isLight;
+    final textPri = isLight ? const Color(0xFF111827) : const Color(0xFFEDE8D8);
+    final textSec = isLight ? const Color(0xFF6B7280) : const Color(0xFF7E93A8);
+    final teal = isLight ? const Color(0xFF0F4A39) : const Color(0xff2EB88A);
+    final border = isLight ? const Color(0xFFE5E7EB) : const Color(0xff1E2C44);
 
     return Directionality(
-      textDirection: Localizations.localeOf(context).languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: _T.bg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      textDirection: TextDirection.rtl,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 18,
+          right: 18,
+          top: 14,
         ),
-        child: Column(
-          children: [
-            SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: _T.surf3,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            SizedBox(height: 14),
-            Text(
-              'اختر ذكراً لضبط التذكير',
-              style: TextStyle(
-                color: _T.txt,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 12),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _searchCtrl,
-                onChanged: (val) => setState(() => _searchQuery = val),
-                style: TextStyle(color: _T.txt, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'ابحث في الأذكار...',
-                  hintStyle: TextStyle(color: _T.txt3, fontSize: 13),
-                  prefixIcon: Icon(Icons.search_rounded, color: _T.acc, size: 20),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear_rounded, color: _T.txt3, size: 18),
-                          onPressed: () => setState(() {
-                            _searchCtrl.clear();
-                            _searchQuery = '';
-                          }),
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: _T.surf,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: _T.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: _T.border),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-
-            // Tabs
-            TabBar(
-              controller: _tabCtrl,
-              indicatorColor: _T.acc,
-              labelColor: _T.acc,
-              unselectedLabelColor: _T.txt3,
-              labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              tabs: [
-                Tab(text: 'أذكار الصباح ☀️'),
-                Tab(text: 'أذكار المساء 🌙'),
-                Tab(text: 'جوامع الأذكار 📿'),
-              ],
-            ),
-            Divider(height: 1, color: _T.border),
-
-            // Tab contents
-            Expanded(
-              child: TabBarView(
-                controller: _tabCtrl,
-                children: [
-                  _buildList(_filter(morningList), 'أذكار الصباح'),
-                  _buildList(_filter(eveningList), 'أذكار المساء'),
-                  _buildList(_filter(generalList), 'تذكير بذكر الله'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildList(List<String> items, String category) {
-    if (items.isEmpty) {
-      return Center(
-        child: Text(
-          'لا توجد أذكار مطابقة للبحث',
-          style: TextStyle(color: _T.txt3, fontSize: 13),
-        ),
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => SizedBox(height: 8),
-      itemBuilder: (ctx, i) {
-        final text = items[i];
-        return InkWell(
-          onTap: () {
-            Navigator.pop(context, {'text': text, 'category': category});
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: _T.surf,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _T.border),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  padding: const EdgeInsets.all(6),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _T.acc3.withValues(alpha: 0.22),
+                    color: border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(Icons.add_rounded, color: _T.acc, size: 16),
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: _T.txt,
-                      fontSize: 14,
-                      height: 1.6,
+              ),
+              const SizedBox(height: 14),
+
+              // Title
+              Text(
+                widget.existing != null ? 'تعديل التذكير' : 'إضافة تذكير بذكر الله',
+                style: TextStyle(color: textPri, fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 14),
+
+              // ── 1. Dhikr Text Input ─────────────────────────────────────
+              Text('نص الذكر أو الدعاء:', style: TextStyle(color: textSec, fontSize: 12.5, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: border),
+                ),
+                child: TextField(
+                  controller: _textCtrl,
+                  maxLines: 2,
+                  style: TextStyle(color: textPri, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'اكتب الذكر أو اختر من القائمة أدناه...',
+                    hintStyle: TextStyle(color: textSec, fontSize: 13),
+                    contentPadding: const EdgeInsets.all(12),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Quick preset chips
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _presetAzkar.take(5).map((zkr) {
+                  return ActionChip(
+                    label: Text(zkr, style: TextStyle(fontSize: 11, color: textPri)),
+                    backgroundColor: isLight ? const Color(0xFFF3F4F6) : const Color(0xFF131D30),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: border)),
+                    onPressed: () {
+                      setState(() => _textCtrl.text = zkr);
+                    },
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 18),
+
+              // ── 2. Repeat Interval (Requested Feature!) ──────────────────
+              Text('طريقة التكرار:', style: TextStyle(color: textSec, fontSize: 12.5, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('تكرار كل عدة ساعات 🔄')),
+                      selected: _isPeriodicMode,
+                      selectedColor: teal.withValues(alpha: 0.18),
+                      labelStyle: TextStyle(
+                        color: _isPeriodicMode ? teal : textSec,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: _isPeriodicMode ? teal : border),
+                      ),
+                      onSelected: (val) {
+                        setState(() {
+                          _isPeriodicMode = true;
+                          _repeatIntervalHours ??= 2;
+                        });
+                      },
                     ),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(child: Text('وقت محدد يومياً ⏰')),
+                      selected: !_isPeriodicMode,
+                      selectedColor: teal.withValues(alpha: 0.18),
+                      labelStyle: TextStyle(
+                        color: !_isPeriodicMode ? teal : textSec,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: !_isPeriodicMode ? teal : border),
+                      ),
+                      onSelected: (val) {
+                        setState(() => _isPeriodicMode = false);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Interval Options
+              if (_isPeriodicMode) ...[
+                Text(
+                  'اختر كم ساعة بين كل تذكير:',
+                  style: TextStyle(color: textSec, fontSize: 12),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: _intervalOptions.map((h) {
+                    final isSel = _repeatIntervalHours == h;
+                    return ChoiceChip(
+                      label: Text('كل $h ${h == 1 ? "ساعة" : (h == 2 ? "ساعتين" : "ساعات")}'),
+                      selected: isSel,
+                      selectedColor: teal.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        color: isSel ? teal : textSec,
+                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: isSel ? teal : border),
+                      ),
+                      onSelected: (_) => setState(() => _repeatIntervalHours = h),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'يبدأ التكرار تلقائياً خلال ساعات اليوم النشطة لتذكيرك بالله طوال اليوم.',
+                  style: TextStyle(color: textSec, fontSize: 11),
+                ),
+              ] else ...[
+                // Specific Time Selector
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.access_time_rounded, color: teal),
+                  title: Text(
+                    'وقت التذكير: ${_time.format(context)}',
+                    style: TextStyle(color: textPri, fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  trailing: TextButton(
+                    onPressed: _pickTime,
+                    child: Text('تغيير الوقت', style: TextStyle(color: teal, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
-            ),
+
+              const SizedBox(height: 18),
+
+              // ── 3. Days of Week Selection ────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'أيام التنبيه:',
+                    style: TextStyle(color: textSec, fontSize: 12.5, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: Icon(
+                      _selectedDays.length == _days.length ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                      size: 16,
+                      color: teal,
+                    ),
+                    label: Text(
+                      _selectedDays.length == _days.length ? 'كل الأيام (محدد)' : 'تحديد كل الأيام',
+                      style: TextStyle(color: teal, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        if (_selectedDays.length == _days.length) {
+                          // Uncheck some to allow custom picking, keep today
+                          _selectedDays.clear();
+                          _selectedDays.add(_days.first);
+                        } else {
+                          _selectedDays.clear();
+                          _selectedDays.addAll(_days);
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // 7 Days Chips Wrap
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _days.map((d) {
+                  final isSel = _selectedDays.contains(d);
+                  return FilterChip(
+                    label: Text(d),
+                    selected: isSel,
+                    selectedColor: teal.withValues(alpha: 0.18),
+                    checkmarkColor: teal,
+                    labelStyle: TextStyle(
+                      color: isSel ? teal : textPri,
+                      fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: isSel ? teal : border),
+                    ),
+                    onSelected: (val) {
+                      setState(() {
+                        if (val) {
+                          _selectedDays.add(d);
+                        } else {
+                          if (_selectedDays.length > 1) {
+                            _selectedDays.remove(d);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('يجب اختيار يوم واحد على الأقل للتنبيه'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Save Button
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: _isSaving ? null : _save,
+                child: _isSaving
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('حفظ وتفعيل التذكير 🔔', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 24),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

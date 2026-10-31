@@ -348,7 +348,7 @@ class SahabiCardState extends State<SahabiCard> with SingleTickerProviderStateMi
                 offset: const Offset(0, 5),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
+                color: Colors.black.withValues(alpha: _C._l ? 0.04 : 0.35),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -497,6 +497,13 @@ class _BgPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size sz) {
+    if (_C._l) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, sz.width, sz.height),
+        Paint()..color = const Color(0xFFF8F6F0),
+      );
+      return;
+    }
     canvas.drawRect(
       Rect.fromLTWH(0, 0, sz.width, sz.height),
       Paint()

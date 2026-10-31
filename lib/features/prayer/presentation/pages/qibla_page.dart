@@ -21,6 +21,10 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
   double _qiblaDirection = 136.0;
   double _distanceKm = 0.0;
   bool _loading = true;
+  bool _isLiveGps = false;
+  bool _isLocationServiceDisabled = false;
+  bool _isPermissionDenied = false;
+  bool _isRefreshingLocation = false;
 
   // Compass sensor state
   StreamSubscription<CompassEvent>? _compassSub;
@@ -41,47 +45,112 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    _loadQiblaData();
+    _loadQiblaData(proactiveRequest: true);
     _initCompass();
   }
 
-  Future<void> _loadQiblaData() async {
+  void _applyPosition(Position pos, {required bool isLive}) {
+    final lat = pos.latitude;
+    final lng = pos.longitude;
+    PrayerConfig.saveCoordinates(lat, lng);
+
+    final coords = Coordinates(lat, lng);
+    final qibla = Qibla(coords);
+    final dist = _calculateDistanceKm(lat, lng, _makkahLat, _makkahLng);
+
+    if (mounted) {
+      setState(() {
+        _coords = coords;
+        _qiblaDirection = qibla.direction;
+        _distanceKm = dist;
+        _isLiveGps = isLive;
+        _isLocationServiceDisabled = false;
+        _isPermissionDenied = false;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _loadQiblaData({bool proactiveRequest = false, bool userTriggered = false}) async {
+    if (mounted) {
+      setState(() => _isRefreshingLocation = true);
+    }
+
     try {
-      Position? pos;
       final enabled = await Geolocator.isLocationServiceEnabled();
-      if (enabled) {
-        var perm = await Geolocator.checkPermission();
-        if (perm == LocationPermission.denied) {
-          perm = await Geolocator.requestPermission();
+      if (!enabled) {
+        if (mounted) {
+          setState(() {
+            _isLocationServiceDisabled = true;
+            _isLiveGps = false;
+          });
         }
-        if (perm == LocationPermission.whileInUse || perm == LocationPermission.always) {
-          pos = await Geolocator.getCurrentPosition(
+        if (userTriggered && mounted) {
+          await _showEnableLocationDialog();
+        }
+      }
+
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied && (proactiveRequest || userTriggered)) {
+        perm = await Geolocator.requestPermission();
+      }
+
+      if (perm == LocationPermission.deniedForever) {
+        if (mounted) {
+          setState(() {
+            _isPermissionDenied = true;
+            _isLiveGps = false;
+          });
+        }
+        if (userTriggered && mounted) {
+          await _showPermissionDeniedForeverDialog();
+        }
+      }
+
+      Position? pos;
+      if (enabled && (perm == LocationPermission.whileInUse || perm == LocationPermission.always)) {
+        _isPermissionDenied = false;
+        _isLocationServiceDisabled = false;
+
+        // 1. Try last known position for instant responsiveness
+        pos = await Geolocator.getLastKnownPosition();
+        if (pos != null && mounted) {
+          _applyPosition(pos, isLive: true);
+        }
+
+        // 2. Fetch fresh high-accuracy position
+        try {
+          final fresh = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.medium,
-              timeLimit: Duration(seconds: 4),
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 8),
             ),
           );
+          pos = fresh;
+          if (mounted) {
+            _applyPosition(fresh, isLive: true);
+          }
+        } catch (_) {}
+      }
+
+      if (pos == null) {
+        final fallbackCoords = await PrayerConfig.getCoordinates();
+        final qibla = Qibla(fallbackCoords);
+        final dist = _calculateDistanceKm(
+          fallbackCoords.latitude,
+          fallbackCoords.longitude,
+          _makkahLat,
+          _makkahLng,
+        );
+        if (mounted) {
+          setState(() {
+            _coords = fallbackCoords;
+            _qiblaDirection = qibla.direction;
+            _distanceKm = dist;
+            _isLiveGps = false;
+            _loading = false;
+          });
         }
-      }
-
-      final double lat = pos?.latitude ?? (await PrayerConfig.getCoordinates()).latitude;
-      final double lng = pos?.longitude ?? (await PrayerConfig.getCoordinates()).longitude;
-
-      if (pos != null) {
-        await PrayerConfig.saveCoordinates(lat, lng);
-      }
-
-      final coords = Coordinates(lat, lng);
-      final qibla = Qibla(coords);
-      final dist = _calculateDistanceKm(lat, lng, _makkahLat, _makkahLng);
-
-      if (mounted) {
-        setState(() {
-          _coords = coords;
-          _qiblaDirection = qibla.direction;
-          _distanceKm = dist;
-          _loading = false;
-        });
       }
     } catch (_) {
       final fallbackCoords = await PrayerConfig.getCoordinates();
@@ -90,10 +159,75 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
         setState(() {
           _coords = fallbackCoords;
           _qiblaDirection = qibla.direction;
+          _isLiveGps = false;
           _loading = false;
         });
       }
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshingLocation = false);
+      }
     }
+  }
+
+  Future<void> _showEnableLocationDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: ThemeProvider.instance.isLight ? Colors.white : const Color(0xFF0F1728),
+          title: const Text('تفعيل خدمة الموقع (GPS)'),
+          content: const Text(
+            'خدمة تحديد الموقع الجغرافي مغلقة في هاتفك. يرجى تشغيلها لكي يتمكن التطبيق من معرفة اتجاه القبلة الصحيح في موقعك.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('لاحقاً'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38BDF8)),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await Geolocator.openLocationSettings();
+              },
+              child: const Text('فتح الإعدادات', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showPermissionDeniedForeverDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: ThemeProvider.instance.isLight ? Colors.white : const Color(0xFF0F1728),
+          title: const Text('إذن تحديد الموقع مطلوب'),
+          content: const Text(
+            'تم رفض إذن الموقع بشكل دائم. لحساب القبلة بدقة متناهية حسب موقعك، يرجى تفعيل إذن الموقع من إعدادات التطبيق.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38BDF8)),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await Geolocator.openAppSettings();
+              },
+              child: const Text('إعدادات التطبيق', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _initCompass() {
@@ -103,10 +237,7 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
           if (!mounted) return;
           final rawHeading = event.heading;
           if (rawHeading != null) {
-            // Normalize heading to [0, 360)
             final normalized = (rawHeading % 360 + 360) % 360;
-
-            // Shortest signed difference to Kaaba: (-180, 180]
             final diff = ((_qiblaDirection - normalized + 540) % 360) - 180;
             final aligned = diff.abs() <= 3.5;
 
@@ -117,7 +248,6 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
 
             setState(() {
               _targetHeading = normalized;
-              // Smooth low-pass interpolation
               _currentHeading = _smoothHeading(_currentHeading, normalized);
               _isAligned = aligned;
               _hasCompass = true;
@@ -153,7 +283,7 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
             math.cos(lat2 * p) *
             (1 - math.cos((lon2 - lon1) * p)) /
             2;
-    return 12742 * math.asin(math.sqrt(a)); // 2 * R; R = 6371 km
+    return 12742 * math.asin(math.sqrt(a));
   }
 
   String _getDirectionCardinal(double deg) {
@@ -209,6 +339,24 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
               ),
               onPressed: () => Navigator.pop(context),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'تحديث الموقع',
+                onPressed: _isRefreshingLocation
+                    ? null
+                    : () => _loadQiblaData(userTriggered: true),
+                icon: _isRefreshingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF38BDF8)),
+                      )
+                    : Icon(
+                        Icons.my_location_rounded,
+                        color: _isLiveGps ? const Color(0xFF10B981) : const Color(0xFF38BDF8),
+                      ),
+              ),
+            ],
           ),
           body: _loading
               ? const Center(
@@ -220,6 +368,49 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: Column(
                       children: [
+                        // GPS Status Banner
+                        if (!_isLiveGps)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_off_rounded, color: Color(0xFFF59E0B), size: 24),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _isLocationServiceDisabled
+                                        ? 'خدمة الموقع (GPS) مغلقة. قم بتشغيلها لدقة تامة.'
+                                        : 'يتم استخدام موقع تقديري. فعّل إذن الموقع لتحديد قبلتك بدقة.',
+                                    style: TextStyle(
+                                      color: isLight ? const Color(0xFF92400E) : const Color(0xFFFDE68A),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF59E0B),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  onPressed: () => _loadQiblaData(userTriggered: true),
+                                  child: const Text('تفعيل', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Top Info Card
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -247,13 +438,30 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'اتجاه القبلة نحو مكة المكرمة',
-                                      style: TextStyle(
-                                        color: isLight ? const Color(0xFF111827) : Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'اتجاه القبلة نحو مكة المكرمة',
+                                          style: TextStyle(
+                                            color: isLight ? const Color(0xFF111827) : Colors.white,
+                                            fontSize: 14.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        if (_isLiveGps)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: const Text(
+                                              'GPS نشط',
+                                              style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -271,7 +479,7 @@ class _QiblaPageState extends State<QiblaPage> with SingleTickerProviderStateMix
                           ),
                         ),
 
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 24),
 
                         // Guidance Turn Indicator Pill
                         AnimatedContainer(
