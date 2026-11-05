@@ -512,6 +512,27 @@ class QuranAudioService {
     await _player.seek(position);
   }
 
+  Future<void> seekForward([Duration step = const Duration(seconds: 10)]) async {
+    final cur = _player.position;
+    final dur = _player.duration ?? Duration.zero;
+    final target = cur + step;
+    if (dur > Duration.zero && target < dur) {
+      await seek(target);
+    } else if (dur > Duration.zero) {
+      await seek(dur);
+    }
+  }
+
+  Future<void> seekBackward([Duration step = const Duration(seconds: 10)]) async {
+    final cur = _player.position;
+    final target = cur - step;
+    if (target > Duration.zero) {
+      await seek(target);
+    } else {
+      await seek(Duration.zero);
+    }
+  }
+
   Future<void> stop() async {
     await _player.stop();
     _currentSurahNumber = null;

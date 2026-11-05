@@ -11,6 +11,7 @@ import 'package:rafiki_app/core/di/service_locator.dart';
 import 'package:rafiki_app/features/quran/domain/repositories/quran_repository.dart' as quran;
 import 'package:rafiki_app/features/quran/data/datasources/juz_data.dart';
 import 'package:rafiki_app/features/quran/presentation/widgets/quran_audio_view.dart';
+import 'package:rafiki_app/features/quran/presentation/widgets/quran_audio_player_bar.dart';
 
 class MushafPage extends StatefulWidget {
   const MushafPage({super.key});
@@ -772,6 +773,15 @@ class _MushafPageState extends State<MushafPage>
                             textColor: _textPri,
                             textMutedColor: _textSec,
                           ),
+                  ),
+
+                  // ── Persistent Quran Audio Player Bar ───────────────
+                  QuranAudioPlayerBar(
+                    surfaceColor: _surface,
+                    accentColor: _accent,
+                    goldColor: _gold,
+                    textColor: _textPri,
+                    textMutedColor: _textSec,
                   ),
                 ],
               ),

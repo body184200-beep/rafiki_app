@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
   final PodcastService _podcastService = PodcastService.instance;
   final TextEditingController _searchCtrl = TextEditingController();
   late final TabController _tabCtrl;
+  StreamSubscription? _episodesSub;
 
   List<PodcastChannel> _channels = [];
   List<PodcastEpisode> _episodes = [];
@@ -29,6 +31,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
   bool _isLoading = true;
   String _searchQuery = '';
   List<PodcastChannel> _searchResults = [];
+  List<PodcastEpisode> _matchingEpisodes = [];
   bool _isSearching = false;
 
   @override
@@ -36,10 +39,21 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
     _loadInitialData();
+    _episodesSub = _podcastService.onEpisodesUpdated.listen((channelId) {
+      if (!mounted) return;
+      setState(() {
+        if (_selectedChannel == null) {
+          _episodes = _podcastService.getAllEpisodes();
+        } else if (_selectedChannel!.id == channelId) {
+          _episodes = _podcastService.getCachedEpisodesForChannel(channelId);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    _episodesSub?.cancel();
     _searchCtrl.dispose();
     _tabCtrl.dispose();
     super.dispose();
@@ -52,17 +66,18 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
 
     if (!mounted) return;
 
+    final allEpisodes = _podcastService.getAllEpisodes();
+
     setState(() {
       _channels = channels;
-      if (channels.isNotEmpty) {
-        _selectedChannel = channels.first;
-        _episodes = channels.first.episodes;
-      }
+      _selectedChannel = null; // null = جميع الحلقات (كل السلاسل)
+      _episodes = allEpisodes;
       _isLoading = false;
     });
 
-    if (channels.isNotEmpty) {
-      _loadEpisodesForChannel(channels.first);
+    // Refresh live channels in background
+    for (final c in channels) {
+      _podcastService.fetchEpisodesForChannel(c.id, channelTitle: c.title, artworkUrl: c.artworkUrl);
     }
   }
 
@@ -78,16 +93,24 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
     }
   }
 
-  Future<void> _selectChannel(PodcastChannel channel) async {
+  Future<void> _selectChannel(PodcastChannel? channel) async {
     HapticFeedback.selectionClick();
     setState(() {
       _selectedChannel = channel;
-      _episodes = channel.episodes;
-      _isLoading = channel.episodes.isEmpty;
+      if (channel == null) {
+        _episodes = _podcastService.getAllEpisodes();
+        _isLoading = false;
+      } else {
+        final cached = _podcastService.getCachedEpisodesForChannel(channel.id);
+        _episodes = cached.isNotEmpty ? cached : channel.episodes;
+        _isLoading = _episodes.isEmpty;
+      }
     });
 
     _tabCtrl.animateTo(1); // switch to Episodes tab
-    await _loadEpisodesForChannel(channel);
+    if (channel != null) {
+      await _loadEpisodesForChannel(channel);
+    }
   }
 
   Future<void> _loadEpisodesForChannel(PodcastChannel channel) async {
@@ -115,16 +138,24 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
       setState(() {
         _isSearching = false;
         _searchResults = [];
+        _matchingEpisodes = [];
       });
       return;
     }
 
     setState(() => _isSearching = true);
     final results = await _podcastService.searchPodcasts(q);
+    final allEps = _podcastService.getAllEpisodes();
+    final matching = allEps.where((e) {
+      return e.title.toLowerCase().contains(q.toLowerCase()) ||
+          e.channelTitle.toLowerCase().contains(q.toLowerCase()) ||
+          e.description.toLowerCase().contains(q.toLowerCase());
+    }).toList();
 
     if (mounted && _searchQuery == q) {
       setState(() {
         _searchResults = results;
+        _matchingEpisodes = matching;
         _isSearching = false;
       });
     }
@@ -296,9 +327,9 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
                         tabs: [
                           Tab(text: 'جميع السلاسل (${_channels.length})'),
                           Tab(
-                            text: _selectedChannel != null
-                                ? 'الحلقات (${_episodes.length})'
-                                : 'الحلقات',
+                            text: _selectedChannel == null
+                                ? 'جميع الحلقات (${_episodes.length})'
+                                : 'الحلقات (${_episodes.length})',
                           ),
                           Tab(
                             text: 'المحمّلة (${_downloadedEpisodes.length})',
@@ -311,7 +342,7 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
                 // ── Main Content Area ───────────────────────────────────────
                 Expanded(
                   child: _searchQuery.isNotEmpty
-                      ? _buildSearchResults(accent, textPri, textSec, surface)
+                      ? _buildSearchResults(accent, gold, textPri, textSec, surface, cardColor, border)
                       : TabBarView(
                           controller: _tabCtrl,
                           children: [
@@ -456,22 +487,82 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
       return Center(child: CircularProgressIndicator(color: accent));
     }
 
-    if (_selectedChannel == null) {
-      return Center(
-        child: Text('اختر سلسلة للاستماع إلى حلقاتها', style: TextStyle(color: textSec)),
-      );
-    }
+    final totalCount = _podcastService.getAllEpisodes().length;
 
     return Column(
       children: [
-        // Channel header banner
+        // ── Series Filter Chips (Horizontal Scrollable) ─────────────────────
         Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          height: 40,
+          margin: const EdgeInsets.only(top: 8, bottom: 4),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              // All Episodes Chip
+              ChoiceChip(
+                label: Text(
+                  'الكل ($totalCount)',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: _selectedChannel == null ? FontWeight.bold : FontWeight.w500,
+                    color: _selectedChannel == null ? accent : textSec,
+                  ),
+                ),
+                selected: _selectedChannel == null,
+                selectedColor: accent.withValues(alpha: 0.16),
+                backgroundColor: Colors.transparent,
+                side: BorderSide(
+                  color: _selectedChannel == null ? accent : border,
+                ),
+                onSelected: (_) {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _selectedChannel = null;
+                    _episodes = _podcastService.getAllEpisodes();
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Individual Series Chips
+              ..._channels.map((ch) {
+                final isSelected = _selectedChannel?.id == ch.id;
+                final count = ch.episodeCount > 0 ? ch.episodeCount : ch.episodes.length;
+                return Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      '${ch.title} ($count)',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected ? accent : textSec,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: accent.withValues(alpha: 0.16),
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: isSelected ? accent : border,
+                    ),
+                    onSelected: (_) => _selectChannel(ch),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+
+        // Channel or All Episodes Header Banner
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.1),
+            color: accent.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: accent.withValues(alpha: 0.25)),
+            border: Border.all(color: accent.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -480,42 +571,58 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _selectedChannel!.title,
+                      _selectedChannel != null
+                          ? _selectedChannel!.title
+                          : '🎙️ جميع الحلقات (${_episodes.length} حلقة)',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: textPri, fontSize: 13.5, fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      _selectedChannel!.artist,
+                      _selectedChannel != null
+                          ? _selectedChannel!.artist
+                          : 'استمع إلى جميع الحلقات والتسجيلات لكل السلاسل بدون استثناء',
                       style: TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: accent,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+              if (_selectedChannel != null)
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: accent,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _selectedChannel = null;
+                      _episodes = _podcastService.getAllEpisodes();
+                    });
+                  },
+                  icon: const Icon(Icons.all_inclusive_rounded, size: 16),
+                  label: const Text('عرض الكل', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
-                onPressed: () => _tabCtrl.animateTo(0),
-                icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                label: const Text('تغيير السلسلة', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
             ],
           ),
         ),
 
         // Episodes ListView
         Expanded(
-          child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-            itemCount: _episodes.length,
-            itemBuilder: (context, index) {
-              final ep = _episodes[index];
-              return _buildEpisodeCard(ep, accent, gold, textPri, textSec, cardColor, border);
-            },
-          ),
+          child: _episodes.isEmpty
+              ? Center(
+                  child: Text('لا توجد حلقات متوفرة حالياً', style: TextStyle(color: textSec)),
+                )
+              : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  itemCount: _episodes.length,
+                  itemBuilder: (context, index) {
+                    final ep = _episodes[index];
+                    return _buildEpisodeCard(ep, accent, gold, textPri, textSec, cardColor, border);
+                  },
+                ),
         ),
       ],
     );
@@ -641,6 +748,15 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          if (_selectedChannel == null && ep.channelTitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              ep.channelTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           Row(
                             children: [
@@ -721,12 +837,20 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
   }
 
   // ── Search Results ────────────────────────────────────────────────────────
-  Widget _buildSearchResults(Color accent, Color textPri, Color textSec, Color surface) {
+  Widget _buildSearchResults(
+    Color accent,
+    Color gold,
+    Color textPri,
+    Color textSec,
+    Color surface,
+    Color cardColor,
+    Color border,
+  ) {
     if (_isSearching) {
       return Center(child: CircularProgressIndicator(color: accent));
     }
 
-    if (_searchResults.isEmpty) {
+    if (_searchResults.isEmpty && _matchingEpisodes.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -739,53 +863,76 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
       );
     }
 
-    return ListView.builder(
+    return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final ch = _searchResults[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(14),
+      children: [
+        if (_searchResults.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(
+              'السلاسل والبرامج (${_searchResults.length})',
+              style: TextStyle(color: gold, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ch.artworkUrl.isNotEmpty
-                  ? Image.network(
-                      ch.artworkUrl,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(Icons.podcasts_rounded, color: accent),
-                    )
-                  : Icon(Icons.podcasts_rounded, color: accent),
+          ..._searchResults.map(
+            (ch) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: border),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: ch.artworkUrl.isNotEmpty
+                      ? Image.network(
+                          ch.artworkUrl,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Icon(Icons.podcasts_rounded, color: accent),
+                        )
+                      : Icon(Icons.podcasts_rounded, color: accent),
+                ),
+                title: Text(
+                  ch.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: textPri, fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  ch.artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: textSec, fontSize: 12),
+                ),
+                trailing: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: textSec),
+                onTap: () {
+                  _searchCtrl.clear();
+                  _onSearchChanged('');
+                  _selectChannel(ch);
+                },
+              ),
             ),
-            title: Text(
-              ch.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: textPri, fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              ch.artist,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: textSec, fontSize: 12),
-            ),
-            trailing: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: textSec),
-            onTap: () {
-              _searchCtrl.clear();
-              _onSearchChanged('');
-              _selectChannel(ch);
-            },
           ),
-        );
-      },
+          const SizedBox(height: 10),
+        ],
+        if (_matchingEpisodes.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(
+              'الحلقات المطابقة (${_matchingEpisodes.length})',
+              style: TextStyle(color: gold, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ..._matchingEpisodes.map(
+            (ep) => _buildEpisodeCard(ep, accent, gold, textPri, textSec, cardColor, border),
+          ),
+        ],
+      ],
     );
   }
 
@@ -796,125 +943,344 @@ class _PrayerPodcastPageState extends State<PrayerPodcastPage> with SingleTicker
       builder: (context, current, _) {
         if (current == null) return const SizedBox.shrink();
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, -4),
-              ),
-            ],
-            border: Border(top: BorderSide(color: accent.withValues(alpha: 0.3))),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    // Play / Pause Button
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _podcastService.isPlaying,
-                      builder: (_, isPlaying, __) {
-                        return ValueListenableBuilder<bool>(
-                          valueListenable: _podcastService.isBuffering,
-                          builder: (_, isBuffering, __) {
-                            if (isBuffering) {
-                              return SizedBox(
-                                width: 38,
-                                height: 38,
-                                child: CircularProgressIndicator(color: accent, strokeWidth: 2),
-                              );
-                            }
-                            return IconButton(
-                              icon: Icon(
-                                isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                                color: accent,
-                                size: 38,
-                              ),
-                              onPressed: () => _podcastService.togglePlayPause(),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 10),
-
-                    // Episode Title
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            current.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: textPri, fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            current.channelTitle.isNotEmpty ? current.channelTitle : 'بودكاست صوتي',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: gold, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Close / Stop Button
-                    IconButton(
-                      icon: Icon(Icons.close_rounded, color: textSec, size: 20),
-                      onPressed: () => _podcastService.stop(),
-                    ),
-                  ],
-                ),
-
-                // Mini Progress Bar
-                ValueListenableBuilder<Duration>(
-                  valueListenable: _podcastService.position,
-                  builder: (_, pos, __) {
-                    return ValueListenableBuilder<Duration>(
-                      valueListenable: _podcastService.duration,
-                      builder: (_, dur, __) {
-                        final progress = dur.inMilliseconds > 0
-                            ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
-                            : 0.0;
-                        return Row(
-                          children: [
-                            Text(
-                              TimeFormat.hhmmss(pos),
-                              style: TextStyle(color: textSec, fontSize: 10),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                backgroundColor: textSec.withValues(alpha: 0.2),
-                                valueColor: AlwaysStoppedAnimation<Color>(accent),
-                                minHeight: 3,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              TimeFormat.hhmmss(dur),
-                              style: TextStyle(color: textSec, fontSize: 10),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+        return _PodcastPlayerBar(
+          episode: current,
+          accent: accent,
+          gold: gold,
+          textPri: textPri,
+          textSec: textSec,
+          surface: surface,
         );
       },
+    );
+  }
+}
+
+class _PodcastPlayerBar extends StatefulWidget {
+  final PodcastEpisode episode;
+  final Color accent;
+  final Color gold;
+  final Color textPri;
+  final Color textSec;
+  final Color surface;
+
+  const _PodcastPlayerBar({
+    required this.episode,
+    required this.accent,
+    required this.gold,
+    required this.textPri,
+    required this.textSec,
+    required this.surface,
+  });
+
+  @override
+  State<_PodcastPlayerBar> createState() => _PodcastPlayerBarState();
+}
+
+class _PodcastPlayerBarState extends State<_PodcastPlayerBar> {
+  final PodcastService _podcastService = PodcastService.instance;
+  double? _dragSeconds;
+
+  String _formatDuration(Duration d) {
+    final safe = d.isNegative ? Duration.zero : d;
+    final hours = safe.inHours;
+    final minutes = safe.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = safe.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
+  void _cycleSpeed() {
+    HapticFeedback.selectionClick();
+    final current = _podcastService.speed.value;
+    final speeds = [1.0, 1.25, 1.5, 2.0];
+    int nextIdx = 0;
+    for (int i = 0; i < speeds.length; i++) {
+      if ((speeds[i] - current).abs() < 0.05) {
+        nextIdx = (i + 1) % speeds.length;
+        break;
+      }
+    }
+    _podcastService.setPlaybackSpeed(speeds[nextIdx]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = widget.episode;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 14,
+            offset: const Offset(0, -4),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(color: widget.accent.withValues(alpha: 0.35), width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Top Row: Artwork / Title / Speed / Close ──────────────────
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      color: widget.accent.withValues(alpha: 0.15),
+                      child: current.artworkUrl.isNotEmpty
+                          ? Image.network(
+                              current.artworkUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  Icon(Icons.podcasts_rounded, color: widget.accent, size: 20),
+                            )
+                          : Icon(Icons.podcasts_rounded, color: widget.accent, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          current.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: widget.textPri,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          current.channelTitle.isNotEmpty ? current.channelTitle : 'بودكاست صوتي',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: widget.gold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Speed Control Chip
+                  ValueListenableBuilder<double>(
+                    valueListenable: _podcastService.speed,
+                    builder: (_, spd, __) {
+                      final label = spd == 1.0
+                          ? '1x'
+                          : spd == 1.25
+                              ? '1.25x'
+                              : spd == 1.5
+                                  ? '1.5x'
+                                  : '${spd.toStringAsFixed(1)}x';
+                      return InkWell(
+                        onTap: _cycleSpeed,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: widget.accent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: widget.accent.withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: widget.accent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Close / Stop Button
+                  IconButton(
+                    icon: Icon(Icons.close_rounded, color: widget.textSec, size: 20),
+                    tooltip: 'إيقاف وإغلاق المشغل',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _podcastService.stop();
+                    },
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 4),
+
+              // ── Middle Row: Progress Slider with Times ─────────────────────
+              ValueListenableBuilder<Duration>(
+                valueListenable: _podcastService.position,
+                builder: (_, pos, __) {
+                  return ValueListenableBuilder<Duration>(
+                    valueListenable: _podcastService.duration,
+                    builder: (_, dur, __) {
+                      final effectivePosSeconds = _dragSeconds ?? pos.inSeconds.toDouble();
+                      final maxSeconds = max(1.0, dur.inSeconds.toDouble());
+                      final clampedSeconds = effectivePosSeconds.clamp(0.0, maxSeconds);
+
+                      final posText = _dragSeconds != null
+                          ? _formatDuration(Duration(seconds: _dragSeconds!.round()))
+                          : _formatDuration(pos);
+                      final durText = _formatDuration(dur);
+
+                      return Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          children: [
+                            Text(
+                              posText,
+                              style: TextStyle(
+                                color: widget.textSec,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            Expanded(
+                              child: SliderTheme(
+                                data: SliderThemeData(
+                                  trackHeight: 3.5,
+                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                                  activeTrackColor: widget.accent,
+                                  inactiveTrackColor: widget.textSec.withValues(alpha: 0.22),
+                                  thumbColor: widget.gold,
+                                  overlayColor: widget.accent.withValues(alpha: 0.15),
+                                ),
+                                child: Slider(
+                                  value: clampedSeconds,
+                                  min: 0.0,
+                                  max: maxSeconds,
+                                  onChanged: dur.inSeconds > 0
+                                      ? (val) {
+                                          setState(() => _dragSeconds = val);
+                                        }
+                                      : null,
+                                  onChangeEnd: dur.inSeconds > 0
+                                      ? (val) {
+                                          HapticFeedback.selectionClick();
+                                          _podcastService.seek(Duration(seconds: val.round()));
+                                          setState(() => _dragSeconds = null);
+                                        }
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              durText,
+                              style: TextStyle(
+                                color: widget.textSec,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // ── Bottom Row: Controls (Rewind 10s, Play/Pause, Forward 10s) ──
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 10s Backward (Rewind)
+                  IconButton(
+                    icon: Icon(Icons.replay_10_rounded, color: widget.textPri, size: 28),
+                    tooltip: 'تأخير ١٠ ثوانٍ',
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _podcastService.seekBackward10();
+                    },
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Play / Pause / Buffering
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _podcastService.isBuffering,
+                    builder: (_, isBuffering, __) {
+                      if (isBuffering) {
+                        return Container(
+                          width: 44,
+                          height: 44,
+                          padding: const EdgeInsets.all(8),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: widget.accent,
+                          ),
+                        );
+                      }
+
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _podcastService.isPlaying,
+                        builder: (_, isPlaying, __) {
+                          return IconButton(
+                            icon: Icon(
+                              isPlaying
+                                  ? Icons.pause_circle_filled_rounded
+                                  : Icons.play_circle_fill_rounded,
+                              color: widget.accent,
+                              size: 44,
+                            ),
+                            tooltip: isPlaying ? 'إيقاف مؤقت' : 'تشغيل',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                            onPressed: () {
+                              HapticFeedback.selectionClick();
+                              _podcastService.togglePlayPause();
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // 10s Forward
+                  IconButton(
+                    icon: Icon(Icons.forward_10_rounded, color: widget.textPri, size: 28),
+                    tooltip: 'تقديم ١٠ ثوانٍ',
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _podcastService.seekForward10();
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

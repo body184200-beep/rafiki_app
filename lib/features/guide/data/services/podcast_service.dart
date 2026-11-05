@@ -41,6 +41,8 @@ class PodcastService {
 
   List<PodcastChannel> _cachedChannels = [];
   final Map<int, List<PodcastEpisode>> _episodesCache = {};
+  final StreamController<int> _episodesUpdateCtrl = StreamController<int>.broadcast();
+  Stream<int> get onEpisodesUpdated => _episodesUpdateCtrl.stream;
   static const String _kDownloadedEpisodesMetaKey = 'podcast_downloaded_meta_v1';
 
   void _initAudioListeners() {
@@ -108,6 +110,25 @@ class PodcastService {
     return _cachedChannels;
   }
 
+  /// Returns all cached episodes across all channels (380+ episodes)
+  List<PodcastEpisode> getAllEpisodes() {
+    final List<PodcastEpisode> all = [];
+    for (final c in _cachedChannels) {
+      final eps = _episodesCache[c.id] ?? c.episodes;
+      all.addAll(eps);
+    }
+    return all;
+  }
+
+  /// Returns cached episodes for a specific channel
+  List<PodcastEpisode> getCachedEpisodesForChannel(int channelId) {
+    if (_episodesCache.containsKey(channelId) && _episodesCache[channelId]!.isNotEmpty) {
+      return _episodesCache[channelId]!;
+    }
+    final ch = _cachedChannels.where((c) => c.id == channelId).firstOrNull;
+    return ch?.episodes ?? [];
+  }
+
   /// Fetches latest live episodes for a channel from Apple Podcasts API
   Future<List<PodcastEpisode>> fetchEpisodesForChannel(
     int channelId, {
@@ -129,7 +150,7 @@ class PodcastService {
     String artworkUrl = '',
   }) async {
     try {
-      final url = Uri.parse('https://itunes.apple.com/lookup?id=$channelId&entity=podcastEpisode&limit=35');
+      final url = Uri.parse('https://itunes.apple.com/lookup?id=$channelId&entity=podcastEpisode&limit=300');
       final response = await http.get(url).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
@@ -156,6 +177,7 @@ class PodcastService {
 
           if (episodes.isNotEmpty) {
             _episodesCache[channelId] = episodes;
+            _episodesUpdateCtrl.add(channelId);
             return episodes;
           }
         }
@@ -172,6 +194,7 @@ class PodcastService {
       final fresh = await _fetchEpisodesFromApi(channelId, channelTitle: channelTitle, artworkUrl: artworkUrl);
       if (fresh.isNotEmpty) {
         _episodesCache[channelId] = fresh;
+        _episodesUpdateCtrl.add(channelId);
       }
     } catch (_) {}
   }
@@ -413,20 +436,19 @@ class PodcastService {
   Future<void> seekForward10() async {
     final target = position.value + const Duration(seconds: 10);
     final maxDur = duration.value;
-    if (target < maxDur) {
+    if (maxDur > Duration.zero && target < maxDur) {
       await seek(target);
-    } else {
+    } else if (maxDur > Duration.zero) {
       await seek(maxDur);
     }
   }
 
   Future<void> seekBackward10() async {
     final target = position.value - const Duration(seconds: 10);
-    final maxDur = duration.value;
-    if (target < maxDur) {
+    if (target > Duration.zero) {
       await seek(target);
     } else {
-      await seek(maxDur);
+      await seek(Duration.zero);
     }
   }
 
