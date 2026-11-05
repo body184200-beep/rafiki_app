@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:rafiki_app/core/theme/theme_provider.dart';
 import 'package:rafiki_app/core/utils/hijri_helper.dart';
+import 'package:rafiki_app/features/calendar/presentation/pages/islamic_calendar_page.dart';
 import 'package:rafiki_app/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:rafiki_app/features/battles/presentation/pages/battles_page.dart';
 import 'package:rafiki_app/features/companions/presentation/pages/companions_page.dart';
@@ -66,9 +67,7 @@ class HomeDashboardView extends StatelessWidget {
                       height: 78,
                       bgColor: isLight ? const Color(0xFFFDF7EC) : const Color(0xFF1F1A12),
                       borderColor: isLight ? const Color(0xFFF5DEC0) : const Color(0xFF4A3820),
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                      },
+                      onTap: () => _push(context, const IslamicCalendarPage()),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         child: Row(
