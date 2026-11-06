@@ -28,4 +28,20 @@ class PrayerConfig {
       await prefs.setDouble('prayer_lng', lng);
     } catch (_) {}
   }
+
+  static Future<String?> getCityName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('prayer_city');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> saveCityName(String cityName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('prayer_city', cityName);
+    } catch (_) {}
+  }
 }
