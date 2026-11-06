@@ -30,7 +30,7 @@ const List<RadioStation> kRadioStations = [
     id: 1,
     name: 'إذاعة القرآن الكريم - القاهرة',
     subtitle: 'البث المباشر الرسمي من القاهرة',
-    url: 'https://stream.radiojar.com/8s5u8tpdtwzuv',
+    url: 'https://radio.xecod.com/station/quran-cairo',
     icon: Icons.mosque_rounded,
   ),
   RadioStation(
